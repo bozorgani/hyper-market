@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { databaseConfig } from './config/database/database.config';
 import { envConfig } from './config/env/env.config';
 import { envValidation } from './config/env/env.validation';
+import { redisProvider } from './infrastructure/cache/redis.provider';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { envValidation } from './config/env/env.validation';
     MongooseModule.forRootAsync(databaseConfig),
   ],
   controllers: [],
-  providers: [],
+  providers: [redisProvider],
 })
 export class AppModule {}
