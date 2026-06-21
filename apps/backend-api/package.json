@@ -8,8 +8,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "test": "jest"
+    "start:prod": "node dist/main"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.27",
@@ -27,8 +26,9 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.23",
+    "@types/express": "^5.0.6",
     "@types/node": "^26.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "5.9"
   }
 }

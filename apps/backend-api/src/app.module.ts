@@ -4,8 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { databaseConfig } from './config/database/database.config';
 import { envConfig } from './config/env/env.config';
 import { envValidation } from './config/env/env.validation';
-import { LoggerService } from './infrastructure/logger/logger.service';
-import { redisProvider } from './infrastructure/cache/redis.provider';
+import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CartModule } from './modules/cart/cart.module';
 import { CategoriesModule } from './modules/categories/categories.module';
@@ -24,6 +23,7 @@ import { UsersModule } from './modules/users/users.module';
       cache: true,
     }),
     MongooseModule.forRootAsync(databaseConfig),
+    InfrastructureModule,
     AuthModule,
     UsersModule,
     ProductsModule,
@@ -33,6 +33,6 @@ import { UsersModule } from './modules/users/users.module';
     PaymentsModule,
   ],
   controllers: [],
-  providers: [redisProvider, LoggerService],
+  providers: [],
 })
 export class AppModule {}
