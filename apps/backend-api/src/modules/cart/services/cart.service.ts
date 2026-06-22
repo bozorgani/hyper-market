@@ -1,0 +1,178 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { isValidObjectId, Types } from 'mongoose';
+import { Product } from '../../products/schemas/product.schema';
+import { ProductsService } from '../../products/services/products.service';
+import { CartRepository } from '../repositories/cart.repository';
+import { Cart, CartItem } from '../schemas/cart.schema';
+
+export type CartSummary = {
+  cart: Cart;
+  totalPrice: number;
+};
+
+@Injectable()
+export class CartService {
+  constructor(
+    private readonly cartRepository: CartRepository,
+    private readonly productsService: ProductsService,
+  ) {}
+
+  async getCartByUserId(userId: string): Promise<Cart> {
+    return this.getOrCreateCart(userId);
+  }
+
+  async getCartSummary(userId: string): Promise<CartSummary> {
+    const cart = await this.getOrCreateCart(userId);
+    const totalPrice = await this.calculateCartTotal(cart);
+
+    return { cart, totalPrice };
+  }
+
+  async addProductToCart(
+    userId: string,
+    productId: string,
+    quantity: number,
+  ): Promise<CartSummary> {
+    this.ensureValidObjectId(productId, 'Invalid product id');
+    const product = await this.productsService.getProductById(productId);
+
+    if (!product.isActive) {
+      throw new BadRequestException('Product is not active');
+    }
+
+    if (product.stock < quantity) {
+      throw new BadRequestException('Insufficient product stock');
+    }
+
+    await this.getOrCreateCart(userId);
+    const updatedCart =
+      (await this.cartRepository.addItem(userId, productId, quantity)) ??
+      (await this.cartRepository.pushItem(userId, productId, quantity));
+
+    if (!updatedCart) {
+      throw new BadRequestException('Unable to update cart');
+    }
+
+    return this.getCartSummary(userId);
+  }
+
+  async updateQuantity(
+    userId: string,
+    productId: string,
+    quantity: number,
+  ): Promise<CartSummary> {
+    return this.addProductToCart(userId, productId, quantity);
+  }
+
+  async removeProduct(userId: string, productId: string): Promise<CartSummary> {
+    this.ensureValidObjectId(productId, 'Invalid product id');
+    await this.getOrCreateCart(userId);
+    await this.cartRepository.removeItem(userId, productId);
+
+    return this.getCartSummary(userId);
+  }
+
+  async clearCart(userId: string): Promise<Cart> {
+    await this.getOrCreateCart(userId);
+    const cart = await this.cartRepository.clearCart(userId);
+
+    if (!cart) {
+      throw new BadRequestException('Unable to clear cart');
+    }
+
+    return cart;
+  }
+
+  async calculateCartTotal(cart: Cart): Promise<number> {
+    let totalPrice = 0;
+
+    for (const item of cart.items) {
+      const product = await this.productsService.getProductById(
+        this.getEntityId(item.productId),
+      );
+      totalPrice += this.getProductPrice(product) * item.quantity;
+    }
+
+    return totalPrice;
+  }
+
+  async validateCartStock(cart: Cart): Promise<void> {
+    if (cart.items.length === 0) {
+      throw new BadRequestException('Cart is empty');
+    }
+
+    for (const item of cart.items) {
+      const product = await this.productsService.getProductById(
+        this.getEntityId(item.productId),
+      );
+
+      if (!product.isActive) {
+        throw new BadRequestException(`Product ${this.getEntityId(item.productId)} is not active`);
+      }
+
+      if (product.stock < item.quantity) {
+        throw new BadRequestException(
+          `Insufficient stock for product ${this.getEntityId(item.productId)}`,
+        );
+      }
+    }
+  }
+
+  async getOrderItemsFromCart(cart: Cart): Promise<Array<CartItem & { priceAtPurchase: number }>> {
+    const orderItems: Array<CartItem & { priceAtPurchase: number }> = [];
+
+    for (const item of cart.items) {
+      const product = await this.productsService.getProductById(
+        this.getEntityId(item.productId),
+      );
+      orderItems.push({
+        productId: new Types.ObjectId(this.getEntityId(item.productId)),
+        quantity: item.quantity,
+        priceAtPurchase: this.getProductPrice(product),
+      });
+    }
+
+    return orderItems;
+  }
+
+  private async getOrCreateCart(userId: string): Promise<Cart> {
+    const existingCart = await this.cartRepository.getCartByUserId(userId);
+    if (existingCart) {
+      return existingCart;
+    }
+
+    return this.cartRepository.createCart(userId);
+  }
+
+  private getProductPrice(product: Product): number {
+    return product.discountPrice ?? product.price;
+  }
+
+  private ensureValidObjectId(id: string, message: string): void {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException(message);
+    }
+  }
+
+  private getEntityId(entity: unknown): string {
+    if (entity instanceof Types.ObjectId) {
+      return entity.toHexString();
+    }
+
+    const withId = entity as { _id?: Types.ObjectId | string; id?: string };
+
+    if (withId._id instanceof Types.ObjectId) {
+      return withId._id.toHexString();
+    }
+
+    if (typeof withId._id === 'string') {
+      return withId._id;
+    }
+
+    if (typeof withId.id === 'string') {
+      return withId.id;
+    }
+
+    return String(entity);
+  }
+}
