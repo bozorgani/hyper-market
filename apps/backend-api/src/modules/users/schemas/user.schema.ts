@@ -29,7 +29,7 @@ export class User {
   })
   phoneNumber?: string;
 
-  @Prop({ type: String, default: null })
+  @Prop({ type: String, default: null, select: false })
   passwordHash?: string | null;
 
   @Prop({ type: String, enum: UserRole, default: UserRole.CUSTOMER, index: true })

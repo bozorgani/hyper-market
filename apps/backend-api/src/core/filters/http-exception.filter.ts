@@ -8,6 +8,12 @@ import {
 import { Response } from 'express';
 import { BaseException } from '../exceptions/base.exception';
 
+interface ExceptionResponse {
+  message?: string | string[];
+  error?: string;
+  errorCode?: string;
+}
+
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -15,24 +21,29 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error';
-    let errorCode = 'INTERNAL_ERROR';
+    let message: string | string[] = 'Internal server error';
+    let errors: string[] | undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      const res = exception.getResponse();
-      message = typeof res === 'string' ? res : (res as Record<string, string>).message || message;
-      errorCode = (res as Record<string, string>)?.errorCode || errorCode;
+      const res = exception.getResponse() as ExceptionResponse;
+      const responseMessage = res.message ?? 'Something went wrong';
+
+      if (Array.isArray(responseMessage)) {
+        message = 'Validation failed';
+        errors = responseMessage;
+      } else {
+        message = responseMessage;
+      }
     } else if (exception instanceof BaseException) {
       status = exception.statusCode;
       message = exception.message;
-      errorCode = exception.errorCode;
     }
 
     response.status(status).json({
       success: false,
       message,
-      errorCode,
+      ...(errors && { errors }),
     });
   }
 }
