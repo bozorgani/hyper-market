@@ -18,6 +18,24 @@ export class RefreshToken {
   @Prop({ type: String, required: true })
   deviceId!: string;
 
+  @Prop({ type: SchemaTypes.ObjectId, required: true, index: true })
+  sessionId!: Types.ObjectId;
+
+  @Prop({ type: String, required: true })
+  jti!: string;
+
+  @Prop({ type: String, required: true, index: true })
+  tokenFamilyId!: string;
+
+  @Prop({ type: String, default: null })
+  replacedByTokenId?: string | null;
+
+  @Prop({ type: Boolean, default: false })
+  reuseDetected!: boolean;
+
+  @Prop({ type: Number, required: true })
+  tokenVersion!: number;
+
   @Prop({ type: Date, required: true, index: true })
   expiresAt!: Date;
 
@@ -27,4 +45,6 @@ export class RefreshToken {
 
 export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken);
 RefreshTokenSchema.index({ userId: 1, deviceId: 1, revokedAt: 1 });
+RefreshTokenSchema.index({ tokenFamilyId: 1, revokedAt: 1 });
+RefreshTokenSchema.index({ tokenHash: 1 }, { unique: true });
 RefreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

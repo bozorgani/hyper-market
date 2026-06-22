@@ -22,6 +22,17 @@ export class OtpRepository {
       .exec();
   }
 
+  async findLatestForVerification(
+    target: string,
+    type: OtpType,
+  ): Promise<OtpCode | null> {
+    return this.otpModel
+      .findOne({ target, type, verifiedAt: null })
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
+  }
+
   async isBlocked(target: string, type: OtpType): Promise<boolean> {
     const otp = await this.otpModel
       .findOne({ target, type, blockedUntil: { $gt: new Date() } })
@@ -34,6 +45,13 @@ export class OtpRepository {
     if (!isValidObjectId(id)) return null;
     return this.otpModel
       .findByIdAndUpdate(id, { $inc: { attempts: 1 } }, { new: true })
+      .exec();
+  }
+
+  async blockOtp(id: string, blockedUntil: Date): Promise<OtpCode | null> {
+    if (!isValidObjectId(id)) return null;
+    return this.otpModel
+      .findByIdAndUpdate(id, { blockedUntil }, { new: true })
       .exec();
   }
 

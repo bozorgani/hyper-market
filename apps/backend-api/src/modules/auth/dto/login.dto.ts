@@ -20,4 +20,7 @@ export class LoginDto {
     message: 'At least one of email or phoneNumber is required',
   })
   password!: string;
+
+  @IsString()
+  deviceId!: string;
 }

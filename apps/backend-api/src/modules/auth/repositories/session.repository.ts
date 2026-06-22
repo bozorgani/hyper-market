@@ -29,6 +29,17 @@ export class SessionRepository {
       .exec();
   }
 
+  async findByUserAndDevice(
+    userId: string,
+    deviceId: string,
+  ): Promise<Session | null> {
+    return this.sessionModel
+      .findOne({ userId, deviceId })
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
+  }
+
   async updateLastActive(id: string): Promise<Session | null> {
     if (!isValidObjectId(id)) return null;
     return this.sessionModel

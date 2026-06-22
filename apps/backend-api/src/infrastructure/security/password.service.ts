@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { compare, hash } from 'bcrypt';
+import { PASSWORD_POLICY_REGEX } from './password-policy.constant';
 
 @Injectable()
 export class PasswordService {
@@ -25,18 +26,6 @@ export class PasswordService {
   }
 
   validatePasswordStrength(password: string): boolean {
-    const minLength = 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-    return (
-      password.length >= minLength &&
-      hasUpperCase &&
-      hasLowerCase &&
-      hasNumber &&
-      hasSpecial
-    );
+    return PASSWORD_POLICY_REGEX.test(password);
   }
 }

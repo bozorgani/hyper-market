@@ -65,6 +65,9 @@ export class User {
   @Prop({ type: Date, default: null })
   passwordChangedAt?: Date | null;
 
+  @Prop({ type: Number, default: 1 })
+  tokenVersion!: number;
+
   @Prop({ type: Date, default: null, index: true })
   deletedAt?: Date | null;
 }

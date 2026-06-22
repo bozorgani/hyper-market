@@ -1,10 +1,24 @@
-export const envValidation = (config: Record<string, unknown>): Record<string, unknown> => {
-  const required = ['PORT', 'APP_ENV', 'MONGO_URI', 'REDIS_HOST', 'REDIS_PORT', 'JWT_SECRET'];
+const REQUIRED_ENV_KEYS = [
+  'DATABASE_URL',
+  'REDIS_URL',
+  'JWT_ACCESS_SECRET',
+  'JWT_REFRESH_SECRET',
+  'CORS_ORIGINS',
+  'PASSWORD_PEPPER',
+] as const;
 
-  for (const key of required) {
+export const envValidation = (config: Record<string, unknown>): Record<string, unknown> => {
+  for (const key of REQUIRED_ENV_KEYS) {
     if (config[key] === undefined || config[key] === '') {
       throw new Error(`Missing required environment variable: ${key}`);
     }
+  }
+
+  const corsOrigins = String(config.CORS_ORIGINS);
+  const isProduction = config.APP_ENV === 'production';
+
+  if (isProduction && corsOrigins.split(',').map((origin) => origin.trim()).includes('*')) {
+    throw new Error('CORS_ORIGINS cannot contain wildcard (*) in production');
   }
 
   return config;

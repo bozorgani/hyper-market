@@ -2,9 +2,9 @@ import {
   IsEmail,
   IsOptional,
   IsString,
-  Length,
   Matches,
 } from 'class-validator';
+import { PASSWORD_POLICY_MESSAGE, PASSWORD_POLICY_REGEX } from '../../../infrastructure/security/password-policy.constant';
 import { AtLeastOne } from '../../../shared/validators/at-least-one.validator';
 
 export class RegisterDto {
@@ -17,7 +17,7 @@ export class RegisterDto {
   phoneNumber?: string;
 
   @IsString()
-  @Length(8, 100)
+  @Matches(PASSWORD_POLICY_REGEX, { message: PASSWORD_POLICY_MESSAGE })
   @AtLeastOne(['email', 'phoneNumber'], {
     message: 'At least one of email or phoneNumber is required',
   })

@@ -1,10 +1,14 @@
 import { Global, Module } from '@nestjs/common';
-import { REDIS_CLIENT, redisProvider } from './cache/redis.provider';
+import { CacheModule } from './cache/cache.module';
+import { DatabaseTransactionService } from './database/database-transaction.service';
+import { HealthController } from './health/health.controller';
 import { LoggerService } from './logger/logger.service';
 
 @Global()
 @Module({
-  providers: [LoggerService, redisProvider],
-  exports: [LoggerService, REDIS_CLIENT],
+  imports: [CacheModule],
+  controllers: [HealthController],
+  providers: [LoggerService, DatabaseTransactionService],
+  exports: [CacheModule, LoggerService, DatabaseTransactionService],
 })
 export class InfrastructureModule {}

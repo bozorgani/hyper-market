@@ -21,8 +21,12 @@ export class RefreshTokenRepository {
   }
 
   async findByTokenHash(tokenHash: string): Promise<RefreshToken | null> {
+    return this.refreshTokenModel.findOne({ tokenHash }).lean().exec();
+  }
+
+  async findActiveByTokenHash(tokenHash: string): Promise<RefreshToken | null> {
     return this.refreshTokenModel
-      .findOne({ tokenHash, revokedAt: null })
+      .findOne({ tokenHash, revokedAt: null, expiresAt: { $gt: new Date() } })
       .lean()
       .exec();
   }
@@ -37,10 +41,41 @@ export class RefreshTokenRepository {
       .exec();
   }
 
-  async revokeToken(id: string): Promise<RefreshToken | null> {
+  async revokeToken(
+    id: string,
+    replacedByTokenId?: string,
+  ): Promise<RefreshToken | null> {
+    if (!isValidObjectId(id)) return null;
+
+    const update: Partial<RefreshToken> = { revokedAt: new Date() };
+    if (replacedByTokenId && isValidObjectId(replacedByTokenId)) {
+      update.replacedByTokenId = replacedByTokenId;
+    }
+
+    return this.refreshTokenModel
+      .findByIdAndUpdate(id, update, { new: true })
+      .exec();
+  }
+
+  async markReuseDetected(id: string): Promise<RefreshToken | null> {
     if (!isValidObjectId(id)) return null;
     return this.refreshTokenModel
-      .findByIdAndUpdate(id, { revokedAt: new Date() }, { new: true })
+      .findByIdAndUpdate(id, { reuseDetected: true }, { new: true })
+      .exec();
+  }
+
+  async revokeTokenFamily(tokenFamilyId: string): Promise<void> {
+    await this.refreshTokenModel
+      .updateMany(
+        { tokenFamilyId, revokedAt: null },
+        { revokedAt: new Date() },
+      )
+      .exec();
+  }
+
+  async revokeAllUserTokens(userId: string): Promise<void> {
+    await this.refreshTokenModel
+      .updateMany({ userId, revokedAt: null }, { revokedAt: new Date() })
       .exec();
   }
 }

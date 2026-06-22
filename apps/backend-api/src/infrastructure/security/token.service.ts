@@ -2,12 +2,10 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { StringValue } from 'ms';
-import { hash } from 'bcrypt';
+import { JwtPayload } from '../../modules/auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class TokenService {
-  private readonly hashRounds = 12;
-
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
@@ -45,7 +43,7 @@ export class TokenService {
     return this.configService.get<string>('JWT_AUDIENCE') ?? undefined;
   }
 
-  generateAccessToken(payload: object): string {
+  generateAccessToken(payload: JwtPayload): string {
     return this.jwtService.sign(payload, {
       secret: this.accessSecret,
       expiresIn: this.accessExpires as StringValue,
@@ -54,7 +52,7 @@ export class TokenService {
     });
   }
 
-  generateRefreshToken(payload: object): string {
+  generateRefreshToken(payload: JwtPayload): string {
     return this.jwtService.sign(payload, {
       secret: this.refreshSecret,
       expiresIn: this.refreshExpires as StringValue,
@@ -63,15 +61,28 @@ export class TokenService {
     });
   }
 
-  verifyToken(token: string): object {
-    return this.jwtService.verify(token, {
+  verifyAccessToken(token: string): JwtPayload {
+    return this.jwtService.verify<JwtPayload>(token, {
       secret: this.accessSecret,
       issuer: this.issuer,
       audience: this.audience,
-    }) as object;
+    });
   }
 
-  async hashToken(token: string): Promise<string> {
-    return hash(token, this.hashRounds);
+  verifyRefreshToken(token: string): JwtPayload {
+    return this.jwtService.verify<JwtPayload>(token, {
+      secret: this.refreshSecret,
+      issuer: this.issuer,
+      audience: this.audience,
+    });
+  }
+
+  decodeToken(token: string): JwtPayload | null {
+    const decoded = this.jwtService.decode(token);
+    if (!decoded || typeof decoded === 'string') {
+      return null;
+    }
+
+    return decoded as JwtPayload;
   }
 }
