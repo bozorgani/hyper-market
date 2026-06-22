@@ -28,6 +28,9 @@ export class OtpCode {
   @Prop({ type: Number, default: 0, max: 5 })
   attempts!: number;
 
+  @Prop({ type: Date, default: null, index: true })
+  blockedUntil?: Date | null;
+
   @Prop({ type: Date, default: null })
   verifiedAt?: Date | null;
 }

@@ -48,4 +48,11 @@ export class SessionRepository {
       .updateMany({ userId, revokedAt: null }, { revokedAt: new Date() })
       .exec();
   }
+
+  async markTrusted(sessionId: string): Promise<Session | null> {
+    if (!isValidObjectId(sessionId)) return null;
+    return this.sessionModel
+      .findByIdAndUpdate(sessionId, { isTrusted: true }, { new: true })
+      .exec();
+  }
 }

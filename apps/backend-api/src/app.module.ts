@@ -4,7 +4,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { databaseConfig } from './config/database/database.config';
 import { envConfig } from './config/env/env.config';
 import { envValidation } from './config/env/env.validation';
+import { jwtConfig } from './config/jwt/jwt.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { SecurityModule } from './infrastructure/security/security.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CartModule } from './modules/cart/cart.module';
 import { CategoriesModule } from './modules/categories/categories.module';
@@ -18,12 +20,13 @@ import { UsersModule } from './modules/users/users.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env', '.env.local', '.env.development'],
-      load: [envConfig],
+      load: [envConfig, jwtConfig],
       validate: envValidation,
       cache: true,
     }),
     MongooseModule.forRootAsync(databaseConfig),
     InfrastructureModule,
+    SecurityModule,
     AuthModule,
     UsersModule,
     ProductsModule,

@@ -29,6 +29,9 @@ export class Session {
 
   @Prop({ type: Date, default: null })
   revokedAt?: Date | null;
+
+  @Prop({ type: Boolean, default: false })
+  isTrusted!: boolean;
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);

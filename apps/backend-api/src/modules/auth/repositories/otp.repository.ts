@@ -22,6 +22,14 @@ export class OtpRepository {
       .exec();
   }
 
+  async isBlocked(target: string, type: OtpType): Promise<boolean> {
+    const otp = await this.otpModel
+      .findOne({ target, type, blockedUntil: { $gt: new Date() } })
+      .lean()
+      .exec();
+    return !!otp;
+  }
+
   async incrementAttempts(id: string): Promise<OtpCode | null> {
     if (!isValidObjectId(id)) return null;
     return this.otpModel
