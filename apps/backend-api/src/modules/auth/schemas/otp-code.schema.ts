@@ -22,7 +22,7 @@ export class OtpCode {
   @Prop({ type: String, enum: OtpType, required: true })
   type!: OtpType;
 
-  @Prop({ type: Date, required: true, index: true })
+  @Prop({ type: Date, required: true })
   expiresAt!: Date;
 
   @Prop({ type: Number, default: 0, max: 5 })

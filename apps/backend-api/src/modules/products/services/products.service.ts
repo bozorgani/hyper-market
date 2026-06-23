@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { isValidObjectId, Types } from 'mongoose';
 import { CategoriesService } from '../../categories/services/categories.service';
+import { SearchIndexer } from '../../search/search.indexer';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { Product } from '../schemas/product.schema';
@@ -11,17 +12,22 @@ export class ProductsService {
   constructor(
     private readonly productsRepository: ProductsRepository,
     private readonly categoriesService: CategoriesService,
+    private readonly searchIndexer: SearchIndexer,
   ) {}
 
   async createProduct(dto: CreateProductDto): Promise<Product> {
     await this.ensureCategoryExists(dto.categoryId);
 
-    return this.productsRepository.create({
+    const product = await this.productsRepository.create({
       ...dto,
       categoryId: new Types.ObjectId(dto.categoryId),
       images: dto.images ?? [],
       isActive: dto.isActive ?? true,
     });
+
+    await this.searchIndexer.indexProduct(product);
+
+    return product;
   }
 
   async updateProduct(id: string, dto: UpdateProductDto): Promise<Product> {
@@ -41,6 +47,8 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
+    await this.searchIndexer.indexProduct(product);
+
     return product;
   }
 
@@ -51,6 +59,8 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
+
+    await this.searchIndexer.removeProduct(id);
 
     return product;
   }
@@ -74,12 +84,20 @@ export class ProductsService {
       throw new BadRequestException('Insufficient product stock');
     }
 
+    await this.searchIndexer.indexProduct(product);
+
     return product;
   }
 
   async restoreStock(id: string, quantity: number): Promise<Product | null> {
     this.ensureValidObjectId(id, 'Invalid product id');
-    return this.productsRepository.restoreStock(id, quantity);
+    const product = await this.productsRepository.restoreStock(id, quantity);
+
+    if (product) {
+      await this.searchIndexer.indexProduct(product);
+    }
+
+    return product;
   }
 
   async listProducts(

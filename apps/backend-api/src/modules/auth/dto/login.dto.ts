@@ -12,7 +12,7 @@ export class LoginDto {
   email?: string;
 
   @IsOptional()
-  @Matches(/^\+[1-9]\d{1,14}$/)
+  @Matches(/^09\d{9}$/)
   phoneNumber?: string;
 
   @IsString()

@@ -481,12 +481,13 @@ export class AuthService {
     type: OtpType,
     expiresInMs: number,
   ): Promise<void> {
-    const code = this.generateOtpCode();
+    const isDevelopmentOtp = process.env.NODE_ENV === 'development';
+    const code = isDevelopmentOtp ? '123456' : this.generateOtpCode();
     await this.otpRepository.create({
       userId: new Types.ObjectId(userId),
       target,
       type,
-      codeHash: this.hashOtpCode(code),
+      codeHash: isDevelopmentOtp ? code : this.hashOtpCode(code),
       attempts: 0,
       expiresAt: new Date(Date.now() + expiresInMs),
     });
@@ -494,6 +495,10 @@ export class AuthService {
     const ttl = Math.ceil(expiresInMs / 1000);
     await this.redisService.set(this.getOtpAttemptsKey(target, type), '0', ttl);
     await this.redisService.delete(this.getOtpLockKey(target, type));
+
+    if (isDevelopmentOtp) {
+      return;
+    }
 
     if (this.isEmailTarget(target)) {
       if (type === OtpType.PASSWORD_RESET) {
@@ -536,7 +541,11 @@ export class AuthService {
       throw new ForbiddenException('OTP is temporarily blocked');
     }
 
-    if (otp.codeHash !== this.hashOtpCode(code)) {
+    const expectedCode = process.env.NODE_ENV === 'development'
+      ? code
+      : this.hashOtpCode(code);
+
+    if (otp.codeHash !== expectedCode) {
       const updatedOtp = await this.otpRepository.incrementAttempts(otpId);
       const updatedAttempts = await this.incrementRedisOtpAttempts(
         attemptsKey,

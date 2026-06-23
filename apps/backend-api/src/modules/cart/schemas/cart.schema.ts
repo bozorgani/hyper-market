@@ -22,7 +22,7 @@ export const CartItemSchema = SchemaFactory.createForClass(CartItem);
   versionKey: false,
 })
 export class Cart {
-  @Prop({ type: SchemaTypes.ObjectId, ref: User.name, required: true, unique: true, index: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: User.name, required: true })
   userId!: Types.ObjectId;
 
   @Prop({ type: [CartItemSchema], default: [] })

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import { api } from "@/services/api";
 import type { CartSummary } from "@/types/domain";
 
@@ -13,7 +14,10 @@ export function useAddToCart() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: { productId: string; quantity: number }) => (await api.post<CartSummary>("/cart/add", input)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cart"] }),
+    onSuccess: (_data, variables) => {
+      trackAnalyticsEvent({ type: "ADD_TO_CART", metadata: variables });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
   });
 }
 
@@ -21,7 +25,10 @@ export function useRemoveFromCart() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (productId: string) => (await api.post<CartSummary>("/cart/remove", { productId })).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cart"] }),
+    onSuccess: (_data, productId) => {
+      trackAnalyticsEvent({ type: "REMOVE_FROM_CART", metadata: { productId } });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
   });
 }
 

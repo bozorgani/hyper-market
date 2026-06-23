@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import { useCart } from "@/hooks/use-cart";
 import { useCreateOrder, useCreatePayment, useSimulatePaymentSuccess } from "@/hooks/use-orders";
 
@@ -20,9 +21,12 @@ export default function CheckoutPage() {
   async function checkout() {
     setError("");
     try {
+      trackAnalyticsEvent({ type: "CHECKOUT_START", metadata: { totalPrice: cart.data?.totalPrice ?? 0 } });
       const order = await createOrder.mutateAsync();
+      trackAnalyticsEvent({ type: "ORDER_CREATED", metadata: { orderId: order._id, amount: order.totalPrice } });
       await createPayment.mutateAsync(order._id);
       await simulateSuccess.mutateAsync(order._id);
+      trackAnalyticsEvent({ type: "PAYMENT_SUCCESS", metadata: { orderId: order._id, amount: order.totalPrice } });
       router.push(`/order/success?orderId=${order._id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "پرداخت ناموفق بود.");

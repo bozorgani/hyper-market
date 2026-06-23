@@ -1,9 +1,11 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import { useAnalytics } from "@/hooks/use-analytics";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useProduct } from "@/hooks/use-products";
 
@@ -11,6 +13,17 @@ export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
   const product = useProduct(params.id);
   const addToCart = useAddToCart();
+  const { trackProductView } = useAnalytics();
+
+  useEffect(() => {
+    if (product.data) {
+      trackProductView(product.data._id, {
+        title: product.data.name,
+        price: product.data.discountPrice ?? product.data.price,
+        stock: product.data.stock,
+      });
+    }
+  }, [product.data, trackProductView]);
 
   if (product.isLoading) return <main className="p-8 text-center text-slate-500">در حال بارگذاری...</main>;
   if (!product.data) return <main className="p-8 text-center text-red-500">محصول پیدا نشد.</main>;
