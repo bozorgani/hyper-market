@@ -46,6 +46,9 @@ export function ProductForm({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!form.categoryId) {
+      return;
+    }
     onSubmit(form);
   }
 
@@ -69,6 +72,9 @@ export function ProductForm({
               <option key={category._id} value={category._id}>{category.name}</option>
             ))}
           </select>
+          {categories.data?.length === 0 ? (
+            <p className="text-xs leading-5 text-amber-600">برای ساخت محصول باید ابتدا حداقل یک دسته‌بندی در دیتابیس وجود داشته باشد.</p>
+          ) : null}
         </label>
         <label className="space-y-2 md:col-span-2">
           <span className="text-sm font-semibold text-slate-600">توضیحات</span>
@@ -100,7 +106,7 @@ export function ProductForm({
           <span className="text-sm font-semibold text-slate-600">فعال باشد</span>
         </label>
         <div className="md:col-span-2">
-          <Button disabled={loading}>{loading ? "در حال ذخیره..." : "ذخیره محصول"}</Button>
+          <Button disabled={loading || !form.categoryId}>{loading ? "در حال ذخیره..." : "ذخیره محصول"}</Button>
         </div>
       </form>
     </Card>

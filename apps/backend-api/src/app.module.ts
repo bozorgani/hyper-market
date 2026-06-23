@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { databaseConfig } from './config/database/database.config';
 import { envConfig } from './config/env/env.config';
 import { envValidation } from './config/env/env.validation';
+import { EventBusModule } from './core/events/event-bus.module';
 import { jwtConfig } from './config/jwt/jwt.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { SecurityModule } from './infrastructure/security/security.module';
@@ -27,6 +28,7 @@ import { UsersModule } from './modules/users/users.module';
       cache: true,
     }),
     MongooseModule.forRootAsync(databaseConfig),
+    EventBusModule,
     InfrastructureModule,
     SecurityModule,
     AnalyticsModule,

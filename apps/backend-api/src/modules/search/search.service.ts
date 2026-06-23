@@ -74,15 +74,21 @@ export class SearchService {
     }));
   }
 
-  private buildFilters(options: ProductSearchOptions, includeInactive: boolean): string[] {
-    const filters: string[] = [];
+  private buildFilters(
+    options: ProductSearchOptions,
+    includeInactive: boolean,
+  ): (string | string[])[] {
+    const filters: (string | string[])[] = [];
 
     if (!includeInactive) {
       filters.push('isActive = true');
     }
 
     if (options.categoryId) {
-      filters.push(`categoryId = "${options.categoryId}"`);
+      const categoryId = this.sanitizeFilterValue(options.categoryId);
+      if (categoryId) {
+        filters.push(`categoryId = "${categoryId}"`);
+      }
     }
 
     if (options.minPrice !== undefined) {
@@ -102,5 +108,9 @@ export class SearchService {
     }
 
     return filters;
+  }
+
+  private sanitizeFilterValue(value: string): string {
+    return value.replace(/[^a-zA-Z0-9_-]/g, '');
   }
 }

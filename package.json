@@ -11,10 +11,15 @@
     "install:all": "npm install",
     "backend:dev": "npm run start:dev --workspace=apps/backend-api",
     "backend:build": "npm run build --workspace=apps/backend-api",
-    "backend:test": "npm run test --workspace=apps/backend-api"
+    "backend:test": "npm run test --workspace=apps/backend-api",
+    "sync:state": "node scripts/sync-project-state.js",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
