@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { isValidObjectId, Types } from 'mongoose';
+import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { CartService } from '../../cart/services/cart.service';
 import { ProductsService } from '../../products/services/products.service';
 import { UserRole } from '../../users/enums/user-role.enum';
@@ -39,7 +40,7 @@ export class OrdersService {
 
     try {
       for (const item of cart.items) {
-        const productId = this.getEntityId(item.productId);
+        const productId = getEntityId(item.productId);
         await this.productsService.reduceStock(productId, item.quantity);
         reducedItems.push({ productId, quantity: item.quantity });
       }
@@ -80,7 +81,7 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    if (!this.isAdminRole(role) && this.getEntityId(order.userId) !== userId) {
+    if (!this.isAdminRole(role) && getEntityId(order.userId) !== userId) {
       throw new ForbiddenException('You cannot access this order');
     }
 
@@ -122,25 +123,4 @@ export class OrdersService {
     return role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
   }
 
-  private getEntityId(entity: unknown): string {
-    if (entity instanceof Types.ObjectId) {
-      return entity.toHexString();
-    }
-
-    const withId = entity as { _id?: Types.ObjectId | string; id?: string };
-
-    if (withId._id instanceof Types.ObjectId) {
-      return withId._id.toHexString();
-    }
-
-    if (typeof withId._id === 'string') {
-      return withId._id;
-    }
-
-    if (typeof withId.id === 'string') {
-      return withId.id;
-    }
-
-    return String(entity);
-  }
 }

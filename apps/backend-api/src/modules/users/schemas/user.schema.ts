@@ -25,7 +25,7 @@ export class User {
     type: String,
     unique: true,
     trim: true,
-    match: [/^\+[1-9]\d{1,14}$/, 'Invalid phone number format'],
+    match: [/^09\d{9}$/, 'Invalid phone number format'],
   })
   phoneNumber?: string;
 

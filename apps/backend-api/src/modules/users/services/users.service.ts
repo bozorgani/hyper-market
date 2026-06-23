@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { isValidObjectId } from 'mongoose';
 import { UsersRepository, UserWithId } from '../repositories/users.repository';
 import { User } from '../schemas/user.schema';
 
@@ -12,6 +13,23 @@ export class UsersService {
 
   async getUserById(id: string): Promise<User | null> {
     return this.usersRepository.findById(id);
+  }
+
+  async getUserByIdOrFail(id: string): Promise<User> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid user id');
+    }
+
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async listUsers(): Promise<User[]> {
+    return this.usersRepository.findAll();
   }
 
   async getUserByEmail(email: string): Promise<User | null> {

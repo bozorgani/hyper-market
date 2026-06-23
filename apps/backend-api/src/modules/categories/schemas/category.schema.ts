@@ -12,9 +12,13 @@ export class Category {
   @Prop({ type: String, required: true, trim: true })
   name!: string;
 
-  @Prop({ type: String, required: true, unique: true, lowercase: true, trim: true })
+  @Prop({ type: String, required: true, lowercase: true, trim: true })
   slug!: string;
+
+  @Prop({ type: Date, default: null })
+  deletedAt?: Date | null;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
 CategorySchema.index({ slug: 1 }, { unique: true });
+CategorySchema.index({ deletedAt: 1 });

@@ -13,7 +13,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     if (hydrated && !user) router.replace("/login");
   }, [hydrated, router, user]);
 
-  if (!hydrated) return <div className="p-8 text-center text-slate-500">Loading...</div>;
+  if (!hydrated) return <div className="p-8 text-center text-slate-500">در حال بارگذاری...</div>;
   if (!user) return null;
   return <>{children}</>;
 }

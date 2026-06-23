@@ -1,6 +1,10 @@
 export type User = {
+  _id?: string;
   id: string;
   role: string;
+  email?: string;
+  phoneNumber?: string;
+  accountStatus?: string;
   sessionId?: string;
   deviceId?: string;
 };

@@ -9,7 +9,7 @@ export type SessionDocument = HydratedDocument<Session>;
   collection: 'sessions',
 })
 export class Session {
-  @Prop({ type: SchemaTypes.ObjectId, required: true, index: true })
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
   userId!: Types.ObjectId;
 
   @Prop({ type: String, required: true })

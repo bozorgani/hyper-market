@@ -7,7 +7,7 @@ export class ForgotPasswordDto {
   email?: string;
 
   @IsOptional()
-  @Matches(/^\+[1-9]\d{1,14}$/)
+  @Matches(/^09\d{9}$/)
   @AtLeastOne(['email', 'phoneNumber'], {
     message: 'At least one of email or phoneNumber is required',
   })

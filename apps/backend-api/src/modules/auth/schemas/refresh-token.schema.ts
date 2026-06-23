@@ -9,7 +9,7 @@ export type RefreshTokenDocument = HydratedDocument<RefreshToken>;
   collection: 'refresh_tokens',
 })
 export class RefreshToken {
-  @Prop({ type: SchemaTypes.ObjectId, required: true, index: true })
+  @Prop({ type: SchemaTypes.ObjectId, required: true })
   userId!: Types.ObjectId;
 
   @Prop({ type: String, required: true })
@@ -24,7 +24,7 @@ export class RefreshToken {
   @Prop({ type: String, required: true })
   jti!: string;
 
-  @Prop({ type: String, required: true, index: true })
+  @Prop({ type: String, required: true })
   tokenFamilyId!: string;
 
   @Prop({ type: String, default: null })
@@ -36,7 +36,7 @@ export class RefreshToken {
   @Prop({ type: Number, required: true })
   tokenVersion!: number;
 
-  @Prop({ type: Date, required: true, index: true })
+  @Prop({ type: Date, required: true })
   expiresAt!: Date;
 
   @Prop({ type: Date, default: null })

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { createHash, randomInt, randomUUID } from 'crypto';
 import { Types } from 'mongoose';
+import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { PasswordService } from '../../../infrastructure/security/password.service';
 import { TokenHashService } from '../../../infrastructure/security/token-hash.service';
@@ -88,7 +89,7 @@ export class AuthService {
       tokenVersion: 1,
     });
 
-    const userId = this.getEntityId(user);
+    const userId = getEntityId(user);
 
     if (user.email) {
       await this.createVerificationOtp(userId, user.email, OtpType.EMAIL_VERIFY);
@@ -115,7 +116,7 @@ export class AuthService {
       throw new BadRequestException('User not found');
     }
 
-    const userId = this.getEntityId(user);
+    const userId = getEntityId(user);
 
     if (dto.email) {
       await this.createVerificationOtp(userId, dto.email, OtpType.EMAIL_VERIFY);
@@ -135,7 +136,7 @@ export class AuthService {
     }
 
     await this.verifyOtpCode(dto.email, OtpType.EMAIL_VERIFY, dto.code, context);
-    await this.usersService.verifyEmail(this.getEntityId(user));
+    await this.usersService.verifyEmail(getEntityId(user));
 
     return { message: 'email verified' };
   }
@@ -147,7 +148,7 @@ export class AuthService {
     }
 
     await this.verifyOtpCode(dto.phoneNumber, OtpType.PHONE_VERIFY, dto.code, context);
-    await this.usersService.verifyPhone(this.getEntityId(user));
+    await this.usersService.verifyPhone(getEntityId(user));
 
     return { message: 'phone verified' };
   }
@@ -159,7 +160,7 @@ export class AuthService {
       const target = dto.email ?? dto.phoneNumber;
       if (target) {
         await this.createOtpForTarget(
-          this.getEntityId(user),
+          getEntityId(user),
           target,
           OtpType.PASSWORD_RESET,
           this.passwordResetOtpExpiresMs,
@@ -180,7 +181,7 @@ export class AuthService {
 
     await this.verifyOtpCode(target, OtpType.PASSWORD_RESET, dto.code, context);
 
-    const userId = this.getEntityId(user);
+    const userId = getEntityId(user);
     const passwordHash = await this.passwordService.hashPassword(dto.newPassword);
     await this.usersService.updatePasswordAndIncrementTokenVersion(
       userId,
@@ -208,7 +209,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const userId = this.getEntityId(user);
+    const userId = getEntityId(user);
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       await this.logSecurityEvent(AuditAction.LOGIN_FAILED, userId, {
@@ -240,14 +241,14 @@ export class AuthService {
     );
 
     if (oldSession) {
-      await this.sessionRepository.revokeSession(this.getEntityId(oldSession));
+      await this.sessionRepository.revokeSession(getEntityId(oldSession));
       const oldRefreshToken = await this.refreshTokenRepository.findActiveToken(
         userId,
         dto.deviceId,
       );
       if (oldRefreshToken) {
         await this.refreshTokenRepository.revokeToken(
-          this.getEntityId(oldRefreshToken),
+          getEntityId(oldRefreshToken),
         );
       }
     }
@@ -262,11 +263,11 @@ export class AuthService {
       expiresAt: refreshExpiresAt,
     });
 
-    const tokens = await this.issueTokenPair(user, this.getEntityId(session), dto.deviceId);
+    const tokens = await this.issueTokenPair(user, getEntityId(session), dto.deviceId);
 
     await this.refreshTokenRepository.create({
       userId: new Types.ObjectId(userId),
-      sessionId: new Types.ObjectId(this.getEntityId(session)),
+      sessionId: new Types.ObjectId(getEntityId(session)),
       deviceId: dto.deviceId,
       tokenHash: this.tokenHashService.hashToken(tokens.refreshToken),
       tokenVersion: user.tokenVersion ?? 1,
@@ -337,8 +338,8 @@ export class AuthService {
     });
 
     await this.refreshTokenRepository.revokeToken(
-      this.getEntityId(storedRefreshToken),
-      this.getEntityId(newRefreshToken),
+      getEntityId(storedRefreshToken),
+      getEntityId(newRefreshToken),
     );
 
     await this.sessionRepository.updateLastActive(payload.sessionId);
@@ -370,7 +371,7 @@ export class AuthService {
 
     if (storedRefreshToken) {
       await this.refreshTokenRepository.revokeToken(
-        this.getEntityId(storedRefreshToken),
+        getEntityId(storedRefreshToken),
       );
     }
 
@@ -380,7 +381,7 @@ export class AuthService {
     );
 
     if (session) {
-      await this.sessionRepository.revokeSession(this.getEntityId(session));
+      await this.sessionRepository.revokeSession(getEntityId(session));
     }
 
     await this.logSecurityEvent(AuditAction.LOGOUT, payload.sub, {
@@ -480,12 +481,13 @@ export class AuthService {
     type: OtpType,
     expiresInMs: number,
   ): Promise<void> {
-    const code = this.generateOtpCode();
+    const isDevelopmentOtp = process.env.NODE_ENV === 'development';
+    const code = isDevelopmentOtp ? '123456' : this.generateOtpCode();
     await this.otpRepository.create({
       userId: new Types.ObjectId(userId),
       target,
       type,
-      codeHash: this.hashOtpCode(code),
+      codeHash: isDevelopmentOtp ? code : this.hashOtpCode(code),
       attempts: 0,
       expiresAt: new Date(Date.now() + expiresInMs),
     });
@@ -493,6 +495,10 @@ export class AuthService {
     const ttl = Math.ceil(expiresInMs / 1000);
     await this.redisService.set(this.getOtpAttemptsKey(target, type), '0', ttl);
     await this.redisService.delete(this.getOtpLockKey(target, type));
+
+    if (isDevelopmentOtp) {
+      return;
+    }
 
     if (this.isEmailTarget(target)) {
       if (type === OtpType.PASSWORD_RESET) {
@@ -516,7 +522,7 @@ export class AuthService {
       throw new BadRequestException('Invalid OTP');
     }
 
-    const otpId = this.getEntityId(otp);
+    const otpId = getEntityId(otp);
     const now = new Date();
     const lockKey = this.getOtpLockKey(target, type);
     const attemptsKey = this.getOtpAttemptsKey(target, type);
@@ -535,7 +541,11 @@ export class AuthService {
       throw new ForbiddenException('OTP is temporarily blocked');
     }
 
-    if (otp.codeHash !== this.hashOtpCode(code)) {
+    const expectedCode = process.env.NODE_ENV === 'development'
+      ? code
+      : this.hashOtpCode(code);
+
+    if (otp.codeHash !== expectedCode) {
       const updatedOtp = await this.otpRepository.incrementAttempts(otpId);
       const updatedAttempts = await this.incrementRedisOtpAttempts(
         attemptsKey,
@@ -551,7 +561,7 @@ export class AuthService {
     await this.redisService.delete(attemptsKey);
     await this.redisService.delete(lockKey);
     await this.otpRepository.markVerified(otpId);
-    await this.logSecurityEvent(AuditAction.OTP_VERIFIED, this.getEntityId(otp.userId), {
+    await this.logSecurityEvent(AuditAction.OTP_VERIFIED, getEntityId(otp.userId), {
       ...context,
       deviceId: context.deviceId,
     });
@@ -608,7 +618,7 @@ export class AuthService {
     context: AuthContext,
   ): Promise<void> {
     await this.refreshTokenRepository.markReuseDetected(
-      this.getEntityId(storedRefreshToken),
+      getEntityId(storedRefreshToken),
     );
     await this.refreshTokenRepository.revokeTokenFamily(
       storedRefreshToken.tokenFamilyId,
@@ -664,7 +674,7 @@ export class AuthService {
     deviceId: string,
   ): Promise<AuthTokens> {
     const basePayload = {
-      sub: this.getEntityId(user),
+      sub: getEntityId(user),
       role: user.role,
       sessionId,
       deviceId,
@@ -736,25 +746,4 @@ export class AuthService {
     }
   }
 
-  private getEntityId(entity: unknown): string {
-    if (entity instanceof Types.ObjectId) {
-      return entity.toHexString();
-    }
-
-    const withId = entity as { _id?: Types.ObjectId | string; id?: string };
-
-    if (withId._id instanceof Types.ObjectId) {
-      return withId._id.toHexString();
-    }
-
-    if (typeof withId._id === 'string') {
-      return withId._id;
-    }
-
-    if (typeof withId.id === 'string') {
-      return withId.id;
-    }
-
-    throw new Error('Entity id is missing');
-  }
 }

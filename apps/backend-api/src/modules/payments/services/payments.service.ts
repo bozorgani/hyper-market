@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { isValidObjectId, Types } from 'mongoose';
+import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { OrderStatus } from '../../orders/enums/order-status.enum';
 import { OrdersService } from '../../orders/services/orders.service';
 import { UserRole } from '../../users/enums/user-role.enum';
@@ -74,7 +75,7 @@ export class PaymentsService {
     }
 
     const paidPayment = await this.paymentsRepository.markAsPaid(
-      this.getEntityId(payment),
+      getEntityId(payment),
       transactionId ?? `mock_${randomUUID()}`,
     );
 
@@ -104,7 +105,7 @@ export class PaymentsService {
       throw new NotFoundException('Payment not found');
     }
 
-    if (!this.isAdminRole(role) && this.getEntityId(payment.userId) !== userId) {
+    if (!this.isAdminRole(role) && getEntityId(payment.userId) !== userId) {
       throw new ForbiddenException('You cannot access this payment');
     }
 
@@ -133,7 +134,7 @@ export class PaymentsService {
   ): Promise<Payment> {
     const payment = await this.verifyPayment(orderId, userId, role);
     const failedPayment = await this.paymentsRepository.markAsFailed(
-      this.getEntityId(payment),
+      getEntityId(payment),
       transactionId,
     );
 
@@ -154,25 +155,4 @@ export class PaymentsService {
     return role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
   }
 
-  private getEntityId(entity: unknown): string {
-    if (entity instanceof Types.ObjectId) {
-      return entity.toHexString();
-    }
-
-    const withId = entity as { _id?: Types.ObjectId | string; id?: string };
-
-    if (withId._id instanceof Types.ObjectId) {
-      return withId._id.toHexString();
-    }
-
-    if (typeof withId._id === 'string') {
-      return withId._id;
-    }
-
-    if (typeof withId.id === 'string') {
-      return withId.id;
-    }
-
-    return String(entity);
-  }
 }

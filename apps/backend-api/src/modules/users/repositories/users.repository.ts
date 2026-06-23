@@ -22,6 +22,14 @@ export class UsersRepository implements BaseRepository<User> {
     return this.userModel.findOne({ _id: id, deletedAt: null }).lean().exec();
   }
 
+  async findAll(): Promise<User[]> {
+    return this.userModel
+      .find({ deletedAt: null })
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel
       .findOne({ email: email.toLowerCase(), deletedAt: null })

@@ -1,0 +1,6 @@
+npm run sync:state
+
+if ! git diff --quiet -- docs/PROJECT_STATE.md; then
+  echo "PROJECT_STATE.md was updated by sync:state. Please commit it before pushing."
+  exit 1
+fi
