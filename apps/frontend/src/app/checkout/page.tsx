@@ -25,20 +25,22 @@ export default function CheckoutPage() {
       await simulateSuccess.mutateAsync(order._id);
       router.push(`/order/success?orderId=${order._id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Checkout failed");
+      setError(err instanceof Error ? err.message : "پرداخت ناموفق بود.");
     }
   }
 
   return (
     <ProtectedRoute>
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="text-2xl font-black">Checkout</h1>
+      <main className="mx-auto max-w-3xl px-4 py-8 text-right">
+        <h1 className="text-2xl font-black">تسویه حساب</h1>
         <Card className="mt-5 p-6">
-          <p className="text-slate-500">Cart total</p>
+          <p className="text-slate-500">مبلغ قابل پرداخت</p>
           <p className="mt-2 text-3xl font-black text-rose-600">{formatPrice(cart.data?.totalPrice ?? 0)}</p>
-          <p className="mt-4 text-sm text-slate-500">Mock payment abstraction will create an order, create payment and simulate success.</p>
-          {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">{error}</p>}
-          <Button className="mt-6 w-full" onClick={checkout} disabled={createOrder.isPending || createPayment.isPending || simulateSuccess.isPending}>Pay now</Button>
+          <p className="mt-4 text-sm leading-7 text-slate-500">در این نسخه، پرداخت به‌صورت آزمایشی انجام می‌شود و پس از پرداخت موفق، سفارش ثبت و پرداخت‌شده نمایش داده می‌شود.</p>
+          {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm leading-6 text-red-600">{error}</p>}
+          <Button className="mt-6 w-full" onClick={checkout} disabled={createOrder.isPending || createPayment.isPending || simulateSuccess.isPending}>
+            پرداخت و ثبت سفارش
+          </Button>
         </Card>
       </main>
     </ProtectedRoute>
