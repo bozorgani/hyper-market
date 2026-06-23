@@ -111,7 +111,7 @@ Module implementation matrix:
 | audit | yes | 0 | 0 | 1 | 1 | 0 |
 | auth | yes | 1 | 1 | 3 | 3 | 10 |
 | cart | yes | 1 | 1 | 1 | 1 | 2 |
-| categories | yes | 1 | 1 | 1 | 1 | 0 |
+| categories | yes | 1 | 1 | 1 | 1 | 2 |
 | mail | yes | 0 | 1 | 0 | 0 | 0 |
 | orders | yes | 1 | 1 | 1 | 1 | 2 |
 | payments | yes | 1 | 1 | 1 | 1 | 2 |
@@ -132,6 +132,89 @@ Infrastructure/core detected:
 - `shared/utils/entity-id.util.ts`: shared entity id extraction utility
 
 ## 3. Frontend Status (frontend + frontend-web)
+
+## 3.1 Main frontend: `apps/frontend`
+
+Detected dependencies:
+
+```text
+@tanstack/react-query
+axios
+class-variance-authority
+clsx
+framer-motion
+lucide-react
+next
+react
+react-dom
+tailwind-merge
+zustand
+```
+
+Detected App Router routes:
+
+```text
+/admin
+/admin/analytics
+/admin/categories
+/admin/orders
+/admin/orders/[id]
+/admin/payments
+/admin/products
+/admin/products/[id]
+/admin/products/new
+/admin/users
+/cart
+/checkout
+/login
+/order/success
+/orders
+/page.tsx
+/products
+/products/[id]
+/profile
+/register
+/search
+/verify-otp
+```
+
+Detected characteristics from code:
+
+- Next.js App Router application
+- Persian/RTL UI is configured globally
+- Zustand auth store exists
+- Axios API service exists
+- TanStack Query hooks are used for server state
+- Customer-facing pages exist for auth, products, search, cart, checkout, orders, and profile
+- Admin panel exists under `/admin/*`
+
+## 3.2 Secondary frontend: `apps/frontend-web`
+
+Detected dependencies:
+
+```text
+next
+react
+react-dom
+zustand
+```
+
+Detected App Router routes:
+
+```text
+/dashboard
+/forgot-password
+/login
+/page.tsx
+/register
+/verify-otp
+```
+
+Detected characteristics from code:
+
+- Independent Next.js App Router application
+- Contains auth-oriented routes and a dashboard route
+- Uses its own local app/lib structure
 
 ## 3.1 Main frontend: `apps/frontend`
 
@@ -499,130 +582,106 @@ Status:
 
 ## 4. API Status (implemented endpoints)
 
-All endpoints below are under global prefix unless noted:
+Global API prefix in code:
 
 ```text
 /api/v1
 ```
 
-Health endpoint:
+Health endpoint is excluded from the global prefix:
 
 ```text
 GET /health
 ```
 
-### Auth
+Detected controller endpoints:
 
-Implemented in controller:
-
-```text
-POST /auth/register
-POST /auth/send-verification-otp
-POST /auth/verify-email
-POST /auth/verify-phone
-POST /auth/login
-POST /auth/refresh
-POST /auth/logout
-POST /auth/verify-otp
-POST /auth/forgot-password
-POST /auth/reset-password
-```
-
-Notes:
-
-- `/auth/refresh-token` is not implemented but the main frontend currently expects it.
-- `/auth/verify-otp` verifies OTP but does not activate account; `/verify-email` or `/verify-phone` activates account.
-
-### Products
+### apps/backend-api/src/modules/search/search.controller.ts
 
 ```text
-POST /products                         admin/super_admin + products.create
-GET /products                          public
-GET /products/:id                      public
-PUT /products/:id                      admin/super_admin + products.update
-DELETE /products/:id                   admin/super_admin + products.delete
+GET    /admin/search/products    [public]
+GET    /search/products
+GET    /search/suggest    [public]
 ```
 
-### Categories
+### apps/backend-api/src/modules/analytics/analytics.controller.ts
 
 ```text
-GET /categories                        public
+GET    /analytics/dashboard    [public]
+POST   /analytics/event
+GET    /analytics/funnel    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+GET    /analytics/products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+GET    /analytics/revenue    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+GET    /analytics/search    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 ```
 
-Missing:
+### apps/backend-api/src/modules/auth/controllers/auth.controller.ts
 
 ```text
-POST /categories
-PUT /categories/:id
-DELETE /categories/:id
-GET /categories/:id
+POST   /auth/forgot-password    [public]
+POST   /auth/login    [public]
+POST   /auth/logout    [public]
+POST   /auth/refresh    [public]
+POST   /auth/register
+POST   /auth/reset-password    [public]
+POST   /auth/send-verification-otp    [public]
+POST   /auth/verify-email    [public]
+POST   /auth/verify-otp    [public]
+POST   /auth/verify-phone    [public]
 ```
 
-### Cart
-
-Controller-level customer role required:
+### apps/backend-api/src/modules/cart/controllers/cart.controller.ts
 
 ```text
-GET /cart/my
-POST /cart/add
-POST /cart/remove
-POST /cart/clear
+POST   /cart/add
+POST   /cart/clear
+GET    /cart/my    [Roles(UserRole.CUSTOMER)]
+POST   /cart/remove
 ```
 
-### Orders
+### apps/backend-api/src/modules/categories/controllers/categories.controller.ts
 
 ```text
-POST /orders                           customer
-GET /orders/my                         customer
-GET /orders                            admin/super_admin
-GET /orders/:id                        authenticated; owner or admin checked in service
-PATCH /orders/:id/status               admin/super_admin + orders.cancel permission
+GET    /categories
+POST   /categories    [public]
+DELETE /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+GET    /categories/:id    [public]
+PUT    /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 ```
 
-### Payments
+### apps/backend-api/src/infrastructure/health/health.controller.ts
 
 ```text
-POST /payments/create                  authenticated
-POST /payments/simulate-success        authenticated
-GET /payments/:orderId                 authenticated; owner/admin checked in service
+GET    /health
 ```
 
-### Search
+### apps/backend-api/src/modules/orders/controllers/orders.controller.ts
 
 ```text
-GET /search/products                   public
-GET /search/suggest                    public
-GET /admin/search/products             admin/super_admin
+GET    /orders    [Roles(UserRole.CUSTOMER)]
+POST   /orders
+GET    /orders/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+PATCH  /orders/:id/status
+GET    /orders/my    [Roles(UserRole.CUSTOMER)]
 ```
 
-Supported query params in search controllers:
+### apps/backend-api/src/modules/payments/controllers/payments.controller.ts
 
 ```text
-q
-categoryId
-minPrice
-maxPrice
-minStock
-maxStock
-sort
+GET    /payments/:orderId
+POST   /payments/create
+POST   /payments/simulate-success
 ```
 
-### Analytics
+### apps/backend-api/src/modules/products/controllers/products.controller.ts
 
 ```text
-POST /analytics/event                  public
-GET /analytics/dashboard               admin/super_admin
-GET /analytics/revenue                 admin/super_admin
-GET /analytics/products                admin/super_admin
-GET /analytics/search                  admin/super_admin
-GET /analytics/funnel                  admin/super_admin
+GET    /products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.create')]
+POST   /products
+DELETE /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
+GET    /products/:id    [public]
+PUT    /products/:id    [public]
 ```
-
-### Users
-
-No users controller/endpoints are currently present in code.
-
----
 
 ## 5. Database Schema Overview
 
@@ -904,24 +963,14 @@ action
 
 ## 7. Missing / Broken Features
 
-- Category create API is missing: `POST /categories`.
-- Category update API is missing: `PUT /categories/:id`.
-- Category delete API is missing: `DELETE /categories/:id`.
-- Category detail API is missing: `GET /categories/:id`.
 - UsersController/admin user-management API is not implemented.
-- Frontend calls `POST /auth/refresh-token`, but backend exposes `POST /auth/refresh`. Silent refresh is currently mismatched.
 - Mail queue abstraction exists, but no SMTP/SMS provider or mail worker is implemented.
 - Payment module is mock/abstraction only; no real Zarinpal/Stripe gateway flow is implemented.
 - EventBus exists, but no explicit event subscribers are implemented yet.
 
 ## 8. High Priority TODOs
 
-- Category create API is missing: `POST /categories`
-- Category update API is missing: `PUT /categories/:id`
-- Category delete API is missing: `DELETE /categories/:id`
-- Category detail API is missing: `GET /categories/:id`
 - UsersController/admin user-management API is not implemented
-- Frontend calls `POST /auth/refresh-token`, but backend exposes `POST /auth/refresh`. Silent refresh is currently mismatched
 - Mail queue abstraction exists, but no SMTP/SMS provider or mail worker is implemented
 - Payment module is mock/abstraction only; no real Zarinpal/Stripe gateway flow is implemented
 - EventBus exists, but no explicit event subscribers are implemented yet
@@ -1052,8 +1101,6 @@ Rules from docs:
 
 ## 10. Risks / Technical Debt
 
-- Auth session renewal may fail because frontend and backend refresh endpoints are mismatched.
-- Admin product creation depends on pre-existing categories, but admin category CRUD is not available through API.
 - Admin users UI cannot be fully functional until backend user-management endpoints exist.
 - Mail/SMS delivery is not production-complete because provider/workers are not implemented.
 - Payment is not production-ready because real gateway integration is missing.

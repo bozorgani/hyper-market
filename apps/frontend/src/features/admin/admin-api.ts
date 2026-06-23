@@ -55,10 +55,42 @@ export function useDeleteProduct() {
   });
 }
 
+export type CategoryFormInput = {
+  name: string;
+  slug: string;
+};
+
 export function useAdminCategories() {
   return useQuery({
     queryKey: ["admin", "categories"],
     queryFn: async () => (await api.get<Category[]>("/categories")).data,
+  });
+}
+
+export function useCreateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CategoryFormInput) =>
+      (await api.post<Category>("/categories", input)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "categories"] }),
+  });
+}
+
+export function useUpdateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: string; input: CategoryFormInput }) =>
+      (await api.put<Category>(`/categories/${id}`, input)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "categories"] }),
+  });
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) =>
+      (await api.delete<Category>(`/categories/${id}`)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "categories"] }),
   });
 }
 

@@ -1,40 +1,112 @@
 "use client";
 
+import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useAdminCategories } from "@/features/admin/admin-api";
+import {
+  CategoryFormInput,
+  useAdminCategories,
+  useCreateCategory,
+  useDeleteCategory,
+  useUpdateCategory,
+} from "@/features/admin/admin-api";
+import type { Category } from "@/types/domain";
+
+const emptyForm: CategoryFormInput = {
+  name: "",
+  slug: "",
+};
 
 export default function AdminCategoriesPage() {
   const categories = useAdminCategories();
+  const createCategory = useCreateCategory();
+  const updateCategory = useUpdateCategory();
+  const deleteCategory = useDeleteCategory();
+  const [form, setForm] = useState<CategoryFormInput>(emptyForm);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [message, setMessage] = useState("");
+
+  const isSubmitting = createCategory.isPending || updateCategory.isPending;
+
+  function resetForm() {
+    setForm(emptyForm);
+    setEditingCategory(null);
+  }
+
+  function startEdit(category: Category) {
+    setMessage("");
+    setEditingCategory(category);
+    setForm({
+      name: category.name,
+      slug: category.slug,
+    });
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+
+    try {
+      if (editingCategory) {
+        await updateCategory.mutateAsync({ id: editingCategory._id, input: form });
+        setMessage("دسته‌بندی با موفقیت ویرایش شد.");
+      } else {
+        await createCategory.mutateAsync(form);
+        setMessage("دسته‌بندی با موفقیت ایجاد شد.");
+      }
+      resetForm();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "عملیات دسته‌بندی ناموفق بود.");
+    }
+  }
+
+  async function removeCategory(categoryId: string) {
+    setMessage("");
+
+    try {
+      await deleteCategory.mutateAsync(categoryId);
+      setMessage("دسته‌بندی با موفقیت حذف شد.");
+      if (editingCategory?._id === categoryId) {
+        resetForm();
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "حذف دسته‌بندی ناموفق بود.");
+    }
+  }
 
   return (
     <main className="space-y-5 text-right">
       <div>
         <h1 className="text-2xl font-black">مدیریت دسته‌بندی‌ها</h1>
         <p className="mt-2 text-sm text-slate-500">
-          دسته‌بندی‌ها از API موجود بک‌اند دریافت می‌شوند. در حال حاضر فقط endpoint لیست دسته‌بندی‌ها در بک‌اند وجود دارد.
+          ایجاد، ویرایش، حذف نرم و مشاهده دسته‌بندی‌های فروشگاه
         </p>
       </div>
 
-      <Card className="border-amber-200 bg-amber-50 p-5 text-amber-800">
-        <h2 className="font-black">ایجاد، ویرایش و حذف دسته‌بندی هنوز API ندارد</h2>
-        <p className="mt-2 text-sm leading-7">
-          برای جلوگیری از ارسال درخواست اشتباه، فرم‌های CRUD غیرفعال هستند تا زمانی که endpointهای POST /categories، PUT /categories/:id و DELETE /categories/:id در بک‌اند اضافه شوند.
-        </p>
-      </Card>
-
-      <Card className="p-5 opacity-60">
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-          <Input placeholder="نام دسته‌بندی" disabled />
-          <Input placeholder="اسلاگ دسته‌بندی" disabled />
-          <Button disabled>افزودن دسته‌بندی</Button>
-        </div>
+      <Card className="p-5">
+        <form onSubmit={submit} className="grid gap-3 lg:grid-cols-[1fr_1fr_auto_auto]">
+          <Input
+            value={form.name}
+            onChange={(event) => setForm({ ...form, name: event.target.value })}
+            placeholder="نام دسته‌بندی"
+            required
+          />
+          <Input
+            value={form.slug}
+            onChange={(event) => setForm({ ...form, slug: event.target.value.toLowerCase() })}
+            placeholder="اسلاگ انگلیسی مثل mobile"
+            required
+          />
+          <Button disabled={isSubmitting}>{editingCategory ? "ذخیره ویرایش" : "افزودن دسته‌بندی"}</Button>
+          {editingCategory ? <Button type="button" variant="outline" onClick={resetForm}>لغو</Button> : null}
+        </form>
+        {message ? <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm leading-6 text-slate-600">{message}</p> : null}
       </Card>
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] text-right text-sm">
+          <table className="w-full min-w-[560px] text-right text-sm">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
                 <th className="p-4">نام</th>
@@ -59,8 +131,8 @@ export default function AdminCategoriesPage() {
                   <td className="p-4 ltr text-left">{category.slug}</td>
                   <td className="p-4">
                     <div className="flex gap-2">
-                      <Button variant="outline" disabled>ویرایش</Button>
-                      <Button variant="destructive" disabled>حذف</Button>
+                      <Button variant="outline" onClick={() => startEdit(category)}>ویرایش</Button>
+                      <Button variant="destructive" onClick={() => removeCategory(category._id)} disabled={deleteCategory.isPending}>حذف</Button>
                     </div>
                   </td>
                 </tr>
