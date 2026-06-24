@@ -21,6 +21,17 @@ export function useAddToCart() {
   });
 }
 
+export function useUpdateCartQuantity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { productId: string; quantity: number }) => (await api.post<CartSummary>("/cart/add", input)).data,
+    onSuccess: (_data, variables) => {
+      trackAnalyticsEvent({ type: "ADD_TO_CART", metadata: variables });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+  });
+}
+
 export function useRemoveFromCart() {
   const queryClient = useQueryClient();
   return useMutation({

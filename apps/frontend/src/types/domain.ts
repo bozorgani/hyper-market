@@ -39,6 +39,15 @@ export type CartItem = {
   quantity: number;
 };
 
+export type CartDetailedItem = CartItem & {
+  name: string;
+  price: number;
+  discountPrice?: number | null;
+  image?: string | null;
+  stock: number;
+  lineTotal: number;
+};
+
 export type Cart = {
   _id?: string;
   userId: string;
@@ -48,6 +57,7 @@ export type Cart = {
 export type CartSummary = {
   cart: Cart;
   totalPrice: number;
+  items: CartDetailedItem[];
 };
 
 export type OrderStatus = "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";

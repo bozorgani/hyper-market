@@ -53,7 +53,13 @@ function readFileSafe(filePath) {
 function walk(dir, predicate = () => true) {
   if (!fs.existsSync(dir)) return [];
   const results = [];
+  const ignoredDirectories = new Set(['node_modules', '.next', 'dist', 'build']);
+
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory() && ignoredDirectories.has(entry.name)) {
+      continue;
+    }
+
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...walk(fullPath, predicate));
@@ -201,6 +207,10 @@ function joinUrlParts(...parts) {
 
 function routeFromPageFile(filePath, appDir) {
   const relative = path.relative(appDir, filePath).replace(/\\/g, '/');
+  if (relative === 'page.tsx') {
+    return '/';
+  }
+
   const route = relative.replace(/\/page\.tsx$/, '');
   return route ? `/${route}` : '/';
 }
@@ -496,7 +506,7 @@ ${risks.map((risk) => `- ${risk}`).join('\n')}
 }
 
 function replaceSection(content, sectionTitleFragment, newSection) {
-  const headingRegex = /^##\s+.*$/gm;
+  const headingRegex = /^##\s+\d+\.\s+.*$/gm;
   const headings = [];
   let match;
 

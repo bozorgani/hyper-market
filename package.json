@@ -13,7 +13,8 @@
     "backend:build": "npm run build --workspace=apps/backend-api",
     "backend:test": "npm run test --workspace=apps/backend-api",
     "sync:state": "node scripts/sync-project-state.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "search:reindex": "node scripts/reindex-products-search.js"
   },
   "engines": {
     "node": ">=20.0.0",

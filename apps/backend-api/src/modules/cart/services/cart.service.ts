@@ -6,9 +6,21 @@ import { ProductsService } from '../../products/services/products.service';
 import { CartRepository } from '../repositories/cart.repository';
 import { Cart, CartItem } from '../schemas/cart.schema';
 
+export type CartDetailedItem = {
+  productId: string;
+  quantity: number;
+  name: string;
+  price: number;
+  discountPrice?: number | null;
+  image?: string | null;
+  stock: number;
+  lineTotal: number;
+};
+
 export type CartSummary = {
   cart: Cart;
   totalPrice: number;
+  items: CartDetailedItem[];
 };
 
 @Injectable()
@@ -24,9 +36,10 @@ export class CartService {
 
   async getCartSummary(userId: string): Promise<CartSummary> {
     const cart = await this.getOrCreateCart(userId);
-    const totalPrice = await this.calculateCartTotal(cart);
+    const items = await this.getDetailedCartItems(cart);
+    const totalPrice = items.reduce((sum, item) => sum + item.lineTotal, 0);
 
-    return { cart, totalPrice };
+    return { cart, totalPrice, items };
   }
 
   async addProductToCart(
@@ -85,16 +98,8 @@ export class CartService {
   }
 
   async calculateCartTotal(cart: Cart): Promise<number> {
-    let totalPrice = 0;
-
-    for (const item of cart.items) {
-      const product = await this.productsService.getProductById(
-        getEntityId(item.productId),
-      );
-      totalPrice += this.getProductPrice(product) * item.quantity;
-    }
-
-    return totalPrice;
+    const items = await this.getDetailedCartItems(cart);
+    return items.reduce((sum, item) => sum + item.lineTotal, 0);
   }
 
   async validateCartStock(cart: Cart): Promise<void> {
@@ -134,6 +139,30 @@ export class CartService {
     }
 
     return orderItems;
+  }
+
+  private async getDetailedCartItems(cart: Cart): Promise<CartDetailedItem[]> {
+    const items: CartDetailedItem[] = [];
+
+    for (const item of cart.items) {
+      const product = await this.productsService.getProductById(
+        getEntityId(item.productId),
+      );
+      const price = this.getProductPrice(product);
+
+      items.push({
+        productId: getEntityId(product),
+        quantity: item.quantity,
+        name: product.name,
+        price,
+        discountPrice: product.discountPrice ?? null,
+        image: product.images?.[0] ?? null,
+        stock: product.stock,
+        lineTotal: price * item.quantity,
+      });
+    }
+
+    return items;
   }
 
   private async getOrCreateCart(userId: string): Promise<Cart> {

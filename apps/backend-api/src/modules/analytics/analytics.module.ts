@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsRepository } from './analytics.repository';
 import { AnalyticsService } from './analytics.service';
+import { AnalyticsSubscriber } from './analytics.subscriber';
 import { AnalyticsEvent, AnalyticsEventSchema } from './schemas/event.schema';
 
 @Module({
@@ -12,7 +13,7 @@ import { AnalyticsEvent, AnalyticsEventSchema } from './schemas/event.schema';
     ]),
   ],
   controllers: [AnalyticsController],
-  providers: [AnalyticsRepository, AnalyticsService],
+  providers: [AnalyticsRepository, AnalyticsService, AnalyticsSubscriber],
   exports: [AnalyticsService],
 })
 export class AnalyticsModule {}

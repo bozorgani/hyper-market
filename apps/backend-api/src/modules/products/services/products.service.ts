@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ClientSession, isValidObjectId, Types } from 'mongoose';
+import { EventBusService } from '../../../core/events/event-bus.service';
+import { EventType } from '../../../core/events/enums/event-type.enum';
 import { CategoriesService } from '../../categories/services/categories.service';
 import { SearchIndexer } from '../../search/search.indexer';
 import { CreateProductDto } from '../dto/create-product.dto';
@@ -13,6 +15,7 @@ export class ProductsService {
     private readonly productsRepository: ProductsRepository,
     private readonly categoriesService: CategoriesService,
     private readonly searchIndexer: SearchIndexer,
+    private readonly eventBusService: EventBusService,
   ) {}
 
   async createProduct(dto: CreateProductDto): Promise<Product> {
@@ -25,7 +28,11 @@ export class ProductsService {
       isActive: dto.isActive ?? true,
     });
 
-    await this.searchIndexer.indexProduct(product);
+    this.eventBusService.emit({
+      type: EventType.PRODUCT_CREATED,
+      payload: { product },
+      timestamp: Date.now(),
+    });
 
     return product;
   }

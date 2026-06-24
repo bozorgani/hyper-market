@@ -112,14 +112,14 @@ Module implementation matrix:
 | auth | yes | 1 | 1 | 3 | 3 | 10 |
 | cart | yes | 1 | 1 | 1 | 1 | 2 |
 | categories | yes | 1 | 1 | 1 | 1 | 2 |
-| mail | yes | 0 | 1 | 0 | 0 | 0 |
+| mail | yes | 0 | 2 | 0 | 0 | 0 |
 | orders | yes | 1 | 1 | 1 | 1 | 2 |
 | payments | yes | 1 | 1 | 1 | 1 | 2 |
 | permissions | yes | 0 | 0 | 1 | 1 | 0 |
 | products | yes | 1 | 1 | 1 | 1 | 2 |
 | queue | yes | 0 | 1 | 0 | 0 | 0 |
 | search | yes | 1 | 1 | 0 | 0 | 0 |
-| users | yes | 0 | 1 | 1 | 1 | 0 |
+| users | yes | 1 | 1 | 1 | 1 | 0 |
 
 Infrastructure/core detected:
 
@@ -154,6 +154,7 @@ zustand
 Detected App Router routes:
 
 ```text
+/
 /admin
 /admin/analytics
 /admin/categories
@@ -169,7 +170,6 @@ Detected App Router routes:
 /login
 /order/success
 /orders
-/page.tsx
 /products
 /products/[id]
 /profile
@@ -200,385 +200,21 @@ zustand
 ```
 
 Detected App Router routes:
-
-```text
-/dashboard
-/forgot-password
-/login
-/page.tsx
-/register
-/verify-otp
-```
-
-Detected characteristics from code:
-
-- Independent Next.js App Router application
-- Contains auth-oriented routes and a dashboard route
-- Uses its own local app/lib structure
-
-## 3.1 Main frontend: `apps/frontend`
-
-Detected dependencies:
-
-```text
-@tanstack/react-query
-axios
-class-variance-authority
-clsx
-framer-motion
-lucide-react
-next
-react
-react-dom
-tailwind-merge
-zustand
-```
-
-Detected App Router routes:
-
-```text
-/admin
-/admin/analytics
-/admin/categories
-/admin/orders
-/admin/orders/[id]
-/admin/payments
-/admin/products
-/admin/products/[id]
-/admin/products/new
-/admin/users
-/cart
-/checkout
-/login
-/order/success
-/orders
-/page.tsx
-/products
-/products/[id]
-/profile
-/register
-/search
-/verify-otp
-```
-
-Detected characteristics from code:
-
-- Next.js App Router application
-- Persian/RTL UI is configured globally
-- Zustand auth store exists
-- Axios API service exists
-- TanStack Query hooks are used for server state
-- Customer-facing pages exist for auth, products, search, cart, checkout, orders, and profile
-- Admin panel exists under `/admin/*`
-
-## 3.2 Secondary frontend: `apps/frontend-web`
-
-Detected dependencies:
-
-```text
-next
-react
-react-dom
-zustand
-```
-
-Detected App Router routes:
-
-```text
-/dashboard
-/forgot-password
-/login
-/page.tsx
-/register
-/verify-otp
-```
-
-Detected characteristics from code:
-
-- Independent Next.js App Router application
-- Contains auth-oriented routes and a dashboard route
-- Uses its own local app/lib structure
-
-## 3.1 Main frontend: `apps/frontend`
-
-Detected dependencies:
-
-```text
-@tanstack/react-query
-axios
-class-variance-authority
-clsx
-framer-motion
-lucide-react
-next
-react
-react-dom
-tailwind-merge
-zustand
-```
-
-Detected App Router routes:
-
-```text
-/admin
-/admin/analytics
-/admin/categories
-/admin/orders
-/admin/orders/[id]
-/admin/payments
-/admin/products
-/admin/products/[id]
-/admin/products/new
-/admin/users
-/cart
-/checkout
-/login
-/order/success
-/orders
-/page.tsx
-/products
-/products/[id]
-/profile
-/register
-/search
-/verify-otp
-```
-
-Detected characteristics from code:
-
-- Next.js App Router application
-- Persian/RTL UI is configured globally
-- Zustand auth store exists
-- Axios API service exists
-- TanStack Query hooks are used for server state
-- Customer-facing pages exist for auth, products, search, cart, checkout, orders, and profile
-- Admin panel exists under `/admin/*`
-
-## 3.2 Secondary frontend: `apps/frontend-web`
-
-Detected dependencies:
-
-```text
-next
-react
-react-dom
-zustand
-```
-
-Detected App Router routes:
-
-```text
-/dashboard
-/forgot-password
-/login
-/page.tsx
-/register
-/verify-otp
-```
-
-Detected characteristics from code:
-
-- Independent Next.js App Router application
-- Contains auth-oriented routes and a dashboard route
-- Uses its own local app/lib structure
-
-## 3.1 Main frontend: `apps/frontend`
-
-Detected dependencies:
-
-```text
-@tanstack/react-query
-axios
-class-variance-authority
-clsx
-framer-motion
-lucide-react
-next
-react
-react-dom
-tailwind-merge
-zustand
-```
-
-Detected App Router routes:
-
-```text
-/admin
-/admin/analytics
-/admin/categories
-/admin/orders
-/admin/orders/[id]
-/admin/payments
-/admin/products
-/admin/products/[id]
-/admin/products/new
-/admin/users
-/cart
-/checkout
-/login
-/order/success
-/orders
-/page.tsx
-/products
-/products/[id]
-/profile
-/register
-/search
-/verify-otp
-```
-
-Detected characteristics from code:
-
-- Next.js App Router application
-- Persian/RTL UI is configured globally
-- Zustand auth store exists
-- Axios API service exists
-- TanStack Query hooks are used for server state
-- Customer-facing pages exist for auth, products, search, cart, checkout, orders, and profile
-- Admin panel exists under `/admin/*`
-
-## 3.2 Secondary frontend: `apps/frontend-web`
-
-Detected dependencies:
-
-```text
-next
-react
-react-dom
-zustand
-```
-
-Detected App Router routes:
-
-```text
-/dashboard
-/forgot-password
-/login
-/page.tsx
-/register
-/verify-otp
-```
-
-Detected characteristics from code:
-
-- Independent Next.js App Router application
-- Contains auth-oriented routes and a dashboard route
-- Uses its own local app/lib structure
-
-## 3.1 Main frontend: `apps/frontend`
-
-Stack present:
-
-```text
-Next.js 16 App Router
-React 19
-TypeScript
-Tailwind CSS 4
-Zustand
-TanStack Query
-Axios
-Framer Motion
-lucide-react
-shadcn-style local UI primitives
-```
-
-Current routes:
 
 ```text
 /
-/login
-/register
-/verify-otp
-/products
-/products/[id]
-/search
-/cart
-/checkout
-/order/success
-/orders
-/profile
-/admin
-/admin/analytics
-/admin/categories
-/admin/orders
-/admin/orders/[id]
-/admin/payments
-/admin/products
-/admin/products/new
-/admin/products/[id]
-/admin/users
-```
-
-Main frontend characteristics:
-
-- Persian UI
-- RTL layout
-- customer-facing e-commerce UI
-- admin panel under `/admin/*`
-- Zustand auth store
-- React Query for server state
-- Axios API layer
-- access/refresh token storage in `sessionStorage`
-- header search with autocomplete
-- admin role protection checks role from client auth state
-
-Important current frontend/backend mismatch:
-
-- `apps/frontend/src/store/auth-store.ts` and `apps/frontend/src/services/api.ts` currently call:
-
-```text
-POST /auth/refresh-token
-```
-
-- Backend currently exposes:
-
-```text
-POST /auth/refresh
-```
-
-This makes silent token refresh broken until aligned.
-
-Admin panel status:
-
-- Dashboard page exists
-- Products list/create/edit/delete UI exists and calls product APIs
-- Categories page lists categories only; create/edit/delete disabled because backend endpoints do not exist
-- Orders list/detail exists
-- Payments page exists
-- Users page exists but backend users API is not implemented/exposed, so page handles error state
-- Analytics dashboard exists and calls analytics API
-
-## 3.2 Secondary frontend: `apps/frontend-web`
-
-Stack present:
-
-```text
-Next.js 16 App Router
-React 19
-TypeScript
-Tailwind CSS 4
-Zustand
-```
-
-Routes:
-
-```text
-/
-/login
-/register
-/verify-otp
-/forgot-password
 /dashboard
+/forgot-password
+/login
+/register
+/verify-otp
 ```
 
-Status:
+Detected characteristics from code:
 
-- This is an independent frontend app.
-- It has a smaller auth/dashboard-focused UI.
-- It is not as feature-complete as `apps/frontend`.
-- It has its own API/auth utilities under `apps/frontend-web/lib`.
-
----
+- Independent Next.js App Router application
+- Contains auth-oriented routes and a dashboard route
+- Uses its own local app/lib structure
 
 ## 4. API Status (implemented endpoints)
 
@@ -681,6 +317,15 @@ POST   /products
 DELETE /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
 GET    /products/:id    [public]
 PUT    /products/:id    [public]
+```
+
+### apps/backend-api/src/modules/users/controllers/users.controller.ts
+
+```text
+GET    /users    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+GET    /users/:id
+PATCH  /users/:id/block
+PATCH  /users/:id/unblock    [Permissions('users.ban')]
 ```
 
 ## 5. Database Schema Overview
@@ -963,50 +608,13 @@ action
 
 ## 7. Missing / Broken Features
 
-- UsersController/admin user-management API is not implemented.
-- Mail queue abstraction exists, but no SMTP/SMS provider or mail worker is implemented.
 - Payment module is mock/abstraction only; no real Zarinpal/Stripe gateway flow is implemented.
-- EventBus exists, but no explicit event subscribers are implemented yet.
 
 ## 8. High Priority TODOs
 
-- UsersController/admin user-management API is not implemented
-- Mail queue abstraction exists, but no SMTP/SMS provider or mail worker is implemented
 - Payment module is mock/abstraction only; no real Zarinpal/Stripe gateway flow is implemented
-- EventBus exists, but no explicit event subscribers are implemented yet
 - Add transaction usage to critical order/payment/cart flows if not already applied.
 - Add tests for auth, permissions, cart/order/payment, search, and analytics flows.
-- Review TODO/FIXME comments detected in source code:
--   - apps/frontend-web/node_modules/@types/node/buffer.buffer.d.ts:453 // TODO: remove globals in future version
--   - apps/frontend-web/node_modules/@types/node/child_process.d.ts:902 // TODO: Just Plain Wrong™ (see also nodejs/node#57392)
--   - apps/frontend-web/node_modules/@types/node/child_process.d.ts:1069 // TODO: execFile exceptions can take many forms... this accurately describes none of them
--   - apps/frontend-web/node_modules/@types/node/compatibility/disposable.d.ts:2 // TODO: remove once this package no longer supports TS 5.1, and replace with a
--   - apps/frontend-web/node_modules/@types/node/compatibility/iterators.d.ts:6 // TODO: remove once this package no longer supports TS 5.5, and replace NodeJS.BuiltinIteratorReturn with BuiltinIteratorReturn.
--   - apps/frontend-web/node_modules/@types/node/fs.d.ts:2594 // TODO: remove in future major
--   - apps/frontend-web/node_modules/@types/node/fs.d.ts:2597 // TODO: remove in future major
--   - apps/frontend-web/node_modules/@types/node/fs.d.ts:4124 // TODO: remove default in future major version
--   - apps/frontend-web/node_modules/@types/node/fs.d.ts:4171 // TODO: remove default in future major version
--   - apps/frontend-web/node_modules/@types/node/fs/promises.d.ts:98 // TODO: Add `EventEmitter` close
--   - apps/frontend-web/node_modules/@types/node/perf_hooks.d.ts:130 // TODO: PerformanceNodeEntry is missing
--   - apps/frontend-web/node_modules/@types/node/stream.d.ts:1673 // TODO: this interface never existed; remove in next major
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:177 * Shorthand for marking a suite as `TODO`. This is the same as calling {@link suite} with `options.todo` set to `true`.
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:180 function todo(name?: string, options?: TestOptions, fn?: SuiteFn): Promise<void>;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:181 function todo(name?: string, fn?: SuiteFn): Promise<void>;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:182 function todo(options?: TestOptions, fn?: SuiteFn): Promise<void>;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:183 function todo(fn?: SuiteFn): Promise<void>;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:202 * Shorthand for marking a test as `TODO`. This is the same as calling {@link test} with `options.todo` set to `true`.
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:205 function todo(name?: string, options?: TestOptions, fn?: TestFn): Promise<void>;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:206 function todo(name?: string, fn?: TestFn): Promise<void>;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:207 function todo(options?: TestOptions, fn?: TestFn): Promise<void>;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:208 function todo(fn?: TestFn): Promise<void>;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:594 * Present if `context.todo` is called.
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:596 todo?: string | boolean;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:654 * Present if `context.todo` is called.
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:656 todo?: string | boolean;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:690 * Present if `context.todo` is called.
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:692 todo?: string | boolean;
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:906 * This function adds a `TODO` directive to the test's output. If `message` is
--   - apps/frontend-web/node_modules/@types/node/test.d.ts:907 * provided, it is included in the output. Calling `todo()` does not terminate
 
 ## 9. Architecture Decisions (from existing docs)
 
@@ -1101,10 +709,7 @@ Rules from docs:
 
 ## 10. Risks / Technical Debt
 
-- Admin users UI cannot be fully functional until backend user-management endpoints exist.
-- Mail/SMS delivery is not production-complete because provider/workers are not implemented.
 - Payment is not production-ready because real gateway integration is missing.
-- Side effects remain partially coupled because EventBus subscribers are not implemented.
 - Meilisearch index can become stale because no bulk reindex command was detected.
 - Permission model is partly static in code even though permission schema exists.
 - No comprehensive automated test suite was detected by this script.
