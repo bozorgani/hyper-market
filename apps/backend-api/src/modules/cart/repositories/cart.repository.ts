@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { ClientSession, Model, Types } from 'mongoose';
 import { Cart, CartDocument } from '../schemas/cart.schema';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class CartRepository {
       .findOneAndUpdate(
         { userId },
         { $setOnInsert: { userId: new Types.ObjectId(userId), items: [] } },
-        { new: true, upsert: true }
+        { returnDocument: 'after', upsert: true },
       )
       .exec();
   }
@@ -33,7 +33,7 @@ export class CartRepository {
       .findOneAndUpdate(
         { userId, 'items.productId': new Types.ObjectId(productId) },
         { $set: { 'items.$.quantity': quantity } },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -54,7 +54,7 @@ export class CartRepository {
             },
           },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -64,14 +64,18 @@ export class CartRepository {
       .findOneAndUpdate(
         { userId },
         { $pull: { items: { productId: new Types.ObjectId(productId) } } },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
 
-  async clearCart(userId: string): Promise<Cart | null> {
+  async clearCart(userId: string, session?: ClientSession): Promise<Cart | null> {
     return this.cartModel
-      .findOneAndUpdate({ userId }, { $set: { items: [] } }, { new: true })
+      .findOneAndUpdate(
+        { userId },
+        { $set: { items: [] } },
+        { returnDocument: 'after', session },
+      )
       .exec();
   }
 }

@@ -133,3 +133,21 @@ export function useAdminUsers() {
     retry: false,
   });
 }
+
+export function useBlockUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) =>
+      (await api.patch<User>(`/users/${id}/block`)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+  });
+}
+
+export function useUnblockUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) =>
+      (await api.patch<User>(`/users/${id}/unblock`)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+  });
+}

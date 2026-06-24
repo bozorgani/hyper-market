@@ -15,6 +15,7 @@ import { TokenService } from '../../../infrastructure/security/token.service';
 import { AuditAction } from '../../audit/enums/audit-action.enum';
 import { AuditLogRepository } from '../../audit/repositories/audit-log.repository';
 import { MailService } from '../../mail/mail.service';
+import { SmsIrService } from '../../mail/sms-ir.service';
 import { AccountStatus } from '../../users/enums/account-status.enum';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { UserWithId } from '../../users/repositories/users.repository';
@@ -68,6 +69,7 @@ export class AuthService {
     private readonly auditLogRepository: AuditLogRepository,
     private readonly redisService: RedisService,
     private readonly mailService: MailService,
+    private readonly smsIrService: SmsIrService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -507,7 +509,10 @@ export class AuthService {
       }
 
       await this.mailService.sendOtpEmail(target, code);
+      return;
     }
+
+    await this.smsIrService.sendOtpSms(target, code);
   }
 
   private async verifyOtpCode(

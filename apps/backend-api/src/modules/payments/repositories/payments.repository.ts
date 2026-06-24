@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isValidObjectId, Model } from 'mongoose';
+import { ClientSession, isValidObjectId, Model } from 'mongoose';
 import { PaymentStatus } from '../enums/payment-status.enum';
 import { Payment, PaymentDocument } from '../schemas/payment.schema';
 
@@ -38,6 +38,7 @@ export class PaymentsRepository {
     id: string,
     status: PaymentStatus,
     transactionId?: string,
+    session?: ClientSession,
   ): Promise<Payment | null> {
     if (!isValidObjectId(id)) return null;
 
@@ -48,18 +49,22 @@ export class PaymentsRepository {
           status,
           ...(transactionId ? { transactionId } : {}),
         },
-        { new: true },
+        { returnDocument: 'after', session },
       )
       .exec();
   }
 
-  async markAsPaid(id: string, transactionId: string): Promise<Payment | null> {
+  async markAsPaid(
+    id: string,
+    transactionId: string,
+    session?: ClientSession,
+  ): Promise<Payment | null> {
     if (!isValidObjectId(id)) return null;
     return this.paymentModel
       .findOneAndUpdate(
         { _id: id, status: PaymentStatus.PENDING },
         { status: PaymentStatus.PAID, transactionId },
-        { new: true },
+        { returnDocument: 'after', session },
       )
       .exec();
   }

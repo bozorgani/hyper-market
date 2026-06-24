@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { isValidObjectId, Types } from 'mongoose';
+import { ClientSession, isValidObjectId, Types } from 'mongoose';
 import { CategoriesService } from '../../categories/services/categories.service';
 import { SearchIndexer } from '../../search/search.indexer';
 import { CreateProductDto } from '../dto/create-product.dto';
@@ -76,15 +76,22 @@ export class ProductsService {
     return product;
   }
 
-  async reduceStock(id: string, quantity: number): Promise<Product> {
+  async reduceStock(
+    id: string,
+    quantity: number,
+    session?: ClientSession,
+    syncSearch = true,
+  ): Promise<Product> {
     this.ensureValidObjectId(id, 'Invalid product id');
 
-    const product = await this.productsRepository.reduceStock(id, quantity);
+    const product = await this.productsRepository.reduceStock(id, quantity, session);
     if (!product) {
       throw new BadRequestException('Insufficient product stock');
     }
 
-    await this.searchIndexer.indexProduct(product);
+    if (syncSearch) {
+      await this.searchIndexer.indexProduct(product);
+    }
 
     return product;
   }
@@ -98,6 +105,11 @@ export class ProductsService {
     }
 
     return product;
+  }
+
+  async syncProductToSearch(id: string): Promise<void> {
+    const product = await this.getProductById(id);
+    await this.searchIndexer.indexProduct(product);
   }
 
   async listProducts(

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isValidObjectId, Model } from 'mongoose';
+import { ClientSession, isValidObjectId, Model } from 'mongoose';
 import { OrderStatus } from '../enums/order-status.enum';
 import { Order, OrderDocument } from '../schemas/order.schema';
 
@@ -11,9 +11,9 @@ export class OrdersRepository {
     private readonly orderModel: Model<OrderDocument>,
   ) {}
 
-  async create(data: Partial<Order>): Promise<Order> {
+  async create(data: Partial<Order>, session?: ClientSession): Promise<Order> {
     const order = new this.orderModel(data);
-    return order.save();
+    return order.save({ session });
   }
 
   async findByUserId(userId: string): Promise<Order[]> {
@@ -25,10 +25,14 @@ export class OrdersRepository {
     return this.orderModel.findById(id).lean().exec();
   }
 
-  async updateStatus(id: string, status: OrderStatus): Promise<Order | null> {
+  async updateStatus(
+    id: string,
+    status: OrderStatus,
+    session?: ClientSession,
+  ): Promise<Order | null> {
     if (!isValidObjectId(id)) return null;
     return this.orderModel
-      .findByIdAndUpdate(id, { status }, { new: true })
+      .findByIdAndUpdate(id, { status }, { returnDocument: 'after', session })
       .exec();
   }
 

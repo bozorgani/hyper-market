@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model, Types } from 'mongoose';
 import { BaseRepository } from '../../../shared/interfaces/base-repository.interface';
+import { AccountStatus } from '../enums/account-status.enum';
 import { User, UserDocument } from '../schemas/user.schema';
 
 export type UserWithId = User & { _id: Types.ObjectId };
@@ -161,6 +162,37 @@ export class UsersRepository implements BaseRepository<User> {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { deletedAt: new Date() },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async blockUser(id: string): Promise<User | null> {
+    if (!isValidObjectId(id)) return null;
+    return this.userModel
+      .findOneAndUpdate(
+        { _id: id, deletedAt: null },
+        {
+          accountStatus: AccountStatus.SUSPENDED,
+          lockedUntil: null,
+          $inc: { tokenVersion: 1 },
+        },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async unblockUser(id: string): Promise<User | null> {
+    if (!isValidObjectId(id)) return null;
+    return this.userModel
+      .findOneAndUpdate(
+        { _id: id, deletedAt: null },
+        {
+          accountStatus: AccountStatus.ACTIVE,
+          lockedUntil: null,
+          failedLoginAttempts: 0,
+          $inc: { tokenVersion: 1 },
+        },
         { new: true },
       )
       .exec();

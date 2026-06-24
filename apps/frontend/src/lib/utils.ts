@@ -54,3 +54,14 @@ export function translateRole(role?: string) {
   };
   return role ? map[role] ?? role : "نامشخص";
 }
+
+export function translateAccountStatus(status?: string) {
+  const map: Record<string, string> = {
+    pending: "در انتظار تأیید",
+    active: "فعال",
+    suspended: "مسدود",
+    deactivated: "غیرفعال",
+    banned: "ممنوع",
+  };
+  return status ? map[status] ?? status : "نامشخص";
+}

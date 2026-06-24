@@ -90,6 +90,28 @@ export class UsersService {
     return this.usersRepository.softDelete(id);
   }
 
+  async blockUser(id: string): Promise<User> {
+    await this.getUserByIdOrFail(id);
+
+    const user = await this.usersRepository.blockUser(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async unblockUser(id: string): Promise<User> {
+    await this.getUserByIdOrFail(id);
+
+    const user = await this.usersRepository.unblockUser(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
   async emailExists(email: string): Promise<boolean> {
     return this.usersRepository.existsByEmail(email);
   }

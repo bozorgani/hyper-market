@@ -5,7 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { isValidObjectId, Types } from 'mongoose';
+import { ClientSession, isValidObjectId, Types } from 'mongoose';
+import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { OrderStatus } from '../../orders/enums/order-status.enum';
 import { OrdersService } from '../../orders/services/orders.service';
@@ -21,6 +22,7 @@ export class PaymentsService {
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly ordersService: OrdersService,
+    private readonly databaseTransactionService: DatabaseTransactionService,
   ) {}
 
   async createPaymentFromOrder(
@@ -74,21 +76,28 @@ export class PaymentsService {
       throw new BadRequestException('Only pending payments can be completed');
     }
 
-    const paidPayment = await this.paymentsRepository.markAsPaid(
-      getEntityId(payment),
-      transactionId ?? `mock_${randomUUID()}`,
+    const paidPayment = await this.databaseTransactionService.executeInTransaction(
+      async (session) => {
+        const completedPayment = await this.paymentsRepository.markAsPaid(
+          getEntityId(payment),
+          transactionId ?? `mock_${randomUUID()}`,
+          session,
+        );
+
+        if (!completedPayment) {
+          const currentPayment = await this.verifyPayment(orderId, userId, role);
+          if (currentPayment.status === PaymentStatus.PAID) {
+            return currentPayment;
+          }
+
+          throw new BadRequestException('Payment could not be completed');
+        }
+
+        await this.updateOrderStatusAfterPayment(orderId, userId, role, session);
+
+        return completedPayment;
+      },
     );
-
-    if (!paidPayment) {
-      const currentPayment = await this.verifyPayment(orderId, userId, role);
-      if (currentPayment.status === PaymentStatus.PAID) {
-        return currentPayment;
-      }
-
-      throw new BadRequestException('Payment could not be completed');
-    }
-
-    await this.updateOrderStatusAfterPayment(orderId, userId, role);
 
     return paidPayment;
   }
@@ -116,6 +125,7 @@ export class PaymentsService {
     orderId: string,
     userId: string,
     role: string,
+    session?: ClientSession,
   ): Promise<void> {
     const order = await this.ordersService.getOrderById(orderId, userId, role);
 
@@ -123,7 +133,7 @@ export class PaymentsService {
       return;
     }
 
-    await this.ordersService.updateStatus(orderId, OrderStatus.PAID);
+    await this.ordersService.updateStatus(orderId, OrderStatus.PAID, session);
   }
 
   async markAsFailed(

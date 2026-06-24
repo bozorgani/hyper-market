@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isValidObjectId, Model, Types } from 'mongoose';
+import { ClientSession, isValidObjectId, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from '../schemas/product.schema';
 
 export type ProductListResult = {
@@ -30,7 +30,11 @@ export class ProductsRepository {
   async updateById(id: string, data: Partial<Product>): Promise<Product | null> {
     if (!isValidObjectId(id)) return null;
     return this.productModel
-      .findOneAndUpdate({ _id: id, deletedAt: null }, data, { new: true })
+      .findOneAndUpdate(
+        { _id: id, deletedAt: null },
+        data,
+        { returnDocument: 'after' },
+      )
       .exec();
   }
 
@@ -40,12 +44,16 @@ export class ProductsRepository {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { deletedAt: new Date(), isActive: false },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
 
-  async reduceStock(id: string, quantity: number): Promise<Product | null> {
+  async reduceStock(
+    id: string,
+    quantity: number,
+    session?: ClientSession,
+  ): Promise<Product | null> {
     if (!isValidObjectId(id)) return null;
     return this.productModel
       .findOneAndUpdate(
@@ -56,7 +64,7 @@ export class ProductsRepository {
           stock: { $gte: quantity },
         },
         { $inc: { stock: -quantity } },
-        { new: true },
+        { returnDocument: 'after', session },
       )
       .exec();
   }
@@ -67,7 +75,7 @@ export class ProductsRepository {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { $inc: { stock: quantity } },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }

@@ -4,7 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { isValidObjectId, Types } from 'mongoose';
+import { ClientSession, isValidObjectId, Types } from 'mongoose';
+import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { CartService } from '../../cart/services/cart.service';
 import { ProductsService } from '../../products/services/products.service';
@@ -28,6 +29,7 @@ export class OrdersService {
     private readonly ordersRepository: OrdersRepository,
     private readonly productsService: ProductsService,
     private readonly cartService: CartService,
+    private readonly databaseTransactionService: DatabaseTransactionService,
   ) {}
 
   async createOrder(userId: string): Promise<Order> {
@@ -36,33 +38,42 @@ export class OrdersService {
 
     const items: OrderItem[] = await this.cartService.getOrderItemsFromCart(cart);
     const totalPrice = await this.cartService.calculateCartTotal(cart);
-    const reducedItems: Array<{ productId: string; quantity: number }> = [];
+    const reducedProductIds = cart.items.map((item) => getEntityId(item.productId));
 
-    try {
-      for (const item of cart.items) {
-        const productId = getEntityId(item.productId);
-        await this.productsService.reduceStock(productId, item.quantity);
-        reducedItems.push({ productId, quantity: item.quantity });
-      }
+    const order = await this.databaseTransactionService.executeInTransaction(
+      async (session) => {
+        for (const item of cart.items) {
+          await this.productsService.reduceStock(
+            getEntityId(item.productId),
+            item.quantity,
+            session,
+            false,
+          );
+        }
 
-      const order = await this.ordersRepository.create({
-        userId: new Types.ObjectId(userId),
-        items,
-        totalPrice,
-        status: OrderStatus.PENDING,
-      });
+        const createdOrder = await this.ordersRepository.create(
+          {
+            userId: new Types.ObjectId(userId),
+            items,
+            totalPrice,
+            status: OrderStatus.PENDING,
+          },
+          session,
+        );
 
-      await this.cartService.clearCart(userId);
+        await this.cartService.clearCart(userId, session);
 
-      return order;
-    } catch (error) {
-      await Promise.all(
-        reducedItems.map((item) =>
-          this.productsService.restoreStock(item.productId, item.quantity),
-        ),
-      );
-      throw error;
-    }
+        return createdOrder;
+      },
+    );
+
+    await Promise.all(
+      reducedProductIds.map((productId) =>
+        this.productsService.syncProductToSearch(productId),
+      ),
+    );
+
+    return order;
   }
 
   async getMyOrders(userId: string): Promise<Order[]> {
@@ -92,7 +103,11 @@ export class OrdersService {
     return this.ordersRepository.findAll();
   }
 
-  async updateStatus(orderId: string, status: OrderStatus): Promise<Order> {
+  async updateStatus(
+    orderId: string,
+    status: OrderStatus,
+    session?: ClientSession,
+  ): Promise<Order> {
     this.ensureValidObjectId(orderId, 'Invalid order id');
 
     const order = await this.ordersRepository.findById(orderId);
@@ -105,7 +120,11 @@ export class OrdersService {
       throw new BadRequestException('Invalid order status transition');
     }
 
-    const updatedOrder = await this.ordersRepository.updateStatus(orderId, status);
+    const updatedOrder = await this.ordersRepository.updateStatus(
+      orderId,
+      status,
+      session,
+    );
     if (!updatedOrder) {
       throw new NotFoundException('Order not found');
     }

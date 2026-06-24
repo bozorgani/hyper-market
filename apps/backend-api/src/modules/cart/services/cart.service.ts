@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { isValidObjectId, Types } from 'mongoose';
+import { ClientSession, isValidObjectId, Types } from 'mongoose';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { Product } from '../../products/schemas/product.schema';
 import { ProductsService } from '../../products/services/products.service';
@@ -73,9 +73,9 @@ export class CartService {
     return this.getCartSummary(userId);
   }
 
-  async clearCart(userId: string): Promise<Cart> {
+  async clearCart(userId: string, session?: ClientSession): Promise<Cart> {
     await this.getOrCreateCart(userId);
-    const cart = await this.cartRepository.clearCart(userId);
+    const cart = await this.cartRepository.clearCart(userId, session);
 
     if (!cart) {
       throw new BadRequestException('Unable to clear cart');
