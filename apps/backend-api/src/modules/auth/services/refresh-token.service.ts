@@ -146,7 +146,7 @@ export class RefreshTokenService {
   }
 
   async findActiveToken(userId: string, deviceId?: string | null): Promise<RefreshToken | null> {
-    return this.refreshTokenRepository.findActiveToken(userId, deviceId || undefined);
+    return this.refreshTokenRepository.findActiveToken(userId, deviceId ?? undefined);
   }
 
   private async handleRefreshTokenReuse(

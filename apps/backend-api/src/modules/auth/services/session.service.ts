@@ -20,10 +20,10 @@ export class SessionService {
 
   async create(data: CreateSessionData): Promise<Session> {
     return this.sessionRepository.create({
-      userId: data.userId,
-      deviceId: data.deviceId || undefined,
-      ipAddress: data.ipAddress || undefined,
-      userAgent: data.userAgent || undefined,
+      userId: new Types.ObjectId(data.userId),
+      deviceId: data.deviceId ?? undefined,
+      ipAddress: data.ipAddress ?? undefined,
+      userAgent: data.userAgent ?? undefined,
       lastActiveAt: new Date(),
       expiresAt: data.expiresAt,
     });
