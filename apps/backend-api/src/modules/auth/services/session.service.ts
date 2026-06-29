@@ -18,19 +18,31 @@ export class SessionService {
     private readonly sessionRepository: SessionRepository,
   ) {}
 
-  async createSession(data: CreateSessionData): Promise<Session> {
+  async create(data: CreateSessionData): Promise<Session> {
     return this.sessionRepository.create({
       userId: new Types.ObjectId(data.userId),
-      deviceId: data.deviceId ?? null,
-      ipAddress: data.ipAddress ?? null,
-      userAgent: data.userAgent ?? null,
+      deviceId: data.deviceId || undefined,
+      ipAddress: data.ipAddress || undefined,
+      userAgent: data.userAgent || undefined,
       lastActiveAt: new Date(),
       expiresAt: data.expiresAt,
     });
   }
 
+  async createSession(data: CreateSessionData): Promise<Session> {
+    return this.create(data);
+  }
+
   async findActiveSession(userId: string, deviceId?: string | null): Promise<Session | null> {
-    return this.sessionRepository.findActiveSession(userId, deviceId ?? undefined);
+    return this.sessionRepository.findActiveSession(userId, deviceId || undefined);
+  }
+
+  async findByUserAndDevice(userId: string, deviceId?: string | null): Promise<Session | null> {
+    return this.sessionRepository.findByUserAndDevice(userId, deviceId || undefined);
+  }
+
+  async updateLastActive(sessionId: string): Promise<void> {
+    await this.sessionRepository.updateLastActive(sessionId);
   }
 
   async revokeSession(sessionId: string): Promise<void> {

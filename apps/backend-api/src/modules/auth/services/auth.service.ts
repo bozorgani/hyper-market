@@ -416,9 +416,6 @@ export class AuthService {
     if (phoneNumber) {
       return this.usersService.getUserByPhone(phoneNumber);
     }
-
-
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target);
   }
 
   private async handleRefreshTokenReuse(

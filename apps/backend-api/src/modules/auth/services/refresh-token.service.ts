@@ -117,16 +117,52 @@ export class RefreshTokenService {
     return { accessToken, refreshToken: newRefreshToken };
   }
 
-  async revokeRefreshToken(tokenId: string): Promise<void> {
+  async revokeToken(tokenId: string): Promise<void> {
     await this.refreshTokenRepository.revokeToken(tokenId);
+  }
+
+  async revokeRefreshToken(tokenId: string): Promise<void> {
+    await this.revokeToken(tokenId);
+  }
+
+  async create(data: any): Promise<any> {
+    return this.refreshTokenRepository.create(data);
+  }
+
+  async revokeToken(tokenId: string, newTokenId?: string): Promise<void> {
+    await this.refreshTokenRepository.revokeToken(tokenId, newTokenId);
+  }
+
+  async findByTokenHash(hash: string): Promise<any> {
+    return this.refreshTokenRepository.findByTokenHash(hash);
+  }
+
+  async markReuseDetected(tokenId: string): Promise<void> {
+    await this.refreshTokenRepository.markReuseDetected(tokenId);
+  }
+
+  async revokeTokenFamily(familyId: string): Promise<void> {
+    await this.refreshTokenRepository.revokeTokenFamily(familyId);
   }
 
   async revokeAllUserTokens(userId: string): Promise<void> {
     await this.refreshTokenRepository.revokeAllUserTokens(userId);
   }
 
+  async findByTokenHash(hash: string): Promise<RefreshToken | null> {
+    return this.refreshTokenRepository.findByTokenHash(hash);
+  }
+
+  async markReuseDetected(tokenId: string): Promise<void> {
+    await this.refreshTokenRepository.markReuseDetected(tokenId);
+  }
+
+  async revokeTokenFamily(familyId: string): Promise<void> {
+    await this.refreshTokenRepository.revokeTokenFamily(familyId);
+  }
+
   async findActiveToken(userId: string, deviceId?: string | null): Promise<RefreshToken | null> {
-    return this.refreshTokenRepository.findActiveToken(userId, deviceId ?? undefined);
+    return this.refreshTokenRepository.findActiveToken(userId, deviceId || undefined);
   }
 
   private async handleRefreshTokenReuse(
