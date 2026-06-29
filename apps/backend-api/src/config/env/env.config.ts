@@ -8,5 +8,6 @@ export const envConfig = registerAs('env', () => ({
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
   corsOrigins: process.env.CORS_ORIGINS,
-  passwordPepper: process.env.PASSWORD_PEPPER,
+  // NOTE: PASSWORD_PEPPER intentionally NOT loaded here.
+  // It is accessed directly via process.env in PasswordService for security.
 }));

@@ -1,5 +1,5 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { LoginDto } from '../dto/login.dto';
@@ -14,56 +14,48 @@ import { VerifyPhoneDto } from '../dto/verify-phone.dto';
 import { Public } from '../decorators/public.decorator';
 import { AuthService } from '../services/auth.service';
 
-const AUTH_RATE_LIMIT = { default: { limit: 5, ttl: 60_000 } };
-
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   @Public()
-  @UseGuards(ThrottlerGuard)
-  @Throttle(AUTH_RATE_LIMIT)
+  @Throttle({ default: { limit: 5, ttl: 60000 }, auth: { limit: 5, ttl: 60000 } })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('send-verification-otp')
   @Public()
-  @UseGuards(ThrottlerGuard)
-  @Throttle(AUTH_RATE_LIMIT)
+  @Throttle({ default: { limit: 5, ttl: 60000 }, auth: { limit: 5, ttl: 60000 } })
   sendVerificationOtp(@Body() dto: SendVerificationOtpDto) {
     return this.authService.sendVerificationOtp(dto);
   }
 
   @Post('verify-email')
   @Public()
-  @UseGuards(ThrottlerGuard)
-  @Throttle(AUTH_RATE_LIMIT)
+  @Throttle({ default: { limit: 5, ttl: 60000 }, auth: { limit: 5, ttl: 60000 } })
   verifyEmail(@Body() dto: VerifyEmailDto, @Req() request: Request) {
     return this.authService.verifyEmail(dto, this.getAuthContext(request));
   }
 
   @Post('verify-phone')
   @Public()
-  @UseGuards(ThrottlerGuard)
-  @Throttle(AUTH_RATE_LIMIT)
+  @Throttle({ default: { limit: 5, ttl: 60000 }, auth: { limit: 5, ttl: 60000 } })
   verifyPhone(@Body() dto: VerifyPhoneDto, @Req() request: Request) {
     return this.authService.verifyPhone(dto, this.getAuthContext(request));
   }
 
   @Post('login')
   @Public()
-  @UseGuards(ThrottlerGuard)
-  @Throttle(AUTH_RATE_LIMIT)
+  @Throttle({ default: { limit: 5, ttl: 60000 }, auth: { limit: 5, ttl: 60000 } })
   login(@Body() dto: LoginDto, @Req() request: Request) {
     return this.authService.login(dto, this.getAuthContext(request, dto.deviceId));
   }
 
   @Post('refresh')
   @Public()
-  @UseGuards(ThrottlerGuard)
-  @Throttle(AUTH_RATE_LIMIT)
+  @Throttle({ default: { limit: 10, ttl: 60000 }, auth: { limit: 10, ttl: 60000 } })
   refresh(@Body() dto: RefreshTokenDto, @Req() request: Request) {
     return this.authService.refreshToken(
       dto.refreshToken,
@@ -79,24 +71,21 @@ export class AuthController {
 
   @Post('verify-otp')
   @Public()
-  @UseGuards(ThrottlerGuard)
-  @Throttle(AUTH_RATE_LIMIT)
+  @Throttle({ default: { limit: 5, ttl: 60000 }, auth: { limit: 5, ttl: 60000 } })
   verifyOtp(@Body() dto: VerifyOtpDto, @Req() request: Request) {
     return this.authService.verifyOtp(dto, this.getAuthContext(request));
   }
 
   @Post('forgot-password')
   @Public()
-  @UseGuards(ThrottlerGuard)
-  @Throttle(AUTH_RATE_LIMIT)
+  @Throttle({ default: { limit: 3, ttl: 60000 }, auth: { limit: 3, ttl: 60000 } })
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
   }
 
   @Post('reset-password')
   @Public()
-  @UseGuards(ThrottlerGuard)
-  @Throttle(AUTH_RATE_LIMIT)
+  @Throttle({ default: { limit: 3, ttl: 60000 }, auth: { limit: 3, ttl: 60000 } })
   resetPassword(@Body() dto: ResetPasswordDto, @Req() request: Request) {
     return this.authService.resetPassword(dto, this.getAuthContext(request));
   }

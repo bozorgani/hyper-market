@@ -4,7 +4,8 @@ const REQUIRED_ENV_KEYS = [
   'JWT_ACCESS_SECRET',
   'JWT_REFRESH_SECRET',
   'CORS_ORIGINS',
-  'PASSWORD_PEPPER',
+  // NOTE: PASSWORD_PEPPER is intentionally NOT in required list here.
+  // It is validated directly inside PasswordService.
 ] as const;
 
 export const envValidation = (config: Record<string, unknown>): Record<string, unknown> => {

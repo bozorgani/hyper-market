@@ -5,5 +5,6 @@ export const jwtConfig = () => ({
   JWT_REFRESH_EXPIRES: process.env.JWT_REFRESH_EXPIRES,
   JWT_ISSUER: process.env.JWT_ISSUER,
   JWT_AUDIENCE: process.env.JWT_AUDIENCE,
-  PASSWORD_PEPPER: process.env.PASSWORD_PEPPER,
+  // PASSWORD_PEPPER intentionally removed from jwtConfig.
+  // It is accessed directly via process.env in PasswordService.
 });

@@ -28,7 +28,12 @@ const menuItems = [
 ];
 
 function isAdminRole(role?: string) {
-  return role === "admin" || role === "super_admin";
+  return (
+    role === "ADMIN" ||
+    role === "SUPER_ADMIN" ||
+    role === "admin" ||
+    role === "super_admin"
+  );
 }
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

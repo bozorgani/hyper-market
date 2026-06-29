@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
-import { ThrottlerModule } from '@nestjs/throttler';
 import { AuditModule } from '../audit/audit.module';
 import { MailModule } from '../mail/mail.module';
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';
@@ -24,12 +22,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   controllers: [AuthController],
   imports: [
     PassportModule,
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60_000,
-        limit: 5,
-      },
-    ]),
     AuditModule,
     MailModule,
     PermissionsModule,
