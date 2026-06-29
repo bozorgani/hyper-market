@@ -30,8 +30,6 @@ import { VerifyOtpDto } from '../dto/verify-otp.dto';
 import { VerifyPhoneDto } from '../dto/verify-phone.dto';
 import { OtpType } from '../enums/otp-type.enum';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
-import { OtpRepository } from '../repositories/otp.repository';
-import { OtpCode } from '../schemas/otp-code.schema';
 import { OtpService } from './otp.service';
 import { SessionService } from './session.service';
 import { RefreshTokenService } from './refresh-token.service';
@@ -401,51 +399,9 @@ export class AuthService {
     return this.usersService.getUserByEmail(email);
   }
 
-  async createRefreshToken(data: Partial<RefreshToken>) {
-    return this.refreshTokenService.create(data);
-  }
-
-  async createSession(data: Partial<Session>) {
-    return this.sessionService.create(data);
-  }
-
-  async createOtp(data: Partial<OtpCode>) {
-    return this.otpRepository.create(data);
-  }
-
-  async getActiveSession(userId: string, deviceId: string) {
-    return this.sessionService.findActiveSession(userId, deviceId);
-  }
-
-  async revokeSession(sessionId: string) {
-    return this.sessionService.revokeSession(sessionId);
-  }
-
-  async revokeAllSessions(userId: string) {
-    await this.sessionService.revokeAllUserSessions(userId);
-    await this.refreshTokenService.revokeAllUserTokens(userId);
-    await this.usersService.incrementTokenVersion(userId);
-  }
-
-  async getRefreshToken(userId: string, deviceId: string) {
-    return this.refreshTokenService.findActiveToken(userId, deviceId);
-  }
-
-  async revokeRefreshToken(tokenId: string) {
-    return this.refreshTokenService.revokeToken(tokenId);
-  }
-
-  async getValidOtp(target: string, type: OtpType) {
-    return this.otpRepository.findValidOtp(target, type);
-  }
-
-  async markOtpVerified(otpId: string) {
-    return this.otpRepository.markVerified(otpId);
-  }
-
-  async incrementOtpAttempts(otpId: string) {
-    return this.otpRepository.incrementAttempts(otpId);
-  }
+  // NOTE: The following methods have been deprecated.
+  // Use OtpService, SessionService, or RefreshTokenService directly instead.
+  // These wrappers will be removed in a future version.
 
   private async findUserByTarget(
     email?: string,
