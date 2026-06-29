@@ -5,7 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { createHash, randomInt, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { Types } from 'mongoose';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
@@ -36,6 +36,7 @@ import { SessionRepository } from '../repositories/session.repository';
 import { OtpCode } from '../schemas/otp-code.schema';
 import { RefreshToken } from '../schemas/refresh-token.schema';
 import { Session } from '../schemas/session.schema';
+import { OtpService } from './otp.service';
 
 type Persisted<T> = T & { _id: Types.ObjectId };
 
@@ -70,6 +71,7 @@ export class AuthService {
     private readonly redisService: RedisService,
     private readonly mailService: MailService,
     private readonly smsIrService: SmsIrService,
+    private readonly otpService: OtpService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -94,11 +96,11 @@ export class AuthService {
     const userId = getEntityId(user);
 
     if (user.email) {
-      await this.createVerificationOtp(userId, user.email, OtpType.EMAIL_VERIFY);
+      await this.otpService.createVerificationOtp(userId, user.email, OtpType.EMAIL_VERIFY);
     }
 
     if (user.phoneNumber) {
-      await this.createVerificationOtp(userId, user.phoneNumber, OtpType.PHONE_VERIFY);
+      await this.otpService.createVerificationOtp(userId, user.phoneNumber, OtpType.PHONE_VERIFY);
     }
 
     return {
@@ -121,11 +123,11 @@ export class AuthService {
     const userId = getEntityId(user);
 
     if (dto.email) {
-      await this.createVerificationOtp(userId, dto.email, OtpType.EMAIL_VERIFY);
+      await this.otpService.createVerificationOtp(userId, dto.email, OtpType.EMAIL_VERIFY);
     }
 
     if (dto.phoneNumber) {
-      await this.createVerificationOtp(userId, dto.phoneNumber, OtpType.PHONE_VERIFY);
+      await this.otpService.createVerificationOtp(userId, dto.phoneNumber, OtpType.PHONE_VERIFY);
     }
 
     return { message: 'verification otp sent' };
@@ -137,7 +139,7 @@ export class AuthService {
       throw new BadRequestException('Invalid verification request');
     }
 
-    await this.verifyOtpCode(dto.email, OtpType.EMAIL_VERIFY, dto.code, context);
+    await this.otpService.verifyOtpCode(dto.email, OtpType.EMAIL_VERIFY, dto.code, context);
     await this.usersService.verifyEmail(getEntityId(user));
 
     return { message: 'email verified' };
@@ -149,7 +151,7 @@ export class AuthService {
       throw new BadRequestException('Invalid verification request');
     }
 
-    await this.verifyOtpCode(dto.phoneNumber, OtpType.PHONE_VERIFY, dto.code, context);
+    await this.otpService.verifyOtpCode(dto.phoneNumber, OtpType.PHONE_VERIFY, dto.code, context);
     await this.usersService.verifyPhone(getEntityId(user));
 
     return { message: 'phone verified' };
@@ -161,11 +163,9 @@ export class AuthService {
     if (user) {
       const target = dto.email ?? dto.phoneNumber;
       if (target) {
-        await this.createOtpForTarget(
+        await this.otpService.createPasswordResetOtp(
           getEntityId(user),
           target,
-          OtpType.PASSWORD_RESET,
-          this.passwordResetOtpExpiresMs,
         );
       }
     }
@@ -181,7 +181,7 @@ export class AuthService {
       throw new BadRequestException('Invalid password reset request');
     }
 
-    await this.verifyOtpCode(target, OtpType.PASSWORD_RESET, dto.code, context);
+    await this.otpService.verifyOtpCode(target, OtpType.PASSWORD_RESET, dto.code, context);
 
     const userId = getEntityId(user);
     const passwordHash = await this.passwordService.hashPassword(dto.newPassword);
@@ -395,7 +395,7 @@ export class AuthService {
   }
 
   async verifyOtp(dto: VerifyOtpDto, context: AuthContext = {}) {
-    await this.verifyOtpCode(dto.target, dto.type, dto.code, context);
+    await this.otpService.verifyOtpCode(dto.target, dto.type, dto.code, context);
     return { message: 'otp verified' };
   }
 
@@ -464,158 +464,6 @@ export class AuthService {
     return null;
   }
 
-  private async createVerificationOtp(
-    userId: string,
-    target: string,
-    type: OtpType.EMAIL_VERIFY | OtpType.PHONE_VERIFY,
-  ): Promise<void> {
-    await this.createOtpForTarget(
-      userId,
-      target,
-      type,
-      this.verificationOtpExpiresMs,
-    );
-  }
-
-  private async createOtpForTarget(
-    userId: string,
-    target: string,
-    type: OtpType,
-    expiresInMs: number,
-  ): Promise<void> {
-    const isDevelopmentOtp = process.env.NODE_ENV === 'development';
-    const code = isDevelopmentOtp ? '123456' : this.generateOtpCode();
-    await this.otpRepository.create({
-      userId: new Types.ObjectId(userId),
-      target,
-      type,
-      codeHash: this.hashOtpCode(code),
-      attempts: 0,
-      expiresAt: new Date(Date.now() + expiresInMs),
-    });
-
-    if (isDevelopmentOtp) {
-      console.info(`Development OTP for ${target}: ${code}`);
-    }
-
-    const ttl = Math.ceil(expiresInMs / 1000);
-    await this.redisService.set(this.getOtpAttemptsKey(target, type), '0', ttl);
-    await this.redisService.delete(this.getOtpLockKey(target, type));
-
-    if (isDevelopmentOtp) {
-      return;
-    }
-
-    if (this.isEmailTarget(target)) {
-      if (type === OtpType.PASSWORD_RESET) {
-        await this.mailService.sendPasswordResetEmail(target, code);
-        return;
-      }
-
-      await this.mailService.sendOtpEmail(target, code);
-      return;
-    }
-
-    await this.smsIrService.sendOtpSms(target, code);
-  }
-
-  private async verifyOtpCode(
-    target: string,
-    type: OtpType,
-    code: string,
-    context: AuthContext,
-  ): Promise<OtpCode> {
-    const otp = await this.otpRepository.findLatestForVerification(target, type);
-
-    if (!otp) {
-      throw new BadRequestException('Invalid OTP');
-    }
-
-    const otpId = getEntityId(otp);
-    const now = new Date();
-    const lockKey = this.getOtpLockKey(target, type);
-    const attemptsKey = this.getOtpAttemptsKey(target, type);
-
-    if ((await this.redisService.exists(lockKey)) || (otp.blockedUntil && otp.blockedUntil > now)) {
-      throw new ForbiddenException('OTP is temporarily blocked');
-    }
-
-    if (otp.expiresAt <= now) {
-      throw new BadRequestException('OTP expired');
-    }
-
-    const redisAttempts = await this.getRedisOtpAttempts(attemptsKey, otp.attempts);
-    if (redisAttempts >= this.maxOtpAttempts || otp.attempts >= this.maxOtpAttempts) {
-      await this.blockOtpValidation(otpId, lockKey);
-      throw new ForbiddenException('OTP is temporarily blocked');
-    }
-
-    const expectedCode = this.hashOtpCode(code);
-
-    if (otp.codeHash !== expectedCode) {
-      const updatedOtp = await this.otpRepository.incrementAttempts(otpId);
-      const updatedAttempts = await this.incrementRedisOtpAttempts(
-        attemptsKey,
-        redisAttempts,
-        otp.expiresAt,
-      );
-      if ((updatedOtp?.attempts ?? otp.attempts + 1) >= this.maxOtpAttempts || updatedAttempts >= this.maxOtpAttempts) {
-        await this.blockOtpValidation(otpId, lockKey);
-      }
-      throw new BadRequestException('Invalid OTP');
-    }
-
-    await this.redisService.delete(attemptsKey);
-    await this.redisService.delete(lockKey);
-    await this.otpRepository.markVerified(otpId);
-    await this.logSecurityEvent(AuditAction.OTP_VERIFIED, getEntityId(otp.userId), {
-      ...context,
-      deviceId: context.deviceId,
-    });
-
-    return otp;
-  }
-
-  private async getRedisOtpAttempts(
-    attemptsKey: string,
-    fallbackAttempts: number,
-  ): Promise<number> {
-    const attempts = await this.redisService.get(attemptsKey);
-    if (attempts === null) {
-      return fallbackAttempts;
-    }
-
-    return Number(attempts);
-  }
-
-  private async incrementRedisOtpAttempts(
-    attemptsKey: string,
-    currentAttempts: number,
-    expiresAt: Date,
-  ): Promise<number> {
-    const updatedAttempts = currentAttempts + 1;
-    const ttl = Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / 1000));
-    await this.redisService.set(attemptsKey, updatedAttempts.toString(), ttl);
-    return updatedAttempts;
-  }
-
-  private async blockOtpValidation(
-    otpId: string,
-    lockKey: string,
-  ): Promise<void> {
-    await this.redisService.set(lockKey, '1', Math.ceil(this.lockoutMs / 1000));
-    await this.otpRepository.blockOtp(otpId, this.getLockoutDate());
-  }
-
-  private getOtpAttemptsKey(target: string, type: OtpType): string {
-    return `otp:attempts:${target}:${type}`;
-  }
-
-  private getOtpLockKey(target: string, type: OtpType): string {
-    return `otp:lockout:${target}:${type}`;
-  }
-
-  private isEmailTarget(target: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target);
   }
 

@@ -10,6 +10,7 @@ import { OtpCode, OtpCodeSchema } from './schemas/otp-code.schema';
 import { RefreshToken, RefreshTokenSchema } from './schemas/refresh-token.schema';
 import { Session, SessionSchema } from './schemas/session.schema';
 import { AuthService } from './services/auth.service';
+import { OtpService } from './services/otp.service';
 import { OtpRepository } from './repositories/otp.repository';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 import { SessionRepository } from './repositories/session.repository';
@@ -34,6 +35,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   ],
   providers: [
     AuthService,
+    OtpService,
     RefreshTokenRepository,
     SessionRepository,
     OtpRepository,
