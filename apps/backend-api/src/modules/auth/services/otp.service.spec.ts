@@ -58,15 +58,18 @@ describe('OtpService', () => {
   });
 
   describe('createVerificationOtp', () => {
-    it('should create an OTP and store attempts in Redis', async () => {
-      mockOtpRepository.create.mockResolvedValue({});
-      mockRedisService.set.mockResolvedValue('OK');
+  it('should create an OTP and store attempts in Redis', async () => {
+    mockOtpRepository.create.mockResolvedValue({});
+    mockRedisService.set.mockResolvedValue('OK');
 
-      await service.createVerificationOtp('user123', 'test@example.com', OtpType.EMAIL_VERIFY);
+    // Use a valid 24-char hex string for userId
+    const validUserId = '507f1f77bcf86cd799439011';
 
-      expect(mockOtpRepository.create).toHaveBeenCalled();
-      expect(mockRedisService.set).toHaveBeenCalled();
-    });
+    await service.createVerificationOtp(validUserId, 'test@example.com', OtpType.EMAIL_VERIFY);
+
+    expect(mockOtpRepository.create).toHaveBeenCalled();
+    expect(mockRedisService.set).toHaveBeenCalled();
+  });
   });
 
   describe('verifyOtpCode', () => {

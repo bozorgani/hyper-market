@@ -20,7 +20,7 @@ export class SessionService {
 
   async create(data: CreateSessionData): Promise<Session> {
     return this.sessionRepository.create({
-      userId: new Types.ObjectId(data.userId),
+      userId: data.userId,
       deviceId: data.deviceId || undefined,
       ipAddress: data.ipAddress || undefined,
       userAgent: data.userAgent || undefined,
@@ -51,14 +51,6 @@ export class SessionService {
 
   async revokeAllUserSessions(userId: string): Promise<void> {
     await this.sessionRepository.revokeAllUserSessions(userId);
-  }
-
-  async updateLastActive(sessionId: string): Promise<void> {
-    await this.sessionRepository.updateLastActive(sessionId);
-  }
-
-  async findByUserAndDevice(userId: string, deviceId?: string | null): Promise<Session | null> {
-    return this.sessionRepository.findByUserAndDevice(userId, deviceId ?? undefined);
   }
 
   async getActiveSession(userId: string, deviceId: string): Promise<Session | null> {

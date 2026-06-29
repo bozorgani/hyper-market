@@ -255,11 +255,10 @@ export class AuthService {
 
     const refreshExpiresAt = this.getRefreshTokenExpiryDate();
     const session = await this.sessionService.create({
-      userId: new Types.ObjectId(userId),
+      userId: userId,
       deviceId: dto.deviceId,
       ipAddress: context.ipAddress ?? null,
       userAgent: context.userAgent ?? null,
-      lastActiveAt: new Date(),
       expiresAt: refreshExpiresAt,
     });
 
