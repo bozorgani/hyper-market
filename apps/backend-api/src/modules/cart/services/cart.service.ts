@@ -102,6 +102,8 @@ export class CartService {
     return items.reduce((sum, item) => sum + item.lineTotal, 0);
   }
 
+  // NOTE: This method is deprecated for order creation.
+  // All validation and price snapshot now happens inside OrdersService transaction.
   async validateCartStock(cart: Cart): Promise<void> {
     if (cart.items.length === 0) {
       throw new BadRequestException('Cart is empty');
@@ -124,6 +126,7 @@ export class CartService {
     }
   }
 
+  // NOTE: Deprecated - price snapshot logic moved to OrdersService
   async getOrderItemsFromCart(cart: Cart): Promise<Array<CartItem & { priceAtPurchase: number }>> {
     const orderItems: Array<CartItem & { priceAtPurchase: number }> = [];
 

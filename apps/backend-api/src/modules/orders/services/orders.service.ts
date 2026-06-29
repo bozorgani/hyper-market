@@ -33,40 +33,76 @@ export class OrdersService {
   ) {}
 
   async createOrder(userId: string): Promise<Order> {
-    const cart = await this.cartService.getCartByUserId(userId);
-    await this.cartService.validateCartStock(cart);
-
-    const items: OrderItem[] = await this.cartService.getOrderItemsFromCart(cart);
-    const totalPrice = await this.cartService.calculateCartTotal(cart);
-    const reducedProductIds = cart.items.map((item) => getEntityId(item.productId));
+    const reducedProductIds: string[] = [];
 
     const order = await this.databaseTransactionService.executeInTransaction(
       async (session) => {
+        // ۱. دریافت سبد خرید داخل تراکنش
+        const cart = await this.cartService.getCartByUserId(userId);
+
+        if (!cart.items || cart.items.length === 0) {
+          throw new BadRequestException('سبد خرید خالی است');
+        }
+
+        const orderItems: OrderItem[] = [];
+        let totalPrice = 0;
+
+        // ۲. بررسی مجدد موجودی + قیمت + وضعیت محصول داخل تراکنش (جلوگیری از Race Condition)
         for (const item of cart.items) {
+          const productId = getEntityId(item.productId);
+          reducedProductIds.push(productId);
+
+          // دریافت محصول با سشن (برای consistency)
+          const product = await this.productsService.getProductById(productId);
+
+          if (!product.isActive) {
+            throw new BadRequestException(`محصول ${product.name} فعال نیست`);
+          }
+
+          if (product.stock < item.quantity) {
+            throw new BadRequestException(
+              `موجودی محصول ${product.name} کافی نیست`,
+            );
+          }
+
+          const priceAtPurchase = product.discountPrice ?? product.price;
+
+          orderItems.push({
+            productId: new Types.ObjectId(productId),
+            quantity: item.quantity,
+            priceAtPurchase,
+          });
+
+          totalPrice += priceAtPurchase * item.quantity;
+
+          // کاهش موجودی داخل تراکنش
           await this.productsService.reduceStock(
-            getEntityId(item.productId),
+            productId,
             item.quantity,
             session,
             false,
           );
         }
 
+        // ۳. ایجاد سفارش با قیمت لحظه‌ای (Price Snapshot)
         const createdOrder = await this.ordersRepository.create(
           {
             userId: new Types.ObjectId(userId),
-            items,
+            items: orderItems,
             totalPrice,
             status: OrderStatus.PENDING,
           },
           session,
         );
 
+        // ۴. پاک کردن سبد خرید
         await this.cartService.clearCart(userId, session);
 
         return createdOrder;
       },
     );
 
+    // همگام‌سازی جستجو بعد از تراکنش (خارج از تراکنش)
     await Promise.all(
       reducedProductIds.map((productId) =>
         this.productsService.syncProductToSearch(productId),
