@@ -235,16 +235,16 @@ Detected controller endpoints:
 ### apps/backend-api/src/modules/search/search.controller.ts
 
 ```text
-GET    /admin/search/products    [public]
-GET    /search/products
-GET    /search/suggest    [public]
+GET    /admin/search/products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+GET    /search/products    [Public()]
+GET    /search/suggest    [Public()]
 ```
 
 ### apps/backend-api/src/modules/analytics/analytics.controller.ts
 
 ```text
-GET    /analytics/dashboard    [public]
-POST   /analytics/event
+GET    /analytics/dashboard    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+POST   /analytics/event    [Public()]
 GET    /analytics/funnel    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 GET    /analytics/products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 GET    /analytics/revenue    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
@@ -254,34 +254,34 @@ GET    /analytics/search    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 ### apps/backend-api/src/modules/auth/controllers/auth.controller.ts
 
 ```text
-POST   /auth/forgot-password    [public]
-POST   /auth/login    [public]
-POST   /auth/logout    [public]
-POST   /auth/refresh    [public]
-POST   /auth/register
-POST   /auth/reset-password    [public]
-POST   /auth/send-verification-otp    [public]
-POST   /auth/verify-email    [public]
-POST   /auth/verify-otp    [public]
-POST   /auth/verify-phone    [public]
+POST   /auth/forgot-password    [Public()]
+POST   /auth/login    [Public()]
+POST   /auth/logout    [Public()]
+POST   /auth/refresh    [Public()]
+POST   /auth/register    [Public()]
+POST   /auth/reset-password    [Public()]
+POST   /auth/send-verification-otp    [Public()]
+POST   /auth/verify-email    [Public()]
+POST   /auth/verify-otp    [Public()]
+POST   /auth/verify-phone    [Public()]
 ```
 
 ### apps/backend-api/src/modules/cart/controllers/cart.controller.ts
 
 ```text
-POST   /cart/add
-POST   /cart/clear
+POST   /cart/add    [Roles(UserRole.CUSTOMER)]
+POST   /cart/clear    [Roles(UserRole.CUSTOMER)]
 GET    /cart/my    [Roles(UserRole.CUSTOMER)]
-POST   /cart/remove
+POST   /cart/remove    [Roles(UserRole.CUSTOMER)]
 ```
 
 ### apps/backend-api/src/modules/categories/controllers/categories.controller.ts
 
 ```text
-GET    /categories
-POST   /categories    [public]
+GET    /categories    [Public()]
+POST   /categories    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 DELETE /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
-GET    /categories/:id    [public]
+GET    /categories/:id    [Public()]
 PUT    /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 ```
 
@@ -294,10 +294,10 @@ GET    /health
 ### apps/backend-api/src/modules/orders/controllers/orders.controller.ts
 
 ```text
-GET    /orders    [Roles(UserRole.CUSTOMER)]
-POST   /orders
-GET    /orders/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
-PATCH  /orders/:id/status
+GET    /orders    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+POST   /orders    [Roles(UserRole.CUSTOMER)]
+GET    /orders/:id
+PATCH  /orders/:id/status    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('orders.cancel')]
 GET    /orders/my    [Roles(UserRole.CUSTOMER)]
 ```
 
@@ -312,20 +312,20 @@ POST   /payments/simulate-success
 ### apps/backend-api/src/modules/products/controllers/products.controller.ts
 
 ```text
-GET    /products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.create')]
-POST   /products
-DELETE /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
-GET    /products/:id    [public]
-PUT    /products/:id    [public]
+GET    /products    [Public()]
+POST   /products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.create')]
+DELETE /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.delete')]
+GET    /products/:id    [Public()]
+PUT    /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
 ```
 
 ### apps/backend-api/src/modules/users/controllers/users.controller.ts
 
 ```text
 GET    /users    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
-GET    /users/:id
-PATCH  /users/:id/block
-PATCH  /users/:id/unblock    [Permissions('users.ban')]
+GET    /users/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+PATCH  /users/:id/block    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('users.ban')]
+PATCH  /users/:id/unblock    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('users.ban')]
 ```
 
 ## 5. Database Schema Overview

@@ -120,6 +120,10 @@ export class OrdersService {
       throw new BadRequestException('Invalid order status transition');
     }
 
+    if (status === OrderStatus.CANCELLED) {
+      return this.cancelOrder(orderId, order, session);
+    }
+
     const updatedOrder = await this.ordersRepository.updateStatus(
       orderId,
       status,
@@ -128,6 +132,51 @@ export class OrdersService {
     if (!updatedOrder) {
       throw new NotFoundException('Order not found');
     }
+
+    return updatedOrder;
+  }
+
+  private async cancelOrder(
+    orderId: string,
+    order: Order,
+    session?: ClientSession,
+  ): Promise<Order> {
+    const productIds = order.items.map((item) => getEntityId(item.productId));
+
+    const restoreStockAndCancel = async (activeSession?: ClientSession) => {
+      for (const item of order.items) {
+        await this.productsService.restoreStock(
+          getEntityId(item.productId),
+          item.quantity,
+          activeSession,
+          false,
+        );
+      }
+
+      const updatedOrder = await this.ordersRepository.updateStatus(
+        orderId,
+        OrderStatus.CANCELLED,
+        activeSession,
+      );
+
+      if (!updatedOrder) {
+        throw new NotFoundException('Order not found');
+      }
+
+      return updatedOrder;
+    };
+
+    const updatedOrder = session
+      ? await restoreStockAndCancel(session)
+      : await this.databaseTransactionService.executeInTransaction((activeSession) =>
+          restoreStockAndCancel(activeSession),
+        );
+
+    await Promise.all(
+      productIds.map((productId) =>
+        this.productsService.syncProductToSearch(productId),
+      ),
+    );
 
     return updatedOrder;
   }

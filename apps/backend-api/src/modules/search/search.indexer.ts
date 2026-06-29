@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { getEntityId } from '../../shared/utils/entity-id.util';
 
 const { Meilisearch } = require('meilisearch') as {
@@ -25,7 +25,7 @@ type ProductWithTimestamps = Product & {
 };
 
 @Injectable()
-export class SearchIndexer {
+export class SearchIndexer implements OnModuleInit {
   private readonly indexName = 'products';
   private readonly client: any;
 
@@ -36,9 +36,16 @@ export class SearchIndexer {
     });
   }
 
-  async indexProduct(product: Product): Promise<void> {
+  async onModuleInit(): Promise<void> {
     try {
       await this.ensureProductIndex();
+    } catch {
+      // Search index settings initialization must not block application startup.
+    }
+  }
+
+  async indexProduct(product: Product): Promise<void> {
+    try {
       const document = await this.toProductDocument(product);
       await this.client.index(this.indexName).addDocuments([document], { primaryKey: 'id' });
     } catch {
@@ -48,7 +55,6 @@ export class SearchIndexer {
 
   async removeProduct(productId: string): Promise<void> {
     try {
-      await this.ensureProductIndex();
       await this.client.index(this.indexName).deleteDocument(productId);
     } catch {
       // Search indexing must not break product deletes.

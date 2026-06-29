@@ -69,13 +69,17 @@ export class ProductsRepository {
       .exec();
   }
 
-  async restoreStock(id: string, quantity: number): Promise<Product | null> {
+  async restoreStock(
+    id: string,
+    quantity: number,
+    session?: ClientSession,
+  ): Promise<Product | null> {
     if (!isValidObjectId(id)) return null;
     return this.productModel
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { $inc: { stock: quantity } },
-        { returnDocument: 'after' },
+        { returnDocument: 'after', session },
       )
       .exec();
   }

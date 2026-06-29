@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { PageLoader } from "@/components/ui/page-loader";
 import { useAuthStore } from "@/store/auth-store";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -13,7 +14,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     if (hydrated && !user) router.replace("/login");
   }, [hydrated, router, user]);
 
-  if (!hydrated) return <div className="p-8 text-center text-slate-500">در حال بارگذاری...</div>;
-  if (!user) return null;
+  if (!hydrated) return <PageLoader title="در حال بررسی وضعیت ورود..." />;
+  if (!user) return <PageLoader title="در حال انتقال به صفحه ورود..." />;
   return <>{children}</>;
 }

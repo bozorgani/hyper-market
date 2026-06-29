@@ -44,6 +44,15 @@ export function translatePaymentStatus(status?: string) {
   return status ? map[status] ?? status : "نامشخص";
 }
 
+export function translatePaymentMethod(method?: string) {
+  const map: Record<string, string> = {
+    mock: "پرداخت آزمایشی",
+    stripe: "Stripe",
+    zarinpal: "زرین‌پال",
+  };
+  return method ? map[method] ?? method : "نامشخص";
+}
+
 export function translateRole(role?: string) {
   const map: Record<string, string> = {
     customer: "مشتری",

@@ -2,12 +2,17 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { formatNumber, formatPersianDate, formatPrice, translateOrderStatus, translatePaymentStatus } from "@/lib/utils";
 import { usePayment } from "@/hooks/use-orders";
+import { formatNumber, formatPersianDate, formatPrice, translateOrderStatus, translatePaymentStatus } from "@/lib/utils";
 import type { Order } from "@/types/domain";
 
 export function OrderCard({ order }: { order: Order }) {
   const payment = usePayment(order._id);
+  const paymentLabel = payment.isLoading
+    ? "در حال بررسی پرداخت"
+    : payment.isError
+      ? "وضعیت پرداخت نامشخص"
+      : translatePaymentStatus(payment.data?.status);
 
   return (
     <Card className="p-5 text-right">
@@ -20,7 +25,7 @@ export function OrderCard({ order }: { order: Order }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge className="bg-blue-50 text-blue-700">{translateOrderStatus(order.status)}</Badge>
-          <Badge className="bg-emerald-50 text-emerald-700">{translatePaymentStatus(payment.data?.status)}</Badge>
+          <Badge className="bg-emerald-50 text-emerald-700">{paymentLabel}</Badge>
         </div>
       </div>
     </Card>

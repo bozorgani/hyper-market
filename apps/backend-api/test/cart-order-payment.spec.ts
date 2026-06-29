@@ -142,6 +142,68 @@ test('OrdersService creates order inside transaction and clears cart', async () 
   ]);
 });
 
+test('OrdersService restores stock when order is cancelled', async () => {
+  const orderId = new Types.ObjectId().toHexString();
+  const productId = new Types.ObjectId();
+  const order = {
+    _id: new Types.ObjectId(orderId),
+    userId: new Types.ObjectId(),
+    items: [{ productId, quantity: 2, priceAtPurchase: 100 }],
+    totalPrice: 200,
+    status: OrderStatus.PENDING,
+  };
+  const cancelledOrder = { ...order, status: OrderStatus.CANCELLED };
+  const calls: string[] = [];
+
+  const ordersRepository = {
+    findById: async () => order,
+    updateStatus: async (_orderId: string, status: OrderStatus, session: unknown) => {
+      assert.equal(status, OrderStatus.CANCELLED);
+      assert.equal(session, 'session');
+      calls.push('cancel-order');
+      return cancelledOrder;
+    },
+  };
+  const productsService = {
+    restoreStock: async (_id: string, quantity: number, session: unknown, syncSearch: boolean) => {
+      assert.equal(quantity, 2);
+      assert.equal(session, 'session');
+      assert.equal(syncSearch, false);
+      calls.push('restore-stock');
+      return createProduct({ _id: productId });
+    },
+    syncProductToSearch: async () => {
+      calls.push('sync-search');
+    },
+  };
+  const transactionService = {
+    executeInTransaction: async (callback: (session: unknown) => Promise<unknown>) => {
+      calls.push('transaction-start');
+      const result = await callback('session');
+      calls.push('transaction-end');
+      return result;
+    },
+  };
+
+  const service = new OrdersService(
+    ordersRepository as never,
+    productsService as never,
+    {} as never,
+    transactionService as never,
+  );
+
+  const result = await service.updateStatus(orderId, OrderStatus.CANCELLED);
+
+  assert.equal(result, cancelledOrder);
+  assert.deepEqual(calls, [
+    'transaction-start',
+    'restore-stock',
+    'cancel-order',
+    'transaction-end',
+    'sync-search',
+  ]);
+});
+
 test('PaymentsService marks payment paid and updates order status inside transaction', async () => {
   const userId = new Types.ObjectId().toHexString();
   const orderId = new Types.ObjectId().toHexString();

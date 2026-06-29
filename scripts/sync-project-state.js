@@ -152,41 +152,76 @@ function parseControllerEndpoints() {
   const endpoints = [];
   const methodRegex = /@(Get|Post|Put|Patch|Delete)\(([^)]*)\)/;
   const controllerRegex = /@Controller\(([^)]*)\)/;
+  const classRegex = /\bclass\s+\w+/;
+  const methodDeclarationRegex = /^(async\s+)?[A-Za-z_$][\w$]*\s*\(/;
 
   for (const file of controllerFiles) {
     const lines = readFileSafe(file).split('\n');
     let controllerPath = '';
-    const guards = [];
+    let inClass = false;
+    const classGuards = [];
+    let pendingMethod = null;
+    let pendingRoutePath = '';
+    let pendingGuards = [];
 
     for (const rawLine of lines) {
       const line = rawLine.trim();
+      if (!line) continue;
+
       const controllerMatch = line.match(controllerRegex);
       if (controllerMatch) {
         controllerPath = extractDecoratorPath(controllerMatch[1]);
         continue;
       }
 
-      if (line.startsWith('@Public')) guards.push('public');
-      if (line.startsWith('@Roles')) guards.push(line.replace(/^@/, ''));
-      if (line.startsWith('@Permissions')) guards.push(line.replace(/^@/, ''));
+      if (!inClass && isGuardDecorator(line)) {
+        classGuards.push(normalizeDecorator(line));
+        continue;
+      }
+
+      if (classRegex.test(line)) {
+        inClass = true;
+        continue;
+      }
+
+      if (!inClass) continue;
 
       const methodMatch = line.match(methodRegex);
       if (methodMatch) {
-        const method = methodMatch[1].toUpperCase();
-        const routePath = extractDecoratorPath(methodMatch[2]);
-        const fullPath = joinUrlParts('/', controllerPath, routePath);
+        pendingMethod = methodMatch[1].toUpperCase();
+        pendingRoutePath = extractDecoratorPath(methodMatch[2]);
+        continue;
+      }
+
+      if (isGuardDecorator(line)) {
+        pendingGuards.push(normalizeDecorator(line));
+        continue;
+      }
+
+      if (pendingMethod && methodDeclarationRegex.test(line)) {
         endpoints.push({
-          method,
-          path: fullPath,
+          method: pendingMethod,
+          path: joinUrlParts('/', controllerPath, pendingRoutePath),
           source: toRepoPath(file),
-          guards: [...guards],
+          guards: [...classGuards, ...pendingGuards],
         });
-        guards.length = 0;
+
+        pendingMethod = null;
+        pendingRoutePath = '';
+        pendingGuards = [];
       }
     }
   }
 
   return endpoints.sort((a, b) => `${a.path} ${a.method}`.localeCompare(`${b.path} ${b.method}`));
+}
+
+function isGuardDecorator(line) {
+  return line.startsWith('@Public') || line.startsWith('@Roles') || line.startsWith('@Permissions');
+}
+
+function normalizeDecorator(line) {
+  return line.replace(/^@/, '').replace(/;$/, '');
 }
 
 function extractDecoratorPath(argumentText) {

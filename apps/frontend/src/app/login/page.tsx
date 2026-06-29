@@ -3,15 +3,24 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { motion } from "framer-motion";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { StatusMessage } from "@/components/ui/status-message";
+import { useToast } from "@/components/ui/toast";
 import { useAuthStore } from "@/store/auth-store";
+
+const features = [
+  { title: "ورود با ایمیل یا موبایل", description: "بدون تغییر در API، همان flow فعلی ورود با تجربه‌ای شفاف‌تر در اختیار شماست." },
+  { title: "نشست ایمن", description: "session و refresh flow سمت فرانت حفظ شده و پس از ورود به‌صورت خودکار استفاده می‌شود." },
+  { title: "دسترسی سریع", description: "بعد از ورود، مستقیم به پروفایل و سپس سفارش‌ها و خریدهای شما هدایت می‌شوید." },
+  { title: "رابط فارسی یکپارچه", description: "فرم‌ها، خطاها و پیام‌های موفقیت با UX هماهنگ و راست‌به‌چپ نمایش داده می‌شوند." },
+];
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const { showToast } = useToast();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,34 +30,45 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError("");
+
     try {
-      await login(identifier.includes("@") ? { email: identifier, password } : { phoneNumber: identifier, password });
+      const normalizedIdentifier = identifier.trim();
+      await login(normalizedIdentifier.includes("@") ? { email: normalizedIdentifier, password } : { phoneNumber: normalizedIdentifier, password });
+      showToast({ type: "success", title: "با موفقیت وارد شدید" });
       router.push("/profile");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "ورود ناموفق بود. دوباره تلاش کنید.");
+      const message = err instanceof Error ? err.message : "ورود ناموفق بود. دوباره تلاش کنید.";
+      setError(message);
+      showToast({ type: "error", title: "ورود ناموفق بود", description: message });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-10">
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <Card className="p-6 text-right">
-          <h1 className="text-2xl font-black">ورود به حساب</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">با ایمیل یا شماره موبایل وارد حساب کاربری شوید.</p>
-          <form onSubmit={submit} className="mt-6 space-y-4">
-            <Input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="ایمیل یا شماره موبایل مثل 0912..." required />
-            <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" type="password" required />
-            {error && <p className="rounded-xl bg-red-50 p-3 text-sm leading-6 text-red-600">{error}</p>}
-            <Button className="w-full" disabled={loading}>{loading ? "در حال ورود..." : "ورود"}</Button>
-          </form>
-          <div className="mt-5 flex items-center justify-between gap-3 text-sm text-slate-500">
-            <Link href="/register">ثبت‌نام</Link>
-            <Link href="/verify-otp">تأیید کد پیامکی</Link>
-          </div>
-        </Card>
-      </motion.div>
-    </main>
+    <AuthShell
+      eyebrow="ورود سریع و امن"
+      title="ورود به حساب کاربری"
+      description="با ایمیل یا شماره موبایل وارد شوید و خرید، سفارش‌ها و وضعیت حساب خود را در محیطی یکپارچه مدیریت کنید."
+      features={features}
+      footer={
+        <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <Link href="/register" className="font-semibold text-rose-600">ثبت‌نام</Link>
+          <Link href="/verify-otp" className="font-semibold text-slate-700">تأیید کد پیامکی / ایمیلی</Link>
+        </div>
+      }
+    >
+      <h2 className="text-2xl font-black">ورود به حساب</h2>
+      <p className="mt-2 text-sm leading-6 text-slate-500">ایمیل یا شماره موبایل و رمز عبور خود را وارد کنید.</p>
+
+      <form onSubmit={submit} className="mt-6 space-y-4">
+        <Input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="ایمیل یا شماره موبایل مثل 0912..." required />
+        <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" type="password" required />
+        {error ? <StatusMessage variant="error">{error}</StatusMessage> : null}
+        <Button type="submit" className="w-full" disabled={loading || !identifier.trim() || !password.trim()}>
+          {loading ? "در حال ورود..." : "ورود"}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

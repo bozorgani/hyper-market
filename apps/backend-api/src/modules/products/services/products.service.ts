@@ -103,11 +103,16 @@ export class ProductsService {
     return product;
   }
 
-  async restoreStock(id: string, quantity: number): Promise<Product | null> {
+  async restoreStock(
+    id: string,
+    quantity: number,
+    session?: ClientSession,
+    syncSearch = true,
+  ): Promise<Product | null> {
     this.ensureValidObjectId(id, 'Invalid product id');
-    const product = await this.productsRepository.restoreStock(id, quantity);
+    const product = await this.productsRepository.restoreStock(id, quantity, session);
 
-    if (product) {
+    if (product && syncSearch) {
       await this.searchIndexer.indexProduct(product);
     }
 

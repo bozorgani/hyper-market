@@ -489,10 +489,14 @@ export class AuthService {
       userId: new Types.ObjectId(userId),
       target,
       type,
-      codeHash: isDevelopmentOtp ? code : this.hashOtpCode(code),
+      codeHash: this.hashOtpCode(code),
       attempts: 0,
       expiresAt: new Date(Date.now() + expiresInMs),
     });
+
+    if (isDevelopmentOtp) {
+      console.info(`Development OTP for ${target}: ${code}`);
+    }
 
     const ttl = Math.ceil(expiresInMs / 1000);
     await this.redisService.set(this.getOtpAttemptsKey(target, type), '0', ttl);
@@ -546,9 +550,7 @@ export class AuthService {
       throw new ForbiddenException('OTP is temporarily blocked');
     }
 
-    const expectedCode = process.env.NODE_ENV === 'development'
-      ? code
-      : this.hashOtpCode(code);
+    const expectedCode = this.hashOtpCode(code);
 
     if (otp.codeHash !== expectedCode) {
       const updatedOtp = await this.otpRepository.incrementAttempts(otpId);
