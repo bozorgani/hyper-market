@@ -5,7 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { createHash, randomInt, randomUUID } from 'crypto';
 import { Types } from 'mongoose';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
@@ -30,6 +30,8 @@ import { VerifyOtpDto } from '../dto/verify-otp.dto';
 import { VerifyPhoneDto } from '../dto/verify-phone.dto';
 import { OtpType } from '../enums/otp-type.enum';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { OtpRepository } from '../repositories/otp.repository';
+import { RefreshToken } from '../schemas/refresh-token.schema';
 import { OtpService } from './otp.service';
 import { SessionService } from './session.service';
 import { RefreshTokenService } from './refresh-token.service';
@@ -415,8 +417,6 @@ export class AuthService {
       return this.usersService.getUserByPhone(phoneNumber);
     }
 
-    return null;
-  }
 
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target);
   }
@@ -550,9 +550,8 @@ export class AuthService {
         deviceId: context.deviceId ?? null,
         userAgent: context.userAgent ?? null,
       });
-    } catch {
+    } catch (error) {
       // Audit logging must never break the authentication flow.
     }
   }
-
 }
