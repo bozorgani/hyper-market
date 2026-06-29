@@ -31,12 +31,10 @@ import { VerifyPhoneDto } from '../dto/verify-phone.dto';
 import { OtpType } from '../enums/otp-type.enum';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { OtpRepository } from '../repositories/otp.repository';
-import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
-import { SessionRepository } from '../repositories/session.repository';
 import { OtpCode } from '../schemas/otp-code.schema';
-import { RefreshToken } from '../schemas/refresh-token.schema';
-import { Session } from '../schemas/session.schema';
 import { OtpService } from './otp.service';
+import { SessionService } from './session.service';
+import { RefreshTokenService } from './refresh-token.service';
 
 type Persisted<T> = T & { _id: Types.ObjectId };
 
@@ -61,8 +59,6 @@ export class AuthService {
 
   constructor(
     private readonly usersService: UsersService,
-    private readonly refreshTokenRepository: RefreshTokenRepository,
-    private readonly sessionRepository: SessionRepository,
     private readonly otpRepository: OtpRepository,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
@@ -72,6 +68,8 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly smsIrService: SmsIrService,
     private readonly otpService: OtpService,
+    private readonly sessionService: SessionService,
+    private readonly refreshTokenService: RefreshTokenService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -189,8 +187,8 @@ export class AuthService {
       userId,
       passwordHash,
     );
-    await this.sessionRepository.revokeAllUserSessions(userId);
-    await this.refreshTokenRepository.revokeAllUserTokens(userId);
+    await this.sessionService.revokeAllUserSessions(userId);
+    await this.refreshTokenService.revokeAllUserTokens(userId);
 
     await this.logSecurityEvent(AuditAction.PASSWORD_CHANGED, userId, {
       ...context,
@@ -237,26 +235,26 @@ export class AuthService {
 
     await this.usersService.resetLoginSecurity(userId);
 
-    const oldSession = await this.sessionRepository.findActiveSession(
+    const oldSession = await this.sessionService.findActiveSession(
       userId,
       dto.deviceId,
     );
 
     if (oldSession) {
-      await this.sessionRepository.revokeSession(getEntityId(oldSession));
-      const oldRefreshToken = await this.refreshTokenRepository.findActiveToken(
+      await this.sessionService.revokeSession(getEntityId(oldSession));
+      const oldRefreshToken = await this.refreshTokenService.findActiveToken(
         userId,
         dto.deviceId,
       );
       if (oldRefreshToken) {
-        await this.refreshTokenRepository.revokeToken(
+        await this.refreshTokenService.revokeToken(
           getEntityId(oldRefreshToken),
         );
       }
     }
 
     const refreshExpiresAt = this.getRefreshTokenExpiryDate();
-    const session = await this.sessionRepository.create({
+    const session = await this.sessionService.create({
       userId: new Types.ObjectId(userId),
       deviceId: dto.deviceId,
       ipAddress: context.ipAddress ?? null,
@@ -267,7 +265,7 @@ export class AuthService {
 
     const tokens = await this.issueTokenPair(user, getEntityId(session), dto.deviceId);
 
-    await this.refreshTokenRepository.create({
+    await this.refreshTokenService.create({
       userId: new Types.ObjectId(userId),
       sessionId: new Types.ObjectId(getEntityId(session)),
       deviceId: dto.deviceId,
@@ -289,7 +287,7 @@ export class AuthService {
   async refreshToken(rawRefreshToken: string, context: AuthContext = {}): Promise<AuthTokens> {
     const payload = this.tokenService.verifyRefreshToken(rawRefreshToken);
     const refreshTokenHash = this.tokenHashService.hashToken(rawRefreshToken);
-    const storedRefreshToken = await this.refreshTokenRepository.findByTokenHash(
+    const storedRefreshToken = await this.refreshTokenService.findByTokenHash(
       refreshTokenHash,
     );
 
@@ -328,7 +326,7 @@ export class AuthService {
     const accessToken = this.tokenService.generateAccessToken(accessPayload);
     const refreshToken = this.tokenService.generateRefreshToken(rotatedRefreshPayload);
 
-    const newRefreshToken = await this.refreshTokenRepository.create({
+    const newRefreshToken = await this.refreshTokenService.create({
       userId: new Types.ObjectId(payload.sub),
       sessionId: new Types.ObjectId(payload.sessionId),
       deviceId: payload.deviceId,
@@ -339,12 +337,12 @@ export class AuthService {
       expiresAt: refreshExpiresAt,
     });
 
-    await this.refreshTokenRepository.revokeToken(
+    await this.refreshTokenService.revokeToken(
       getEntityId(storedRefreshToken),
       getEntityId(newRefreshToken),
     );
 
-    await this.sessionRepository.updateLastActive(payload.sessionId);
+    await this.sessionService.updateLastActive(payload.sessionId);
     await this.logSecurityEvent(AuditAction.TOKEN_REFRESH, payload.sub, {
       ...context,
       deviceId: payload.deviceId,
@@ -367,23 +365,23 @@ export class AuthService {
     }
 
     const refreshTokenHash = this.tokenHashService.hashToken(rawRefreshToken);
-    const storedRefreshToken = await this.refreshTokenRepository.findByTokenHash(
+    const storedRefreshToken = await this.refreshTokenService.findByTokenHash(
       refreshTokenHash,
     );
 
     if (storedRefreshToken) {
-      await this.refreshTokenRepository.revokeToken(
+      await this.refreshTokenService.revokeToken(
         getEntityId(storedRefreshToken),
       );
     }
 
-    const session = await this.sessionRepository.findByUserAndDevice(
+    const session = await this.sessionService.findByUserAndDevice(
       payload.sub,
       payload.deviceId,
     );
 
     if (session) {
-      await this.sessionRepository.revokeSession(getEntityId(session));
+      await this.sessionService.revokeSession(getEntityId(session));
     }
 
     await this.logSecurityEvent(AuditAction.LOGOUT, payload.sub, {
@@ -404,11 +402,11 @@ export class AuthService {
   }
 
   async createRefreshToken(data: Partial<RefreshToken>) {
-    return this.refreshTokenRepository.create(data);
+    return this.refreshTokenService.create(data);
   }
 
   async createSession(data: Partial<Session>) {
-    return this.sessionRepository.create(data);
+    return this.sessionService.create(data);
   }
 
   async createOtp(data: Partial<OtpCode>) {
@@ -416,25 +414,25 @@ export class AuthService {
   }
 
   async getActiveSession(userId: string, deviceId: string) {
-    return this.sessionRepository.findActiveSession(userId, deviceId);
+    return this.sessionService.findActiveSession(userId, deviceId);
   }
 
   async revokeSession(sessionId: string) {
-    return this.sessionRepository.revokeSession(sessionId);
+    return this.sessionService.revokeSession(sessionId);
   }
 
   async revokeAllSessions(userId: string) {
-    await this.sessionRepository.revokeAllUserSessions(userId);
-    await this.refreshTokenRepository.revokeAllUserTokens(userId);
+    await this.sessionService.revokeAllUserSessions(userId);
+    await this.refreshTokenService.revokeAllUserTokens(userId);
     await this.usersService.incrementTokenVersion(userId);
   }
 
   async getRefreshToken(userId: string, deviceId: string) {
-    return this.refreshTokenRepository.findActiveToken(userId, deviceId);
+    return this.refreshTokenService.findActiveToken(userId, deviceId);
   }
 
   async revokeRefreshToken(tokenId: string) {
-    return this.refreshTokenRepository.revokeToken(tokenId);
+    return this.refreshTokenService.revokeToken(tokenId);
   }
 
   async getValidOtp(target: string, type: OtpType) {
@@ -472,13 +470,13 @@ export class AuthService {
     payload: JwtPayload,
     context: AuthContext,
   ): Promise<void> {
-    await this.refreshTokenRepository.markReuseDetected(
+    await this.refreshTokenService.markReuseDetected(
       getEntityId(storedRefreshToken),
     );
-    await this.refreshTokenRepository.revokeTokenFamily(
+    await this.refreshTokenService.revokeTokenFamily(
       storedRefreshToken.tokenFamilyId,
     );
-    await this.sessionRepository.revokeAllUserSessions(payload.sub);
+    await this.sessionService.revokeAllUserSessions(payload.sub);
     await this.usersService.incrementTokenVersion(payload.sub);
     await this.logSecurityEvent(AuditAction.ACCOUNT_LOCKED, payload.sub, {
       ...context,

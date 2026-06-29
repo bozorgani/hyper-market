@@ -11,6 +11,8 @@ import { RefreshToken, RefreshTokenSchema } from './schemas/refresh-token.schema
 import { Session, SessionSchema } from './schemas/session.schema';
 import { AuthService } from './services/auth.service';
 import { OtpService } from './services/otp.service';
+import { SessionService } from './services/session.service';
+import { RefreshTokenService } from './services/refresh-token.service';
 import { OtpRepository } from './repositories/otp.repository';
 import { RefreshTokenRepository } from './repositories/refresh-token.repository';
 import { SessionRepository } from './repositories/session.repository';
@@ -36,6 +38,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   providers: [
     AuthService,
     OtpService,
+    SessionService,
+    RefreshTokenService,
     RefreshTokenRepository,
     SessionRepository,
     OtpRepository,
@@ -53,6 +57,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useClass: PermissionsGuard,
     },
   ],
-  exports: [AuthService],
+  exports: [AuthService, OtpService, SessionService, RefreshTokenService],
 })
 export class AuthModule {}
