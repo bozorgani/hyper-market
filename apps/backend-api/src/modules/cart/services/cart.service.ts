@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { ClientSession, isValidObjectId, Types } from 'mongoose';
+import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { Product } from '../../products/schemas/product.schema';
 import { ProductsService } from '../../products/services/products.service';
@@ -28,6 +29,7 @@ export class CartService {
   constructor(
     private readonly cartRepository: CartRepository,
     private readonly productsService: ProductsService,
+    private readonly redisService?: RedisService,
   ) {}
 
   async getCartByUserId(userId: string): Promise<Cart> {
@@ -58,16 +60,16 @@ export class CartService {
       throw new BadRequestException('Insufficient product stock');
     }
 
-    await this.getOrCreateCart(userId);
-    const updatedCart = await this.cartRepository.upsertItem(
-      userId,
-      productId,
-      quantity,
-    );
+    await this.withCartMutationLock(userId, async () => {
+      await this.getOrCreateCart(userId);
+      const updatedCart =
+        (await this.cartRepository.addItem(userId, productId, quantity)) ??
+        (await this.cartRepository.pushItem(userId, productId, quantity));
 
-    if (!updatedCart) {
-      throw new BadRequestException('Unable to update cart');
-    }
+      if (!updatedCart) {
+        throw new BadRequestException('Unable to update cart');
+      }
+    });
 
     return this.getCartSummary(userId);
   }
@@ -144,6 +146,29 @@ export class CartService {
     }
 
     return orderItems;
+  }
+
+
+  private async withCartMutationLock<T>(
+    userId: string,
+    operation: () => Promise<T>,
+  ): Promise<T> {
+    if (!this.redisService) {
+      return operation();
+    }
+
+    const lockKey = `cart:lock:${userId}`;
+    const acquired = await this.redisService.setIfNotExists(lockKey, '1', 10);
+
+    if (!acquired) {
+      throw new ConflictException('Cart update is already in progress');
+    }
+
+    try {
+      return await operation();
+    } finally {
+      await this.redisService.delete(lockKey);
+    }
   }
 
   private async getDetailedCartItems(cart: Cart): Promise<CartDetailedItem[]> {

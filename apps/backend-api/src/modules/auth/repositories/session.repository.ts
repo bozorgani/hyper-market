@@ -43,14 +43,14 @@ export class SessionRepository {
   async updateLastActive(id: string): Promise<Session | null> {
     if (!isValidObjectId(id)) return null;
     return this.sessionModel
-      .findByIdAndUpdate(id, { lastActiveAt: new Date() }, { new: true })
+      .findByIdAndUpdate(id, { lastActiveAt: new Date() }, { returnDocument: 'after' })
       .exec();
   }
 
   async revokeSession(id: string): Promise<Session | null> {
     if (!isValidObjectId(id)) return null;
     return this.sessionModel
-      .findByIdAndUpdate(id, { revokedAt: new Date() }, { new: true })
+      .findByIdAndUpdate(id, { revokedAt: new Date() }, { returnDocument: 'after' })
       .exec();
   }
 
@@ -63,7 +63,7 @@ export class SessionRepository {
   async markTrusted(sessionId: string): Promise<Session | null> {
     if (!isValidObjectId(sessionId)) return null;
     return this.sessionModel
-      .findByIdAndUpdate(sessionId, { isTrusted: true }, { new: true })
+      .findByIdAndUpdate(sessionId, { isTrusted: true }, { returnDocument: 'after' })
       .exec();
   }
 }

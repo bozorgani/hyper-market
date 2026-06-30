@@ -53,14 +53,14 @@ export class RefreshTokenRepository {
     }
 
     return this.refreshTokenModel
-      .findByIdAndUpdate(id, update, { new: true })
+      .findByIdAndUpdate(id, update, { returnDocument: 'after' })
       .exec();
   }
 
   async markReuseDetected(id: string): Promise<RefreshToken | null> {
     if (!isValidObjectId(id)) return null;
     return this.refreshTokenModel
-      .findByIdAndUpdate(id, { reuseDetected: true }, { new: true })
+      .findByIdAndUpdate(id, { reuseDetected: true }, { returnDocument: 'after' })
       .exec();
   }
 

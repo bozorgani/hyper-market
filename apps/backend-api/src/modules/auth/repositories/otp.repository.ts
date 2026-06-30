@@ -44,21 +44,21 @@ export class OtpRepository {
   async incrementAttempts(id: string): Promise<OtpCode | null> {
     if (!isValidObjectId(id)) return null;
     return this.otpModel
-      .findByIdAndUpdate(id, { $inc: { attempts: 1 } }, { new: true })
+      .findByIdAndUpdate(id, { $inc: { attempts: 1 } }, { returnDocument: 'after' })
       .exec();
   }
 
   async blockOtp(id: string, blockedUntil: Date): Promise<OtpCode | null> {
     if (!isValidObjectId(id)) return null;
     return this.otpModel
-      .findByIdAndUpdate(id, { blockedUntil }, { new: true })
+      .findByIdAndUpdate(id, { blockedUntil }, { returnDocument: 'after' })
       .exec();
   }
 
   async markVerified(id: string): Promise<OtpCode | null> {
     if (!isValidObjectId(id)) return null;
     return this.otpModel
-      .findByIdAndUpdate(id, { verifiedAt: new Date() }, { new: true })
+      .findByIdAndUpdate(id, { verifiedAt: new Date() }, { returnDocument: 'after' })
       .exec();
   }
 }
