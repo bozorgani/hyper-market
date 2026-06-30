@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Patch, Post, Res } from '@nestjs/common';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { Response } from 'express';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
+import { IdempotencyService } from '../../../infrastructure/idempotency/idempotency.service';
 import { Permissions } from '../../permissions/decorators/permissions.decorator';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
@@ -9,12 +11,27 @@ import { OrdersService } from '../services/orders.service';
 
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly idempotencyService: IdempotencyService,
+  ) {}
 
   @Post()
   @Roles(UserRole.CUSTOMER)
-  createOrder(@CurrentUser() user: JwtPayload) {
-    return this.ordersService.createOrder(user.sub);
+  async createOrder(
+    @CurrentUser() user: JwtPayload,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.idempotencyService.execute(
+      `orders:create:${user.sub}`,
+      idempotencyKey,
+      { userId: user.sub },
+      () => this.ordersService.createOrder(user.sub),
+    );
+
+    response.setHeader('Idempotency-Status', result.status);
+    return result.data;
   }
 
   @Get('my')

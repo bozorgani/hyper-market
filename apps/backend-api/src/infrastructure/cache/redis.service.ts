@@ -40,6 +40,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     await this.client.set(key, serializedValue);
   }
 
+  async setIfNotExists<T>(key: string, value: T, ttl: number): Promise<boolean> {
+    const serializedValue = this.serialize(value);
+    const result = await this.client.set(key, serializedValue, 'EX', ttl, 'NX');
+    return result === 'OK';
+  }
+
   async delete(key: string): Promise<void> {
     await this.client.del(key);
   }
