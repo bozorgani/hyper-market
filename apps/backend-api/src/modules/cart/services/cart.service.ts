@@ -172,16 +172,28 @@ export class CartService {
   }
 
   private async getDetailedCartItems(cart: Cart): Promise<CartDetailedItem[]> {
-    const items: CartDetailedItem[] = [];
+    if (cart.items.length === 0) {
+      return [];
+    }
 
-    for (const item of cart.items) {
-      const product = await this.productsService.getProductById(
-        getEntityId(item.productId),
-      );
+    const productIds = cart.items.map((item) => getEntityId(item.productId));
+    const products = await this.productsService.getProductsByIds(productIds);
+    const productsById = new Map(
+      products.map((product) => [getEntityId(product), product]),
+    );
+
+    return cart.items.map((item) => {
+      const productId = getEntityId(item.productId);
+      const product = productsById.get(productId);
+
+      if (!product) {
+        throw new BadRequestException(`Product ${productId} is not available`);
+      }
+
       const price = this.getProductPrice(product);
 
-      items.push({
-        productId: getEntityId(product),
+      return {
+        productId,
         quantity: item.quantity,
         name: product.name,
         price,
@@ -189,10 +201,8 @@ export class CartService {
         image: product.images?.[0] ?? null,
         stock: product.stock,
         lineTotal: price * item.quantity,
-      });
-    }
-
-    return items;
+      };
+    });
   }
 
   private async getOrCreateCart(userId: string): Promise<Cart> {

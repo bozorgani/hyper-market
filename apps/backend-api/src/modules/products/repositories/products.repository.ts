@@ -27,6 +27,22 @@ export class ProductsRepository {
     return this.productModel.findOne({ _id: id, deletedAt: null }).lean().exec();
   }
 
+
+  async findByIds(ids: string[]): Promise<Product[]> {
+    const objectIds = ids
+      .filter((id) => isValidObjectId(id))
+      .map((id) => new Types.ObjectId(id));
+
+    if (objectIds.length === 0) {
+      return [];
+    }
+
+    return this.productModel
+      .find({ _id: { $in: objectIds }, deletedAt: null })
+      .lean()
+      .exec();
+  }
+
   async updateById(id: string, data: Partial<Product>): Promise<Product | null> {
     if (!isValidObjectId(id)) return null;
     return this.productModel

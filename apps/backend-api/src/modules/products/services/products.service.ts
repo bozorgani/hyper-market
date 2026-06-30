@@ -83,6 +83,16 @@ export class ProductsService {
     return product;
   }
 
+
+  async getProductsByIds(ids: string[]): Promise<Product[]> {
+    const uniqueIds = [...new Set(ids)];
+    for (const id of uniqueIds) {
+      this.ensureValidObjectId(id, 'Invalid product id');
+    }
+
+    return this.productsRepository.findByIds(uniqueIds);
+  }
+
   async reduceStock(
     id: string,
     quantity: number,
