@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
@@ -18,11 +19,13 @@ export class CartController {
   }
 
   @Post('add')
+  @Throttle({ default: { limit: 300, ttl: 60000 } })
   addProduct(@CurrentUser() user: JwtPayload, @Body() dto: AddCartItemDto) {
     return this.cartService.addProductToCart(user.sub, dto.productId, dto.quantity);
   }
 
   @Post('remove')
+  @Throttle({ default: { limit: 300, ttl: 60000 } })
   removeProduct(@CurrentUser() user: JwtPayload, @Body() dto: RemoveCartItemDto) {
     return this.cartService.removeProduct(user.sub, dto.productId);
   }

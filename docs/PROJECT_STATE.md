@@ -257,6 +257,7 @@ GET    /analytics/search    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 POST   /auth/forgot-password    [Public()]
 POST   /auth/login    [Public()]
 POST   /auth/logout    [Public()]
+GET    /auth/me
 POST   /auth/refresh    [Public()]
 POST   /auth/register    [Public()]
 POST   /auth/reset-password    [Public()]

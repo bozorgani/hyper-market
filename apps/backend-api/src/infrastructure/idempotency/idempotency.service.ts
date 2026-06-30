@@ -55,15 +55,41 @@ export class IdempotencyService {
 
     try {
       const response = await operation();
-      await this.redisService.set<StoredResponse<T>>(
-        responseKey,
-        { requestHash, response },
-        this.ttlSeconds,
-      );
+      await this.storeResponse(responseKey, requestHash, response);
 
       return { status: 'created', data: response };
     } finally {
       await this.redisService.delete(lockKey);
+    }
+  }
+
+
+  private async storeResponse<T>(
+    responseKey: string,
+    requestHash: string,
+    response: T,
+  ): Promise<void> {
+    try {
+      await this.redisService.set<StoredResponse<unknown>>(
+        responseKey,
+        {
+          requestHash,
+          response: this.toSerializable(response),
+        },
+        this.ttlSeconds,
+      );
+    } catch {
+      // Idempotency cache persistence must not turn a successful business
+      // operation into a 500 response. A later retry will execute normally
+      // if this cache write fails.
+    }
+  }
+
+  private toSerializable(value: unknown): unknown {
+    try {
+      return JSON.parse(JSON.stringify(value)) as unknown;
+    } catch {
+      return value;
     }
   }
 

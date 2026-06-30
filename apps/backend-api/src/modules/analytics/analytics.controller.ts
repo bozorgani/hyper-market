@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { TokenService } from '../../infrastructure/security/token.service';
 import { Public } from '../auth/decorators/public.decorator';
@@ -19,6 +20,7 @@ export class AnalyticsController {
 
   @Post('event')
   @Public()
+  @Throttle({ default: { limit: 600, ttl: 60000 } })
   trackEvent(@Body() body: TrackEventDto, @Req() request: Request) {
     const authenticatedUser = this.getAuthenticatedUserIfPresent(request);
 
