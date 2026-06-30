@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ClientSession, isValidObjectId, Types } from 'mongoose';
+import { EventBusService } from '../../../core/events/event-bus.service';
+import { EventType } from '../../../core/events/enums/event-type.enum';
 import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { OrderStatus } from '../../orders/enums/order-status.enum';
@@ -23,6 +25,7 @@ export class PaymentsService {
     private readonly paymentsRepository: PaymentsRepository,
     private readonly ordersService: OrdersService,
     private readonly databaseTransactionService: DatabaseTransactionService,
+    private readonly eventBusService: EventBusService,
   ) {}
 
   async createPaymentFromOrder(
@@ -76,11 +79,12 @@ export class PaymentsService {
       throw new BadRequestException('Only pending payments can be completed');
     }
 
+    const finalTransactionId = transactionId ?? `mock_${randomUUID()}`;
     const paidPayment = await this.databaseTransactionService.executeInTransaction(
       async (session) => {
         const completedPayment = await this.paymentsRepository.markAsPaid(
           getEntityId(payment),
-          transactionId ?? `mock_${randomUUID()}`,
+          finalTransactionId,
           session,
         );
 
@@ -98,6 +102,18 @@ export class PaymentsService {
         return completedPayment;
       },
     );
+
+    this.eventBusService.emit({
+      type: EventType.ORDER_PAID,
+      payload: {
+        userId,
+        orderId,
+        paymentId: getEntityId(paidPayment),
+        amount: paidPayment.amount,
+        transactionId: paidPayment.transactionId ?? finalTransactionId,
+      },
+      timestamp: Date.now(),
+    });
 
     return paidPayment;
   }

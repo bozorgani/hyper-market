@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -9,6 +9,7 @@ import { envValidation } from './config/env/env.validation';
 import { EventBusModule } from './core/events/event-bus.module';
 import { jwtConfig } from './config/jwt/jwt.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { CsrfProtectionMiddleware } from './infrastructure/security/csrf-protection.middleware';
 import { SecurityModule } from './infrastructure/security/security.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -68,4 +69,8 @@ import { UsersModule } from './modules/users/users.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CsrfProtectionMiddleware).forRoutes('*');
+  }
+}

@@ -1,29 +1,40 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const TOKEN_KEY = "hyper_market_access_token";
-const USER_KEY = "hyper_market_user";
-const REFRESH_TOKEN_KEY = "hyper_market_refresh_token";
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    _skipAuthRedirect?: boolean;
+  }
+}
+
+
+const CSRF_TOKEN_COOKIE = "hyper_market_csrf_token";
+const CSRF_TOKEN_HEADER = "x-csrf-token";
+const CSRF_SAFE_METHODS = new Set(["get", "head", "options"]);
+
+function getCookieValue(name: string): string | null {
+  if (typeof document === "undefined") return null;
+
+  const cookies = document.cookie.split(";");
+  for (const cookie of cookies) {
+    const [rawKey, ...rawValue] = cookie.trim().split("=");
+    if (rawKey === name) {
+      return decodeURIComponent(rawValue.join("="));
+    }
+  }
+
+  return null;
+}
+
 
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (token: string) => void;
+  resolve: () => void;
   reject: (error: unknown) => void;
 }> = [];
 
-type AuthResponse = {
-  accessToken: string;
-  refreshToken: string;
-};
-
-type JwtPayload = {
-  sub: string;
-  role: string;
-  sessionId?: string;
-  deviceId?: string;
-};
-
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
+  _skipAuthRedirect?: boolean;
 };
 
 function localizeApiMessage(message: string) {
@@ -41,90 +52,62 @@ function getApiBaseUrl(): string {
   return process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1";
 }
 
-function decodeToken(token: string): JwtPayload | null {
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    return JSON.parse(window.atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as JwtPayload;
-  } catch {
-    return null;
-  }
-}
-
-function persistTokens(accessToken: string, refreshToken: string): void {
-  window.sessionStorage.setItem(TOKEN_KEY, accessToken);
-  window.sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-
-  const payload = decodeToken(accessToken);
-  if (payload?.sub && payload.role) {
-    window.sessionStorage.setItem(
-      USER_KEY,
-      JSON.stringify({
-        id: payload.sub,
-        role: payload.role,
-        sessionId: payload.sessionId,
-        deviceId: payload.deviceId,
-      }),
-    );
-  }
-}
-
-function clearStoredSession(): void {
-  window.sessionStorage.removeItem(TOKEN_KEY);
-  window.sessionStorage.removeItem(USER_KEY);
-  window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
-}
-
 function redirectToLogin(): void {
   if (typeof window !== "undefined") {
     window.location.href = "/login";
   }
 }
 
-function processQueue(error: unknown, token: string | null): void {
+function processQueue(error: unknown): void {
   failedQueue.forEach((promise) => {
-    if (error || !token) {
+    if (error) {
       promise.reject(error);
       return;
     }
 
-    promise.resolve(token);
+    promise.resolve();
   });
 
   failedQueue = [];
 }
 
-async function refreshAccessToken(refreshToken: string): Promise<string> {
+async function refreshSessionCookie(): Promise<void> {
   const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
+    headers: {
+      "Content-Type": "application/json",
+      ...(getCookieValue(CSRF_TOKEN_COOKIE)
+        ? { [CSRF_TOKEN_HEADER]: getCookieValue(CSRF_TOKEN_COOKIE)! }
+        : {}),
+    },
+    credentials: "include",
+    body: JSON.stringify({}),
   });
 
   if (!response.ok) {
     throw new Error("Refresh token failed");
   }
-
-  const data = (await response.json()) as AuthResponse;
-  persistTokens(data.accessToken, data.refreshToken);
-  return data.accessToken;
 }
 
 export const api = axios.create({
   baseURL: getApiBaseUrl(),
   timeout: 15000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+
 api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = window.sessionStorage.getItem(TOKEN_KEY);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  const method = config.method?.toLowerCase() ?? "get";
+  if (!CSRF_SAFE_METHODS.has(method)) {
+    const csrfToken = getCookieValue(CSRF_TOKEN_COOKIE);
+    if (csrfToken) {
+      config.headers[CSRF_TOKEN_HEADER] = csrfToken;
     }
   }
+
   return config;
 });
 
@@ -134,38 +117,27 @@ api.interceptors.response.use(
     const originalRequest = error.config as RetriableRequestConfig | undefined;
 
     if (typeof window !== "undefined" && error.response?.status === 401 && originalRequest && !originalRequest._retry) {
-      const refreshToken = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
-
-      if (!refreshToken) {
-        clearStoredSession();
-        redirectToLogin();
-        return Promise.reject(error);
-      }
-
       originalRequest._retry = true;
 
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
+          .then(() => api(originalRequest))
           .catch((queueError) => Promise.reject(queueError));
       }
 
       isRefreshing = true;
 
       try {
-        const newAccessToken = await refreshAccessToken(refreshToken);
-        processQueue(null, newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        await refreshSessionCookie();
+        processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
-        clearStoredSession();
-        redirectToLogin();
+        processQueue(refreshError);
+        if (!originalRequest._skipAuthRedirect) {
+          redirectToLogin();
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

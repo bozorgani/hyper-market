@@ -86,7 +86,7 @@ async function bootstrap() {
 
       callback(new Error('CORS origin is not allowed'), false);
     },
-    credentials: !hasWildcardOrigin,
+    credentials: true,
   });
 
   app.useGlobalFilters(new HttpExceptionFilter());

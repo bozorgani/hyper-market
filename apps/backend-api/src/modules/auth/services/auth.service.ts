@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { createHash, randomInt, randomUUID } from 'crypto';
 import { Types } from 'mongoose';
+import { EventBusService } from '../../../core/events/event-bus.service';
+import { EventType } from '../../../core/events/enums/event-type.enum';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { PasswordService } from '../../../infrastructure/security/password.service';
@@ -70,6 +72,7 @@ export class AuthService {
     private readonly otpService: OtpService,
     private readonly sessionService: SessionService,
     private readonly refreshTokenService: RefreshTokenService,
+    private readonly eventBusService: EventBusService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -100,6 +103,17 @@ export class AuthService {
     if (user.phoneNumber) {
       await this.otpService.createVerificationOtp(userId, user.phoneNumber, OtpType.PHONE_VERIFY);
     }
+
+    this.eventBusService.emit({
+      type: EventType.USER_REGISTERED,
+      payload: {
+        userId,
+        role: user.role,
+        hasEmail: Boolean(user.email),
+        hasPhoneNumber: Boolean(user.phoneNumber),
+      },
+      timestamp: Date.now(),
+    });
 
     return {
       id: userId,
@@ -394,6 +408,30 @@ export class AuthService {
   async verifyOtp(dto: VerifyOtpDto, context: AuthContext = {}) {
     await this.otpService.verifyOtpCode(dto.target, dto.type, dto.code, context);
     return { message: 'otp verified' };
+  }
+
+
+  async getCurrentUser(payload: JwtPayload) {
+    const user = await this.usersService.getUserById(payload.sub);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const userId = getEntityId(user);
+
+    return {
+      _id: userId,
+      id: userId,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      accountStatus: user.accountStatus,
+      isEmailVerified: user.isEmailVerified,
+      isPhoneVerified: user.isPhoneVerified,
+      sessionId: payload.sessionId,
+      deviceId: payload.deviceId,
+    };
   }
 
   async findUserByEmail(email: string) {

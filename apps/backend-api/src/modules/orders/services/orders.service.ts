@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ClientSession, isValidObjectId, Types } from 'mongoose';
+import { EventBusService } from '../../../core/events/event-bus.service';
+import { EventType } from '../../../core/events/enums/event-type.enum';
 import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { CartService } from '../../cart/services/cart.service';
@@ -30,6 +32,7 @@ export class OrdersService {
     private readonly productsService: ProductsService,
     private readonly cartService: CartService,
     private readonly databaseTransactionService: DatabaseTransactionService,
+    private readonly eventBusService: EventBusService,
   ) {}
 
   async createOrder(userId: string): Promise<Order> {
@@ -108,6 +111,17 @@ export class OrdersService {
         this.productsService.syncProductToSearch(productId),
       ),
     );
+
+    this.eventBusService.emit({
+      type: EventType.ORDER_CREATED,
+      payload: {
+        userId,
+        orderId: getEntityId(order),
+        totalPrice: order.totalPrice,
+        itemsCount: order.items.length,
+      },
+      timestamp: Date.now(),
+    });
 
     return order;
   }

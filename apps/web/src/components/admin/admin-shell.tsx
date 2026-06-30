@@ -88,7 +88,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             })}
             <button
               onClick={() => {
-                logout();
+                void logout();
                 router.replace("/");
               }}
               className="mt-2 flex items-center gap-3 rounded-2xl px-4 py-3 text-right text-sm font-semibold text-slate-600 transition hover:bg-slate-50"

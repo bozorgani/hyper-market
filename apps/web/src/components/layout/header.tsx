@@ -29,7 +29,7 @@ export function Header() {
   }
 
   function handleLogout() {
-    logout();
+    void logout();
     showToast({ type: "info", title: "از حساب کاربری خارج شدید" });
   }
 
