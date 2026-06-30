@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { LoggerService } from '../../infrastructure/logger/logger.service';
 import { getEntityId } from '../../shared/utils/entity-id.util';
 
 const { Meilisearch } = require('meilisearch') as {
@@ -6,6 +7,7 @@ const { Meilisearch } = require('meilisearch') as {
 };
 import { CategoriesService } from '../categories/services/categories.service';
 import { Product } from '../products/schemas/product.schema';
+import { SearchQueueService } from './search-queue.service';
 
 export type ProductSearchDocument = {
   id: string;
@@ -29,7 +31,11 @@ export class SearchIndexer implements OnModuleInit {
   private readonly indexName = 'products';
   private readonly client: any;
 
-  constructor(private readonly categoriesService: CategoriesService) {
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    private readonly searchQueueService: SearchQueueService,
+    private readonly loggerService: LoggerService,
+  ) {
     this.client = new Meilisearch({
       host: process.env.MEILI_HOST ?? 'http://localhost:7700',
       apiKey: process.env.MEILI_API_KEY,
@@ -39,8 +45,10 @@ export class SearchIndexer implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     try {
       await this.ensureProductIndex();
-    } catch {
-      // Search index settings initialization must not block application startup.
+    } catch (error) {
+      this.loggerService.error('Search index settings initialization failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -48,16 +56,27 @@ export class SearchIndexer implements OnModuleInit {
     try {
       const document = await this.toProductDocument(product);
       await this.client.index(this.indexName).addDocuments([document], { primaryKey: 'id' });
-    } catch {
-      // Search indexing must not break product writes.
+    } catch (error) {
+      this.loggerService.warn('Direct search indexing failed; enqueueing retry job', {
+        productId: getEntityId(product),
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      const document = await this.toProductDocument(product);
+      await this.searchQueueService.enqueueIndexProduct(document);
     }
   }
 
   async removeProduct(productId: string): Promise<void> {
     try {
       await this.client.index(this.indexName).deleteDocument(productId);
-    } catch {
-      // Search indexing must not break product deletes.
+    } catch (error) {
+      this.loggerService.warn('Direct search delete failed; enqueueing retry job', {
+        productId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      await this.searchQueueService.enqueueDeleteProduct(productId);
     }
   }
 
