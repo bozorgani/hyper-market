@@ -122,8 +122,8 @@ export class OtpService {
     type: OtpType,
     expiresInMs: number,
   ): Promise<void> {
-    const isDevelopmentOtp = process.env.NODE_ENV === 'development';
-    const code = isDevelopmentOtp ? '123456' : this.generateOtpCode();
+    // TEMPORARY: Always generate real code and log it (no SMS/Email)
+    const code = this.generateOtpCode();
 
     await this.otpRepository.create({
       userId: new Types.ObjectId(userId),
@@ -134,28 +134,15 @@ export class OtpService {
       expiresAt: new Date(Date.now() + expiresInMs),
     });
 
-    if (isDevelopmentOtp) {
-      console.info(`Development OTP for ${target}: ${code}`);
-    }
+    // Log the raw OTP code to console (before hashing)
+    console.log(`[OTP] Code for ${target}: ${code}`);
 
     const ttl = Math.ceil(expiresInMs / 1000);
     await this.redisService.set(this.getOtpAttemptsKey(target, type), '0', ttl);
     await this.redisService.delete(this.getOtpLockKey(target, type));
 
-    if (isDevelopmentOtp) {
-      return;
-    }
-
-    if (this.isEmailTarget(target)) {
-      if (type === OtpType.PASSWORD_RESET) {
-        await this.mailService.sendPasswordResetEmail(target, code);
-        return;
-      }
-      await this.mailService.sendOtpEmail(target, code);
-      return;
-    }
-
-    await this.smsIrService.sendOtpSms(target, code);
+    // Skip SMS / Email sending for now
+    return;
   }
 
   private async getRedisOtpAttempts(
@@ -176,7 +163,7 @@ export class OtpService {
   ): Promise<number> {
     const updatedAttempts = currentAttempts + 1;
     const ttl = Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / 1000));
-    await this.redisService.set(attemptsKey, updatedAttempts.toString(), ttl);
+    await this.redisService.set(updatedAttempts.toString(), ttl);
     return updatedAttempts;
   }
 
