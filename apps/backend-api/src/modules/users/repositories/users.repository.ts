@@ -64,7 +64,7 @@ export class UsersRepository implements BaseRepository<User> {
   async updateById(id: string, data: Partial<User>): Promise<User | null> {
     if (!isValidObjectId(id)) return null;
     return this.userModel
-      .findOneAndUpdate({ _id: id, deletedAt: null }, data, { new: true })
+      .findOneAndUpdate({ _id: id, deletedAt: null }, data, { returnDocument: 'after' })
       .exec();
   }
 
@@ -74,7 +74,7 @@ export class UsersRepository implements BaseRepository<User> {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { isEmailVerified: true, accountStatus: 'active' },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -85,7 +85,7 @@ export class UsersRepository implements BaseRepository<User> {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { isPhoneVerified: true, accountStatus: 'active' },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -103,7 +103,7 @@ export class UsersRepository implements BaseRepository<User> {
           passwordChangedAt: new Date(),
           $inc: { tokenVersion: 1 },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -114,7 +114,7 @@ export class UsersRepository implements BaseRepository<User> {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { $inc: { tokenVersion: 1 } },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -125,7 +125,7 @@ export class UsersRepository implements BaseRepository<User> {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { $inc: { failedLoginAttempts: 1 }, lastFailedLoginAt: new Date() },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -136,7 +136,7 @@ export class UsersRepository implements BaseRepository<User> {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { lockedUntil },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -151,7 +151,7 @@ export class UsersRepository implements BaseRepository<User> {
           lockedUntil: null,
           lastLoginAt: new Date(),
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -162,7 +162,7 @@ export class UsersRepository implements BaseRepository<User> {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { deletedAt: new Date() },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -177,7 +177,7 @@ export class UsersRepository implements BaseRepository<User> {
           lockedUntil: null,
           $inc: { tokenVersion: 1 },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
@@ -193,7 +193,7 @@ export class UsersRepository implements BaseRepository<User> {
           failedLoginAttempts: 0,
           $inc: { tokenVersion: 1 },
         },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }

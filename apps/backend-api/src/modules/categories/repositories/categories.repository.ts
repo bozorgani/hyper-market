@@ -38,7 +38,7 @@ export class CategoriesRepository {
   async updateById(id: string, data: Partial<Category>): Promise<Category | null> {
     if (!isValidObjectId(id)) return null;
     return this.categoryModel
-      .findOneAndUpdate({ _id: id, deletedAt: null }, data, { new: true })
+      .findOneAndUpdate({ _id: id, deletedAt: null }, data, { returnDocument: 'after' })
       .exec();
   }
 
@@ -48,7 +48,7 @@ export class CategoriesRepository {
       .findOneAndUpdate(
         { _id: id, deletedAt: null },
         { deletedAt: new Date() },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .exec();
   }
