@@ -74,6 +74,8 @@ function clearStoredSession(): void {
   window.sessionStorage.removeItem(TOKEN_KEY);
   window.sessionStorage.removeItem(USER_KEY);
   window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  // پاک کردن کوکی هم
+  document.cookie = "hyper_market_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 }
 
 function persistSession(accessToken: string, refreshToken: string): User {
@@ -81,6 +83,10 @@ function persistSession(accessToken: string, refreshToken: string): User {
   window.sessionStorage.setItem(TOKEN_KEY, accessToken);
   window.sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   window.sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+
+  // ذخیره توکن در کوکی (برای middleware)
+  document.cookie = `hyper_market_access_token=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
+
   return user;
 }
 
@@ -93,6 +99,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
   refreshToken: null,
   hydrated: false,
+
   hydrate: () => {
     const accessToken = window.sessionStorage.getItem(TOKEN_KEY);
     const refreshToken = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
@@ -102,57 +109,38 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
     try {
-      set({ accessToken, refreshToken, user: JSON.parse(storedUser) as User, hydrated: true });
+      const user = JSON.parse(storedUser);
+      set({ user, accessToken, refreshToken, hydrated: true });
     } catch {
-      clearStoredSession();
-      set({ accessToken: null, refreshToken: null, user: null, hydrated: true });
+      set({ hydrated: true });
     }
   },
-  login: async (input) => {
-    const { data } = await api.post<AuthResponse>("/auth/login", {
+
+  login: async (input: LoginInput) => {
+    const deviceId = getDeviceId();
+    const payload = {
       ...input,
-      deviceId: getDeviceId(),
-    });
+      deviceId,
+    };
+
+    const { data } = await api.post<AuthResponse>("/auth/login", payload);
     const user = persistSession(data.accessToken, data.refreshToken);
-    set({ accessToken: data.accessToken, refreshToken: data.refreshToken, user, hydrated: true });
+
+    set({
+      user,
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+    });
   },
+
   refreshSession: async () => {
-    const refreshToken = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
-    if (!refreshToken) {
-      clearStoredSession();
-      set({ accessToken: null, refreshToken: null, user: null, hydrated: true });
-      return null;
-    }
-
-    const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) {
-      clearStoredSession();
-      set({ accessToken: null, refreshToken: null, user: null, hydrated: true });
-      return null;
-    }
-
-    const data = (await response.json()) as AuthResponse;
-    const user = persistSession(data.accessToken, data.refreshToken);
-    set({ accessToken: data.accessToken, refreshToken: data.refreshToken, user, hydrated: true });
-    return data.accessToken;
+    // TODO: implement refresh logic
+    return null;
   },
+
   logout: () => {
-    const refreshToken = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
-
-    if (refreshToken) {
-      void fetch(`${getApiBaseUrl()}/auth/logout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
-      }).catch(() => undefined);
-    }
-
     clearStoredSession();
-    set({ accessToken: null, refreshToken: null, user: null, hydrated: true });
+    set({ user: null, accessToken: null, refreshToken: null });
+    window.location.href = "/login";
   },
 }));
