@@ -32,7 +32,7 @@ export class OrdersService {
     private readonly productsService: ProductsService,
     private readonly cartService: CartService,
     private readonly databaseTransactionService: DatabaseTransactionService,
-    private readonly eventBusService: EventBusService,
+    private readonly eventBusService?: EventBusService,
   ) {}
 
   async createOrder(userId: string): Promise<Order> {
@@ -112,7 +112,7 @@ export class OrdersService {
       ),
     );
 
-    this.eventBusService.emit({
+    this.eventBusService?.emit({
       type: EventType.ORDER_CREATED,
       payload: {
         userId,

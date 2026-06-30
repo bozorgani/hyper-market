@@ -24,6 +24,65 @@ export class CartRepository {
       .exec();
   }
 
+
+  async upsertItem(
+    userId: string,
+    productId: string,
+    quantity: number,
+  ): Promise<Cart | null> {
+    const productObjectId = new Types.ObjectId(productId);
+
+    return this.cartModel
+      .findOneAndUpdate(
+        { userId },
+        [
+          {
+            $set: {
+              items: {
+                $let: {
+                  vars: {
+                    existingItems: {
+                      $filter: {
+                        input: '$items',
+                        as: 'item',
+                        cond: { $eq: ['$$item.productId', productObjectId] },
+                      },
+                    },
+                  },
+                  in: {
+                    $cond: [
+                      { $gt: [{ $size: '$$existingItems' }, 0] },
+                      {
+                        $map: {
+                          input: '$items',
+                          as: 'item',
+                          in: {
+                            $cond: [
+                              { $eq: ['$$item.productId', productObjectId] },
+                              { productId: '$$item.productId', quantity },
+                              '$$item',
+                            ],
+                          },
+                        },
+                      },
+                      {
+                        $concatArrays: [
+                          '$items',
+                          [{ productId: productObjectId, quantity }],
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        ],
+        { returnDocument: 'after' },
+      )
+      .exec();
+  }
+
   async addItem(
     userId: string,
     productId: string,

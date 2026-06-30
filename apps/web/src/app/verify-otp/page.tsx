@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, Suspense, useMemo, useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ const features = [
   { title: "بازگشت سریع", description: "پس از موفقیت، کاربر به صفحه ورود هدایت می‌شود تا جریان ورود نهایی شود." },
 ];
 
-export default function VerifyOtpPage() {
+function VerifyOtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTarget = useMemo(() => searchParams.get("target") ?? "", [searchParams]);
@@ -99,5 +99,14 @@ export default function VerifyOtpPage() {
         </Button>
       </form>
     </AuthShell>
+  );
+}
+
+
+export default function VerifyOtpPage() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyOtpContent />
+    </Suspense>
   );
 }

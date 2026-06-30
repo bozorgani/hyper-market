@@ -59,9 +59,11 @@ export class CartService {
     }
 
     await this.getOrCreateCart(userId);
-    const updatedCart =
-      (await this.cartRepository.addItem(userId, productId, quantity)) ??
-      (await this.cartRepository.pushItem(userId, productId, quantity));
+    const updatedCart = await this.cartRepository.upsertItem(
+      userId,
+      productId,
+      quantity,
+    );
 
     if (!updatedCart) {
       throw new BadRequestException('Unable to update cart');

@@ -25,7 +25,7 @@ export class PaymentsService {
     private readonly paymentsRepository: PaymentsRepository,
     private readonly ordersService: OrdersService,
     private readonly databaseTransactionService: DatabaseTransactionService,
-    private readonly eventBusService: EventBusService,
+    private readonly eventBusService?: EventBusService,
   ) {}
 
   async createPaymentFromOrder(
@@ -103,7 +103,7 @@ export class PaymentsService {
       },
     );
 
-    this.eventBusService.emit({
+    this.eventBusService?.emit({
       type: EventType.ORDER_PAID,
       payload: {
         userId,

@@ -107,7 +107,7 @@ Module implementation matrix:
 
 | Module | Module file | Controllers | Services | Repositories | Schemas | DTOs |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| analytics | yes | 1 | 1 | 1 | 1 | 0 |
+| analytics | yes | 1 | 1 | 1 | 1 | 1 |
 | audit | yes | 0 | 0 | 1 | 1 | 0 |
 | auth | yes | 1 | 4 | 3 | 3 | 10 |
 | cart | yes | 1 | 1 | 1 | 1 | 2 |
@@ -118,7 +118,7 @@ Module implementation matrix:
 | permissions | yes | 0 | 0 | 1 | 1 | 0 |
 | products | yes | 1 | 1 | 1 | 1 | 2 |
 | queue | yes | 0 | 1 | 0 | 0 | 0 |
-| search | yes | 1 | 1 | 0 | 0 | 0 |
+| search | yes | 1 | 2 | 0 | 0 | 0 |
 | users | yes | 1 | 1 | 1 | 1 | 0 |
 
 Infrastructure/core detected:
@@ -589,8 +589,6 @@ action
 ## 6. Completed Features
 
 - Backend API application exists under `apps/backend-api`.
-- Main frontend application exists under `apps/frontend`.
-- Secondary frontend application exists under `apps/frontend-web`.
 - Auth module exists with JWT/OTP-related services, guards, strategies, DTOs, and schemas.
 - Products module exists with controller, service, repository, DTOs, and schema.
 - Categories module exists with list controller, service, repository, and schema.
