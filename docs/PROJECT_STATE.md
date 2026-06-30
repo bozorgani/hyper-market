@@ -109,7 +109,7 @@ Module implementation matrix:
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | analytics | yes | 1 | 1 | 1 | 1 | 0 |
 | audit | yes | 0 | 0 | 1 | 1 | 0 |
-| auth | yes | 1 | 1 | 3 | 3 | 10 |
+| auth | yes | 1 | 4 | 3 | 3 | 10 |
 | cart | yes | 1 | 1 | 1 | 1 | 2 |
 | categories | yes | 1 | 1 | 1 | 1 | 2 |
 | mail | yes | 0 | 2 | 0 | 0 | 0 |

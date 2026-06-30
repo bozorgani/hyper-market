@@ -34,7 +34,7 @@ describe('SessionService', () => {
     mockSessionRepository.create.mockResolvedValue({ _id: 'session123' });
 
     const result = await service.createSession({
-      userId: 'user123',
+      userId: '507f1f77bcf86cd799439011',
       expiresAt: new Date(),
     });
 

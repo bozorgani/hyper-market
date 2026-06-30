@@ -34,11 +34,11 @@ export class SessionService {
   }
 
   async findActiveSession(userId: string, deviceId?: string | null): Promise<Session | null> {
-    return this.sessionRepository.findActiveSession(userId, deviceId || undefined);
+    return this.sessionRepository.findActiveSession(userId, deviceId ?? undefined);
   }
 
   async findByUserAndDevice(userId: string, deviceId?: string | null): Promise<Session | null> {
-    return this.sessionRepository.findByUserAndDevice(userId, deviceId || undefined);
+    return this.sessionRepository.findByUserAndDevice(userId, deviceId ?? undefined);
   }
 
   async updateLastActive(sessionId: string): Promise<void> {

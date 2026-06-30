@@ -33,7 +33,7 @@ export class RefreshTokenRepository {
 
   async findActiveToken(
     userId: string,
-    deviceId: string,
+    deviceId?: string,
   ): Promise<RefreshToken | null> {
     return this.refreshTokenModel
       .findOne({ userId, deviceId, revokedAt: null, expiresAt: { $gt: new Date() } })

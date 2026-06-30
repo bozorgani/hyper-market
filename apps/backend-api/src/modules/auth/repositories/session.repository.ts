@@ -21,7 +21,7 @@ export class SessionRepository {
 
   async findActiveSession(
     userId: string,
-    deviceId: string,
+    deviceId?: string,
   ): Promise<Session | null> {
     return this.sessionModel
       .findOne({ userId, deviceId, revokedAt: null, expiresAt: { $gt: new Date() } })
@@ -31,7 +31,7 @@ export class SessionRepository {
 
   async findByUserAndDevice(
     userId: string,
-    deviceId: string,
+    deviceId?: string,
   ): Promise<Session | null> {
     return this.sessionModel
       .findOne({ userId, deviceId })

@@ -41,7 +41,7 @@ export class RefreshTokenService {
     return this.refreshTokenRepository.create({
       userId: new Types.ObjectId(data.userId),
       sessionId: new Types.ObjectId(data.sessionId),
-      deviceId: data.deviceId ?? null,
+      deviceId: data.deviceId ?? undefined,
       tokenHash,
       tokenVersion: data.tokenVersion,
       jti: payload.jti,
@@ -99,7 +99,7 @@ export class RefreshTokenService {
     const createdRefreshToken = await this.refreshTokenRepository.create({
       userId: new Types.ObjectId(payload.sub),
       sessionId: new Types.ObjectId(payload.sessionId!),
-      deviceId: payload.deviceId ?? null,
+      deviceId: payload.deviceId ?? undefined,
       tokenHash: this.tokenHashService.hashToken(newRefreshToken),
       tokenVersion: payload.tokenVersion,
       jti: rotatedRefreshPayload.jti,
