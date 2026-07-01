@@ -7,6 +7,17 @@ import { ProductsService } from '../../products/services/products.service';
 import { CartRepository } from '../repositories/cart.repository';
 import { Cart, CartItem } from '../schemas/cart.schema';
 
+export type CartItemProductSummary = {
+  _id: string;
+  name: string;
+  price: number;
+  discountPrice?: number | null;
+  image?: string | null;
+  images: string[];
+  stock: number;
+  isActive: boolean;
+};
+
 export type CartDetailedItem = {
   productId: string;
   quantity: number;
@@ -16,6 +27,8 @@ export type CartDetailedItem = {
   image?: string | null;
   stock: number;
   lineTotal: number;
+  isAvailable: boolean;
+  product: CartItemProductSummary | null;
 };
 
 export type CartSummary = {
@@ -187,10 +200,22 @@ export class CartService {
       const product = productsById.get(productId);
 
       if (!product) {
-        throw new BadRequestException(`Product ${productId} is not available`);
+        return {
+          productId,
+          quantity: item.quantity,
+          name: 'محصول حذف‌شده یا ناموجود',
+          price: 0,
+          discountPrice: null,
+          image: null,
+          stock: 0,
+          lineTotal: 0,
+          isAvailable: false,
+          product: null,
+        };
       }
 
       const price = this.getProductPrice(product);
+      const image = product.images?.[0] ?? null;
 
       return {
         productId,
@@ -198,9 +223,20 @@ export class CartService {
         name: product.name,
         price,
         discountPrice: product.discountPrice ?? null,
-        image: product.images?.[0] ?? null,
+        image,
         stock: product.stock,
         lineTotal: price * item.quantity,
+        isAvailable: product.isActive && product.stock >= item.quantity,
+        product: {
+          _id: productId,
+          name: product.name,
+          price: product.price,
+          discountPrice: product.discountPrice ?? null,
+          image,
+          images: product.images ?? [],
+          stock: product.stock,
+          isActive: product.isActive,
+        },
       };
     });
   }

@@ -39,6 +39,17 @@ export type CartItem = {
   quantity: number;
 };
 
+export type CartItemProductSummary = {
+  _id: string;
+  name: string;
+  price: number;
+  discountPrice?: number | null;
+  image?: string | null;
+  images: string[];
+  stock: number;
+  isActive: boolean;
+};
+
 export type CartDetailedItem = CartItem & {
   name: string;
   price: number;
@@ -46,6 +57,8 @@ export type CartDetailedItem = CartItem & {
   image?: string | null;
   stock: number;
   lineTotal: number;
+  isAvailable?: boolean;
+  product?: CartItemProductSummary | null;
 };
 
 export type Cart = {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus } from "lucide-react";
+import { AlertTriangle, Minus, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
@@ -152,11 +152,23 @@ export default function CartPage() {
                 return (
                 <div key={item.productId} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
-                      {item.image ? "🛍️" : "🛒"}
+                    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 text-2xl">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                      ) : (
+                        "🛒"
+                      )}
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate font-semibold">{item.name}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate font-semibold">{item.product?.name ?? item.name}</p>
+                        {item.isAvailable === false ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            نیازمند بررسی
+                          </span>
+                        ) : null}
+                      </div>
                       <p className="text-sm text-slate-500">موجودی: {formatNumber(item.stock)}</p>
                       <p className="text-sm font-bold text-rose-600">{formatPrice(item.lineTotal)}</p>
                     </div>
@@ -167,7 +179,7 @@ export default function CartPage() {
                         <Minus className="h-4 w-4" />
                       </Button>
                       <span className="min-w-10 text-center text-sm font-black">{isItemMutating ? "..." : formatNumber(item.quantity)}</span>
-                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating || item.quantity >= item.stock} onClick={() => incrementItem(item.productId, item.quantity)} aria-label="افزایش تعداد">
+                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating || item.isAvailable === false || item.quantity >= item.stock} onClick={() => incrementItem(item.productId, item.quantity)} aria-label="افزایش تعداد">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
