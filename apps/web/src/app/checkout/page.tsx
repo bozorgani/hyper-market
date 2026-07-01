@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,9 +13,40 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { createIdempotencyKey } from "@/lib/idempotency";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/hooks/use-cart";
 import { useCreateOrder, useCreatePayment, useSimulatePaymentSuccess } from "@/hooks/use-orders";
+
+type CheckoutStep = "idle" | "creating_order" | "creating_payment" | "confirming_payment" | "redirecting";
+
+type CheckoutAttemptKeys = {
+  attemptId: string;
+  order: string;
+  paymentCreate: string;
+  paymentSuccess: string;
+};
+
+const checkoutSteps: { key: Exclude<CheckoutStep, "idle">; title: string; description: string }[] = [
+  { key: "creating_order", title: "ثبت سفارش", description: "ایجاد سفارش از اقلام سبد خرید" },
+  { key: "creating_payment", title: "ایجاد پرداخت", description: "ساخت تراکنش پرداخت آزمایشی" },
+  { key: "confirming_payment", title: "تأیید پرداخت", description: "موفق‌سازی پرداخت mock" },
+  { key: "redirecting", title: "انتقال", description: "هدایت به صفحه موفقیت سفارش" },
+];
+
+function createCheckoutAttemptKeys(): CheckoutAttemptKeys {
+  const attemptId = createIdempotencyKey("checkout");
+  return {
+    attemptId,
+    order: `${attemptId}:order`,
+    paymentCreate: `${attemptId}:payment-create`,
+    paymentSuccess: `${attemptId}:payment-success`,
+  };
+}
+
+function stepIndex(step: CheckoutStep) {
+  return checkoutSteps.findIndex((item) => item.key === step);
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -26,32 +57,60 @@ export default function CheckoutPage() {
   const { showToast } = useToast();
   const [error, setError] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState<CheckoutStep>("idle");
+  const [attemptKeys, setAttemptKeys] = useState<CheckoutAttemptKeys | null>(null);
+  const submittingRef = useRef(false);
 
   const detailedItems = cart.data?.items ?? [];
   const totalPrice = cart.data?.totalPrice ?? 0;
-  const isSubmitting = createOrder.isPending || createPayment.isPending || simulateSuccess.isPending;
+  const mutationPending = createOrder.isPending || createPayment.isPending || simulateSuccess.isPending;
+  const isSubmitting = mutationPending || submittingRef.current;
+  const activeStepIndex = stepIndex(currentStep);
   const cartErrorMessage = useMemo(() => {
     if (!cart.error) return "";
     return cart.error instanceof Error ? cart.error.message : "دریافت اطلاعات سبد خرید ناموفق بود.";
   }, [cart.error]);
 
   async function checkout() {
+    if (submittingRef.current || mutationPending) return;
+
+    const keys = attemptKeys ?? createCheckoutAttemptKeys();
+    setAttemptKeys(keys);
+    submittingRef.current = true;
     setError("");
+
     try {
-      trackAnalyticsEvent({ type: "CHECKOUT_START", metadata: { totalPrice } });
-      const order = await createOrder.mutateAsync();
-      trackAnalyticsEvent({ type: "ORDER_CREATED", metadata: { orderId: order._id, amount: order.totalPrice } });
-      await createPayment.mutateAsync(order._id);
-      await simulateSuccess.mutateAsync(order._id);
-      trackAnalyticsEvent({ type: "PAYMENT_SUCCESS", metadata: { orderId: order._id, amount: order.totalPrice } });
+      trackAnalyticsEvent({ type: "CHECKOUT_START", metadata: { totalPrice, attemptId: keys.attemptId } });
+
+      setCurrentStep("creating_order");
+      const order = await createOrder.mutateAsync({ idempotencyKey: keys.order });
+      trackAnalyticsEvent({ type: "ORDER_CREATED", metadata: { orderId: order._id, amount: order.totalPrice, attemptId: keys.attemptId } });
+
+      setCurrentStep("creating_payment");
+      await createPayment.mutateAsync({ orderId: order._id, idempotencyKey: keys.paymentCreate });
+
+      setCurrentStep("confirming_payment");
+      await simulateSuccess.mutateAsync({ orderId: order._id, idempotencyKey: keys.paymentSuccess });
+      trackAnalyticsEvent({ type: "PAYMENT_SUCCESS", metadata: { orderId: order._id, amount: order.totalPrice, attemptId: keys.attemptId } });
+
+      setCurrentStep("redirecting");
       showToast({ type: "success", title: "پرداخت آزمایشی با موفقیت انجام شد" });
       router.push(`/order/success?orderId=${order._id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "پرداخت ناموفق بود.";
+      submittingRef.current = false;
       setError(message);
       setConfirmOpen(false);
       showToast({ type: "error", title: "پرداخت انجام نشد", description: message });
     }
+  }
+
+  function resetCheckoutAttempt() {
+    if (isSubmitting) return;
+    setAttemptKeys(null);
+    setCurrentStep("idle");
+    setError("");
+    setConfirmOpen(true);
   }
 
   return (
@@ -141,13 +200,60 @@ export default function CheckoutPage() {
               <p className="text-sm text-slate-500">مبلغ قابل پرداخت</p>
               <p className="mt-2 text-3xl font-black text-rose-600">{formatPrice(totalPrice)}</p>
               <p className="mt-4 text-sm leading-7 text-slate-500">پس از تأیید، سفارش ثبت می‌شود، پرداخت mock موفق می‌شود و شما به صفحه موفقیت سفارش هدایت خواهید شد.</p>
-              {error ? <p className="mt-4 rounded-2xl bg-red-50 p-3 text-sm leading-6 text-red-600">{error}</p> : null}
+
+              <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-black text-slate-900">وضعیت پرداخت</p>
+                  {attemptKeys ? <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500">تلاش فعال</span> : null}
+                </div>
+                <div className="mt-4 space-y-3">
+                  {checkoutSteps.map((step, index) => {
+                    const isActive = currentStep === step.key;
+                    const isDone = activeStepIndex > index;
+                    const isWaiting = activeStepIndex < index || currentStep === "idle";
+
+                    return (
+                      <div key={step.key} className="flex gap-3">
+                        <span
+                          className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
+                            isDone
+                              ? "bg-emerald-500 text-white"
+                              : isActive
+                                ? "bg-rose-600 text-white shadow-sm shadow-rose-200"
+                                : "bg-white text-slate-400 ring-1 ring-slate-200"
+                          }`}
+                        >
+                          {isDone ? "✓" : index + 1}
+                        </span>
+                        <div>
+                          <p className={`text-sm font-bold ${isWaiting ? "text-slate-500" : "text-slate-900"}`}>{step.title}</p>
+                          <p className="mt-0.5 text-xs leading-5 text-slate-500">
+                            {isActive ? "در حال انجام..." : isDone ? "انجام شد" : step.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {error ? (
+                <div className="mt-4 rounded-2xl bg-red-50 p-3 text-sm leading-6 text-red-600">
+                  <p>{error}</p>
+                  <p className="mt-2 text-xs text-red-500">برای جلوگیری از ثبت تکراری، تلاش مجدد با همان شناسه امن checkout انجام می‌شود.</p>
+                </div>
+              ) : null}
               <div className="mt-6 flex flex-col gap-3">
                 <Button type="button" className="w-full" onClick={() => setConfirmOpen(true)} disabled={isSubmitting}>
-                  {isSubmitting ? "در حال ثبت سفارش..." : "پرداخت و ثبت سفارش"}
+                  {isSubmitting ? "در حال پردازش پرداخت..." : error && attemptKeys ? "تلاش مجدد پرداخت" : "پرداخت و ثبت سفارش"}
                 </Button>
-                <Link href="/cart">
-                  <Button type="button" variant="outline" className="w-full">
+                {error && attemptKeys ? (
+                  <Button type="button" variant="secondary" className="w-full" onClick={resetCheckoutAttempt} disabled={isSubmitting}>
+                    شروع تلاش جدید
+                  </Button>
+                ) : null}
+                <Link href="/cart" aria-disabled={isSubmitting} className={isSubmitting ? "pointer-events-none" : undefined}>
+                  <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
                     بازگشت به سبد خرید
                   </Button>
                 </Link>
@@ -160,10 +266,12 @@ export default function CheckoutPage() {
           open={confirmOpen}
           title="تأیید پرداخت آزمایشی"
           description={`سفارش شما با مبلغ ${formatPrice(totalPrice)} ثبت می‌شود و پرداخت mock به‌صورت خودکار موفق خواهد شد. ادامه می‌دهید؟`}
-          confirmText="بله، ثبت سفارش"
+          confirmText={error && attemptKeys ? "بله، تلاش مجدد" : "بله، ثبت سفارش"}
           cancelText="بازگشت"
           loading={isSubmitting}
-          onCancel={() => setConfirmOpen(false)}
+          onCancel={() => {
+            if (!isSubmitting) setConfirmOpen(false);
+          }}
           onConfirm={checkout}
         />
       </main>

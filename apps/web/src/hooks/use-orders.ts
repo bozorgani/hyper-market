@@ -3,6 +3,19 @@ import { createIdempotencyKey } from "@/lib/idempotency";
 import { api } from "@/services/api";
 import type { Order, Payment } from "@/types/domain";
 
+type CreateOrderInput = {
+  idempotencyKey?: string;
+};
+
+type CreatePaymentInput = {
+  orderId: string;
+  idempotencyKey?: string;
+};
+
+function idempotencyHeaders(key: string) {
+  return { "Idempotency-Key": key };
+}
+
 export function useMyOrders() {
   return useQuery({
     queryKey: ["orders", "my"],
@@ -13,8 +26,10 @@ export function useMyOrders() {
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () =>
-      (await api.post<Order>("/orders", {}, { headers: { "Idempotency-Key": createIdempotencyKey("order") } })).data,
+    mutationFn: async (input?: CreateOrderInput) =>
+      (
+        await api.post<Order>("/orders", {}, { headers: idempotencyHeaders(input?.idempotencyKey ?? createIdempotencyKey("order")) })
+      ).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders", "my"] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -24,16 +39,24 @@ export function useCreateOrder() {
 
 export function useCreatePayment() {
   return useMutation({
-    mutationFn: async (orderId: string) =>
-      (await api.post<Payment>("/payments/create", { orderId, method: "mock" }, { headers: { "Idempotency-Key": createIdempotencyKey("payment-create") } })).data,
+    mutationFn: async (input: string | CreatePaymentInput) => {
+      const orderId = typeof input === "string" ? input : input.orderId;
+      const idempotencyKey = typeof input === "string" ? createIdempotencyKey("payment-create") : input.idempotencyKey ?? createIdempotencyKey("payment-create");
+
+      return (await api.post<Payment>("/payments/create", { orderId, method: "mock" }, { headers: idempotencyHeaders(idempotencyKey) })).data;
+    },
   });
 }
 
 export function useSimulatePaymentSuccess() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (orderId: string) =>
-      (await api.post<Payment>("/payments/simulate-success", { orderId }, { headers: { "Idempotency-Key": createIdempotencyKey("payment-success") } })).data,
+    mutationFn: async (input: string | CreatePaymentInput) => {
+      const orderId = typeof input === "string" ? input : input.orderId;
+      const idempotencyKey = typeof input === "string" ? createIdempotencyKey("payment-success") : input.idempotencyKey ?? createIdempotencyKey("payment-success");
+
+      return (await api.post<Payment>("/payments/simulate-success", { orderId }, { headers: idempotencyHeaders(idempotencyKey) })).data;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["orders", "my"] }),
   });
 }
