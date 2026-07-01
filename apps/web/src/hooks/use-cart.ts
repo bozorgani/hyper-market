@@ -25,8 +25,7 @@ export function useUpdateCartQuantity() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: { productId: string; quantity: number }) => (await api.post<CartSummary>("/cart/add", input)).data,
-    onSuccess: (_data, variables) => {
-      trackAnalyticsEvent({ type: "ADD_TO_CART", metadata: variables });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
   });

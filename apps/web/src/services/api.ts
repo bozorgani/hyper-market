@@ -37,12 +37,17 @@ type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _skipAuthRedirect?: boolean;
 };
 
-function localizeApiMessage(message: string) {
+function localizeApiMessage(message: string, status?: number) {
+  if (status === 429) return "تعداد درخواست‌ها زیاد است. لطفاً چند لحظه صبر کنید و دوباره تلاش کنید.";
+  if (status === 409) return "این عملیات هم‌اکنون در حال پردازش است. لطفاً چند لحظه صبر کنید.";
+  if (status && status >= 500) return "خطای سرور رخ داد. لطفاً کمی بعد دوباره تلاش کنید.";
+
   const normalized = message.toLowerCase();
   if (normalized.includes("unauthorized") || normalized.includes("invalid credentials")) return "اطلاعات ورود معتبر نیست.";
-  if (normalized.includes("forbidden")) return "شما مجوز انجام این عملیات را ندارید.";
+  if (normalized.includes("forbidden") || normalized.includes("csrf")) return "شما مجوز انجام این عملیات را ندارید یا نشست شما منقضی شده است.";
   if (normalized.includes("not found")) return "موردی یافت نشد.";
   if (normalized.includes("insufficient")) return "موجودی کافی نیست.";
+  if (normalized.includes("already in progress") || normalized.includes("idempotency")) return "این عملیات در حال پردازش است. لطفاً چند لحظه صبر کنید.";
   if (normalized.includes("timeout")) return "زمان پاسخ‌گویی سرور به پایان رسید.";
   if (normalized.includes("network")) return "ارتباط با سرور برقرار نشد.";
   return message;
@@ -149,6 +154,6 @@ api.interceptors.response.use(
       ? message.join("، ")
       : message || error.response?.data?.error || error.message || "خطای غیرمنتظره رخ داد.";
 
-    return Promise.reject(new Error(localizeApiMessage(normalizedMessage)));
+    return Promise.reject(new Error(localizeApiMessage(normalizedMessage, error.response?.status)));
   },
 );

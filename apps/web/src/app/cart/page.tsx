@@ -22,16 +22,19 @@ export default function CartPage() {
   const clear = useClearCart();
   const { showToast } = useToast();
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [mutatingProductId, setMutatingProductId] = useState<string | null>(null);
   const detailedItems = cart.data?.items ?? [];
   const totalPrice = cart.data?.totalPrice ?? 0;
   const hasItems = detailedItems.length > 0;
-  const isMutating = remove.isPending || updateQuantity.isPending;
+  const isMutating = remove.isPending || updateQuantity.isPending || clear.isPending;
   const cartErrorMessage = useMemo(() => {
     if (!cart.error) return "";
     return cart.error instanceof Error ? cart.error.message : "دریافت سبد خرید ناموفق بود.";
   }, [cart.error]);
 
   async function decrementItem(productId: string, quantity: number) {
+    if (isMutating) return;
+    setMutatingProductId(productId);
     try {
       if (quantity <= 1) {
         await remove.mutateAsync(productId);
@@ -42,27 +45,38 @@ export default function CartPage() {
       await updateQuantity.mutateAsync({ productId, quantity: quantity - 1 });
     } catch (error) {
       showToast({ type: "error", title: "خطا در به‌روزرسانی سبد", description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setMutatingProductId(null);
     }
   }
 
   async function incrementItem(productId: string, quantity: number) {
+    if (isMutating) return;
+    setMutatingProductId(productId);
     try {
       await updateQuantity.mutateAsync({ productId, quantity: quantity + 1 });
     } catch (error) {
       showToast({ type: "error", title: "خطا در افزایش تعداد", description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setMutatingProductId(null);
     }
   }
 
   async function removeItem(productId: string) {
+    if (isMutating) return;
+    setMutatingProductId(productId);
     try {
       await remove.mutateAsync(productId);
       showToast({ type: "success", title: "محصول از سبد حذف شد" });
     } catch (error) {
       showToast({ type: "error", title: "حذف محصول ناموفق بود", description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setMutatingProductId(null);
     }
   }
 
   async function clearCart() {
+    if (isMutating) return;
     try {
       await clear.mutateAsync();
       setClearDialogOpen(false);
@@ -133,7 +147,9 @@ export default function CartPage() {
         {!cart.isLoading && !cartErrorMessage && hasItems ? (
           <>
             <Card className="mt-5 divide-y divide-slate-100 overflow-hidden">
-              {detailedItems.map((item) => (
+              {detailedItems.map((item) => {
+                const isItemMutating = mutatingProductId === item.productId;
+                return (
                 <div key={item.productId} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
@@ -150,17 +166,18 @@ export default function CartPage() {
                       <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating} onClick={() => decrementItem(item.productId, item.quantity)} aria-label="کاهش تعداد">
                         <Minus className="h-4 w-4" />
                       </Button>
-                      <span className="min-w-10 text-center text-sm font-black">{formatNumber(item.quantity)}</span>
+                      <span className="min-w-10 text-center text-sm font-black">{isItemMutating ? "..." : formatNumber(item.quantity)}</span>
                       <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating || item.quantity >= item.stock} onClick={() => incrementItem(item.productId, item.quantity)} aria-label="افزایش تعداد">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <Button type="button" variant="outline" disabled={remove.isPending} onClick={() => removeItem(item.productId)}>
-                      حذف
+                    <Button type="button" variant="outline" disabled={isMutating} onClick={() => removeItem(item.productId)}>
+                      {isItemMutating && remove.isPending ? "در حال حذف..." : "حذف"}
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </Card>
 
             <div className="mt-5 rounded-2xl bg-white p-5 shadow-sm">
@@ -169,11 +186,11 @@ export default function CartPage() {
                 <span>{formatPrice(totalPrice)}</span>
               </div>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                <Button type="button" variant="outline" onClick={() => setClearDialogOpen(true)}>
+                <Button type="button" variant="outline" onClick={() => setClearDialogOpen(true)} disabled={isMutating}>
                   خالی کردن سبد
                 </Button>
                 <Link href="/checkout" className="flex-1">
-                  <Button type="button" className="w-full">ادامه خرید</Button>
+                  <Button type="button" className="w-full" disabled={isMutating}>ادامه خرید</Button>
                 </Link>
               </div>
             </div>
