@@ -161,12 +161,24 @@ export function useAdminUsers() {
   });
 }
 
+export function useAdminUser(id: string) {
+  return useQuery({
+    queryKey: ["admin", "user", id],
+    queryFn: async () => (await api.get<User>(`/users/${id}`)).data,
+    enabled: Boolean(id),
+    retry: false,
+  });
+}
+
 export function useBlockUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) =>
       (await api.patch<User>(`/users/${id}/block`)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "user", id] });
+    },
   });
 }
 
@@ -175,6 +187,9 @@ export function useUnblockUser() {
   return useMutation({
     mutationFn: async (id: string) =>
       (await api.patch<User>(`/users/${id}/unblock`)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "user", id] });
+    },
   });
 }

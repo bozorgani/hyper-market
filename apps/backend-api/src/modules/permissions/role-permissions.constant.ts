@@ -10,6 +10,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'categories.update',
     'categories.delete',
     'orders.cancel',
+    'users.read',
     'users.ban',
     'vendors.approve',
   ],

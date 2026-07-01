@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
+import { UserRole } from '../enums/user-role.enum';
 import { UsersRepository, UserWithId } from '../repositories/users.repository';
 import { User } from '../schemas/user.schema';
 
@@ -90,8 +91,16 @@ export class UsersService {
     return this.usersRepository.softDelete(id);
   }
 
-  async blockUser(id: string): Promise<User> {
-    await this.getUserByIdOrFail(id);
+  async blockUser(id: string, actorUserId?: string): Promise<User> {
+    const targetUser = await this.getUserByIdOrFail(id);
+
+    if (actorUserId && actorUserId === id) {
+      throw new BadRequestException('You cannot block your own account');
+    }
+
+    if (targetUser.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Super admin accounts cannot be blocked');
+    }
 
     const user = await this.usersRepository.blockUser(id);
     if (!user) {
