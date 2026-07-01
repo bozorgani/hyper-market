@@ -1,20 +1,46 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { OrderCard } from "@/components/order-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMyOrders } from "@/hooks/use-orders";
 import { formatNumber } from "@/lib/utils";
+import type { OrderStatus } from "@/types/domain";
+
+const statuses: Array<{ value: OrderStatus | "all"; label: string }> = [
+  { value: "all", label: "همه" },
+  { value: "pending", label: "در انتظار" },
+  { value: "paid", label: "پرداخت‌شده" },
+  { value: "processing", label: "در حال پردازش" },
+  { value: "shipped", label: "ارسال‌شده" },
+  { value: "delivered", label: "تحویل‌شده" },
+  { value: "cancelled", label: "لغوشده" },
+];
 
 export default function OrdersPage() {
   const orders = useMyOrders();
+  const [status, setStatus] = useState<OrderStatus | "all">("all");
+  const [query, setQuery] = useState("");
   const errorMessage = orders.error instanceof Error ? orders.error.message : "دریافت سفارش‌ها ناموفق بود.";
+
+  const filteredOrders = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return (orders.data ?? []).filter((order) => {
+      const matchesStatus = status === "all" || order.status === status;
+      const matchesQuery = normalizedQuery ? order._id.toLowerCase().includes(normalizedQuery) : true;
+      return matchesStatus && matchesQuery;
+    });
+  }, [orders.data, query, status]);
+
+  const latestOrder = orders.data?.[0];
 
   return (
     <ProtectedRoute>
@@ -65,9 +91,43 @@ export default function OrdersPage() {
           </div>
         ) : null}
 
+        {!orders.isLoading && !orders.isError && orders.data?.length ? (
+          <Card className="mt-6 p-4">
+            <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
+              <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="جستجو بر اساس شماره سفارش..." />
+              <Button type="button" variant="outline" onClick={() => { setQuery(""); setStatus("all"); }}>
+                پاک‌کردن فیلترها
+              </Button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {statuses.map((item) => (
+                <Button key={item.value} type="button" variant={status === item.value ? "default" : "outline"} onClick={() => setStatus(item.value)}>
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+          </Card>
+        ) : null}
+
+        {!orders.isLoading && !orders.isError && latestOrder ? (
+          <Card className="mt-5 border-emerald-100 bg-emerald-50/60 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-emerald-900">آخرین سفارش شما</p>
+                <p className="mt-1 text-sm leading-7 text-emerald-700">
+                  سفارش #{latestOrder._id.slice(-8)} با مبلغ {formatNumber(latestOrder.totalPrice)} تومان ثبت شده است.
+                </p>
+              </div>
+              <Link href={`/order/success?orderId=${latestOrder._id}`}>
+                <Button type="button">مشاهده وضعیت</Button>
+              </Link>
+            </div>
+          </Card>
+        ) : null}
+
         {!orders.isLoading && !orders.isError ? (
           <div className="mt-5 space-y-4">
-            {(orders.data ?? []).map((order) => (
+            {filteredOrders.map((order) => (
               <OrderCard key={order._id} order={order} />
             ))}
             {orders.data?.length === 0 ? (
@@ -79,6 +139,13 @@ export default function OrdersPage() {
                     <Button type="button">شروع خرید</Button>
                   </Link>
                 }
+              />
+            ) : null}
+            {orders.data?.length && filteredOrders.length === 0 ? (
+              <EmptyState
+                title="سفارشی با این فیلتر یافت نشد"
+                description="عبارت جستجو یا وضعیت انتخاب‌شده را تغییر دهید."
+                actions={<Button type="button" onClick={() => { setQuery(""); setStatus("all"); }}>بازنشانی فیلترها</Button>}
               />
             ) : null}
           </div>
