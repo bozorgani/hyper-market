@@ -22,9 +22,13 @@ export class ProductsRepository {
     return product.save();
   }
 
-  async findById(id: string): Promise<Product | null> {
+  async findById(id: string, session?: ClientSession): Promise<Product | null> {
     if (!isValidObjectId(id)) return null;
-    return this.productModel.findOne({ _id: id, deletedAt: null }).lean().exec();
+    return this.productModel
+      .findOne({ _id: id, deletedAt: null })
+      .session(session ?? null)
+      .lean()
+      .exec();
   }
 
 

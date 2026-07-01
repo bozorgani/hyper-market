@@ -72,10 +72,10 @@ export class ProductsService {
     return product;
   }
 
-  async getProductById(id: string): Promise<Product> {
+  async getProductById(id: string, session?: ClientSession): Promise<Product> {
     this.ensureValidObjectId(id, 'Invalid product id');
 
-    const product = await this.productsRepository.findById(id);
+    const product = await this.productsRepository.findById(id, session);
     if (!product) {
       throw new NotFoundException('Product not found');
     }

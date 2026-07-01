@@ -32,8 +32,8 @@ export class CartService {
     private readonly redisService?: RedisService,
   ) {}
 
-  async getCartByUserId(userId: string): Promise<Cart> {
-    return this.getOrCreateCart(userId);
+  async getCartByUserId(userId: string, session?: ClientSession): Promise<Cart> {
+    return this.getOrCreateCart(userId, session);
   }
 
   async getCartSummary(userId: string): Promise<CartSummary> {
@@ -205,13 +205,13 @@ export class CartService {
     });
   }
 
-  private async getOrCreateCart(userId: string): Promise<Cart> {
-    const existingCart = await this.cartRepository.getCartByUserId(userId);
+  private async getOrCreateCart(userId: string, session?: ClientSession): Promise<Cart> {
+    const existingCart = await this.cartRepository.getCartByUserId(userId, session);
     if (existingCart) {
       return existingCart;
     }
 
-    return this.cartRepository.createCart(userId);
+    return this.cartRepository.createCart(userId, session);
   }
 
   private getProductPrice(product: Product): number {

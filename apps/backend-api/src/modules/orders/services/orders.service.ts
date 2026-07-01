@@ -41,7 +41,7 @@ export class OrdersService {
     const order = await this.databaseTransactionService.executeInTransaction(
       async (session) => {
         // ۱. دریافت سبد خرید داخل تراکنش
-        const cart = await this.cartService.getCartByUserId(userId);
+        const cart = await this.cartService.getCartByUserId(userId, session);
 
         if (!cart.items || cart.items.length === 0) {
           throw new BadRequestException('سبد خرید خالی است');
@@ -56,7 +56,7 @@ export class OrdersService {
           reducedProductIds.push(productId);
 
           // دریافت محصول با سشن (برای consistency)
-          const product = await this.productsService.getProductById(productId);
+          const product = await this.productsService.getProductById(productId, session);
 
           if (!product.isActive) {
             throw new BadRequestException(`محصول ${product.name} فعال نیست`);
