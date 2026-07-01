@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
+import { firstValidationError, normalizeDigits, normalizePhoneNumber, registerSchema } from "@/lib/validation/auth";
 import { api } from "@/services/api";
 
 const features = [
@@ -32,19 +33,19 @@ export default function RegisterPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
     setError("");
 
-    const normalizedEmail = email.trim();
-    const normalizedPhone = phoneNumber.trim();
-
-    if (!normalizedEmail && !normalizedPhone) {
-      const message = "حداقل یکی از فیلدهای ایمیل یا شماره موبایل باید وارد شود.";
+    const validation = registerSchema.safeParse({ email, phoneNumber, password });
+    if (!validation.success) {
+      const message = firstValidationError(validation.error);
       setError(message);
-      showToast({ type: "error", title: "ثبت‌نام ناقص است", description: message });
-      setLoading(false);
+      showToast({ type: "error", title: "اطلاعات ثبت‌نام معتبر نیست", description: message });
       return;
     }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = normalizePhoneNumber(phoneNumber);
+    setLoading(true);
 
     try {
       await api.post("/auth/register", {
@@ -84,9 +85,17 @@ export default function RegisterPage() {
 
       <form onSubmit={submit} className="mt-6 space-y-4">
         <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ایمیل" type="email" />
-        <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="شماره موبایل مثل 0912..." />
+        <Input
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(normalizeDigits(e.target.value))}
+          onBlur={() => setPhoneNumber(normalizePhoneNumber(phoneNumber))}
+          placeholder="شماره موبایل مثل 0912..."
+          inputMode="numeric"
+          maxLength={11}
+        />
         <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور قوی" type="password" required />
         {!email.trim() && !phoneNumber.trim() ? <StatusMessage variant="warning">برای ادامه، یکی از فیلدهای ایمیل یا شماره موبایل را تکمیل کنید.</StatusMessage> : null}
+        <StatusMessage variant="warning">شماره موبایل باید ۱۱ رقم و با 09 شروع شود. رمز عبور باید شامل حرف بزرگ، حرف کوچک، عدد و کاراکتر ویژه باشد.</StatusMessage>
         {error ? <StatusMessage variant="error">{error}</StatusMessage> : null}
         <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
           {loading ? "در حال ثبت..." : "ثبت‌نام"}

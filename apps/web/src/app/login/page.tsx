@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
+import { firstValidationError, loginSchema, normalizeDigits, normalizePhoneNumber } from "@/lib/validation/auth";
 import { useAuthStore } from "@/store/auth-store";
 
 const features = [
@@ -28,11 +29,22 @@ export default function LoginPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
     setError("");
 
+    const validation = loginSchema.safeParse({ identifier, password });
+    if (!validation.success) {
+      const message = firstValidationError(validation.error);
+      setError(message);
+      showToast({ type: "error", title: "اطلاعات ورود معتبر نیست", description: message });
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const normalizedIdentifier = identifier.trim();
+      const normalizedIdentifier = validation.data.identifier.includes("@")
+        ? validation.data.identifier.trim().toLowerCase()
+        : normalizePhoneNumber(validation.data.identifier);
       await login(normalizedIdentifier.includes("@") ? { email: normalizedIdentifier, password } : { phoneNumber: normalizedIdentifier, password });
       showToast({ type: "success", title: "با موفقیت وارد شدید" });
       router.push("/profile");
@@ -62,7 +74,16 @@ export default function LoginPage() {
       <p className="mt-2 text-sm leading-6 text-slate-500">ایمیل یا شماره موبایل و رمز عبور خود را وارد کنید.</p>
 
       <form onSubmit={submit} className="mt-6 space-y-4">
-        <Input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="ایمیل یا شماره موبایل مثل 0912..." required />
+        <Input
+          value={identifier}
+          onChange={(e) => setIdentifier(normalizeDigits(e.target.value))}
+          onBlur={() => {
+            if (identifier && !identifier.includes("@")) setIdentifier(normalizePhoneNumber(identifier));
+          }}
+          placeholder="ایمیل یا شماره موبایل مثل 0912..."
+          required
+          inputMode="email"
+        />
         <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" type="password" required />
         {error ? <StatusMessage variant="error">{error}</StatusMessage> : null}
         <Button type="submit" className="w-full" disabled={loading || !identifier.trim() || !password.trim()}>

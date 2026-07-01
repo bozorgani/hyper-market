@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
+import { firstValidationError, normalizeDigits, normalizeOtpCode, normalizePhoneNumber, verifyOtpSchema } from "@/lib/validation/auth";
 import { api } from "@/services/api";
 
 const features = [
@@ -34,23 +35,34 @@ function VerifyOtpContent() {
     event.preventDefault();
     setError("");
     setSuccess("");
+
+    const validation = verifyOtpSchema.safeParse({ target, code, type });
+    if (!validation.success) {
+      const message = firstValidationError(validation.error);
+      setError(message);
+      showToast({ type: "error", title: "اطلاعات تأیید معتبر نیست", description: message });
+      return;
+    }
+
+    const normalizedTarget = type === "phone_verify" ? normalizePhoneNumber(target) : target.trim().toLowerCase();
+    const normalizedCode = normalizeOtpCode(code);
     setLoading(true);
 
     try {
       if (type === "phone_verify") {
         await api.post("/auth/verify-phone", {
-          phoneNumber: target.trim(),
-          code: code.trim(),
+          phoneNumber: normalizedTarget,
+          code: normalizedCode,
         });
       } else if (type === "email_verify") {
         await api.post("/auth/verify-email", {
-          email: target.trim(),
-          code: code.trim(),
+          email: normalizedTarget,
+          code: normalizedCode,
         });
       } else {
         await api.post("/auth/verify-otp", {
-          target: target.trim(),
-          code: code.trim(),
+          target: type === "password_reset" && !normalizedTarget.includes("@") ? normalizePhoneNumber(target) : normalizedTarget,
+          code: normalizedCode,
           type,
         });
       }
@@ -85,13 +97,22 @@ function VerifyOtpContent() {
       <p className="mt-2 text-sm leading-6 text-slate-500">در صورت ورود از مسیر ثبت‌نام، فیلدهای مقصد و نوع تأیید به‌صورت خودکار تکمیل می‌شوند.</p>
 
       <form onSubmit={submit} className="mt-6 space-y-4">
-        <Input value={target} onChange={(e) => setTarget(e.target.value)} placeholder="ایمیل یا شماره موبایل" required />
+        <Input
+          value={target}
+          onChange={(e) => setTarget(normalizeDigits(e.target.value))}
+          onBlur={() => {
+            if (type === "phone_verify" || (!target.includes("@") && type === "password_reset")) setTarget(normalizePhoneNumber(target));
+          }}
+          placeholder="ایمیل یا شماره موبایل"
+          required
+        />
         <select value={type} onChange={(e) => setType(e.target.value)} className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100">
           <option value="phone_verify">تأیید موبایل</option>
           <option value="email_verify">تأیید ایمیل</option>
           <option value="password_reset">بازیابی رمز عبور</option>
         </select>
-        <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="کد ۶ رقمی" required maxLength={6} inputMode="numeric" />
+        <Input value={code} onChange={(e) => setCode(normalizeOtpCode(e.target.value))} placeholder="کد ۶ رقمی" required maxLength={6} inputMode="numeric" />
+        <StatusMessage variant="warning">شماره موبایل باید ۱۱ رقم و با 09 شروع شود؛ کد تأیید هم دقیقاً ۶ رقم است.</StatusMessage>
         {success ? <StatusMessage variant="success">{success}</StatusMessage> : null}
         {error ? <StatusMessage variant="error">{error}</StatusMessage> : null}
         <Button type="submit" className="w-full" disabled={loading || !target.trim() || !code.trim()}>
