@@ -69,15 +69,20 @@ export class CartService {
       throw new BadRequestException('Product is not active');
     }
 
-    if (product.stock < quantity) {
-      throw new BadRequestException('Insufficient product stock');
-    }
-
     await this.withCartMutationLock(userId, async () => {
-      await this.getOrCreateCart(userId);
-      const updatedCart =
-        (await this.cartRepository.addItem(userId, productId, quantity)) ??
-        (await this.cartRepository.pushItem(userId, productId, quantity));
+      const cart = await this.getOrCreateCart(userId);
+      const existingItem = cart.items.find(
+        (item) => getEntityId(item.productId) === productId,
+      );
+      const nextQuantity = (existingItem?.quantity ?? 0) + quantity;
+
+      if (product.stock < nextQuantity) {
+        throw new BadRequestException('Insufficient product stock');
+      }
+
+      const updatedCart = existingItem
+        ? await this.cartRepository.incrementItem(userId, productId, quantity)
+        : await this.cartRepository.pushItem(userId, productId, quantity);
 
       if (!updatedCart) {
         throw new BadRequestException('Unable to update cart');
@@ -92,7 +97,33 @@ export class CartService {
     productId: string,
     quantity: number,
   ): Promise<CartSummary> {
-    return this.addProductToCart(userId, productId, quantity);
+    this.ensureValidObjectId(productId, 'Invalid product id');
+    const product = await this.productsService.getProductById(productId);
+
+    if (!product.isActive) {
+      throw new BadRequestException('Product is not active');
+    }
+
+    if (product.stock < quantity) {
+      throw new BadRequestException('Insufficient product stock');
+    }
+
+    await this.withCartMutationLock(userId, async () => {
+      const cart = await this.getOrCreateCart(userId);
+      const existingItem = cart.items.find(
+        (item) => getEntityId(item.productId) === productId,
+      );
+
+      const updatedCart = existingItem
+        ? await this.cartRepository.setItemQuantity(userId, productId, quantity)
+        : await this.cartRepository.pushItem(userId, productId, quantity);
+
+      if (!updatedCart) {
+        throw new BadRequestException('Unable to update cart');
+      }
+    });
+
+    return this.getCartSummary(userId);
   }
 
   async removeProduct(userId: string, productId: string): Promise<CartSummary> {

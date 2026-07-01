@@ -24,6 +24,12 @@ export class CartController {
     return this.cartService.addProductToCart(user.sub, dto.productId, dto.quantity);
   }
 
+  @Post('update')
+  @Throttle({ default: { limit: 300, ttl: 60000 } })
+  updateQuantity(@CurrentUser() user: JwtPayload, @Body() dto: AddCartItemDto) {
+    return this.cartService.updateQuantity(user.sub, dto.productId, dto.quantity);
+  }
+
   @Post('remove')
   @Throttle({ default: { limit: 300, ttl: 60000 } })
   removeProduct(@CurrentUser() user: JwtPayload, @Body() dto: RemoveCartItemDto) {

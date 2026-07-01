@@ -25,7 +25,7 @@ export class CartRepository {
   }
 
 
-  async addItem(
+  async setItemQuantity(
     userId: string,
     productId: string,
     quantity: number,
@@ -34,6 +34,20 @@ export class CartRepository {
       .findOneAndUpdate(
         { userId, 'items.productId': new Types.ObjectId(productId) },
         { $set: { 'items.$.quantity': quantity } },
+        { returnDocument: 'after' },
+      )
+      .exec();
+  }
+
+  async incrementItem(
+    userId: string,
+    productId: string,
+    quantity: number,
+  ): Promise<Cart | null> {
+    return this.cartModel
+      .findOneAndUpdate(
+        { userId, 'items.productId': new Types.ObjectId(productId) },
+        { $inc: { 'items.$.quantity': quantity } },
         { returnDocument: 'after' },
       )
       .exec();
