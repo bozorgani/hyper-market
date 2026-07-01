@@ -67,7 +67,6 @@ export class AuthController {
     );
     this.setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
     this.setCsrfCookie(response);
-    this.setCsrfCookie(response);
     return this.buildAuthResponse(tokens, 'login successful');
   }
 
