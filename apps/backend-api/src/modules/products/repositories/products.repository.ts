@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, isValidObjectId, Model, Types } from 'mongoose';
+import { OrderStatus } from '../../orders/enums/order-status.enum';
+import { Order, OrderDocument } from '../../orders/schemas/order.schema';
 import { Product, ProductDocument } from '../schemas/product.schema';
 
 export type ProductListResult = {
@@ -15,6 +17,8 @@ export class ProductsRepository {
   constructor(
     @InjectModel(Product.name)
     private readonly productModel: Model<ProductDocument>,
+    @InjectModel(Order.name)
+    private readonly orderModel: Model<OrderDocument>,
   ) {}
 
   async create(data: Partial<Product>): Promise<Product> {
@@ -45,6 +49,33 @@ export class ProductsRepository {
       .find({ _id: { $in: objectIds }, deletedAt: null })
       .lean()
       .exec();
+  }
+
+
+  async getActiveOrderQuantityForProduct(productId: string): Promise<number> {
+    if (!isValidObjectId(productId)) return 0;
+
+    const [result] = await this.orderModel
+      .aggregate<{ quantity: number }>([
+        {
+          $match: {
+            status: {
+              $in: [
+                OrderStatus.PENDING,
+                OrderStatus.PAID,
+                OrderStatus.PROCESSING,
+              ],
+            },
+            'items.productId': new Types.ObjectId(productId),
+          },
+        },
+        { $unwind: '$items' },
+        { $match: { 'items.productId': new Types.ObjectId(productId) } },
+        { $group: { _id: null, quantity: { $sum: '$items.quantity' } } },
+      ])
+      .exec();
+
+    return result?.quantity ?? 0;
   }
 
   async updateById(id: string, data: Partial<Product>): Promise<Product | null> {

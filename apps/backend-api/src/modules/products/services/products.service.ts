@@ -44,6 +44,10 @@ export class ProductsService {
       await this.ensureCategoryExists(dto.categoryId);
     }
 
+    if (dto.stock !== undefined) {
+      await this.ensureStockCanCoverActiveOrders(id, dto.stock);
+    }
+
     const updateData: Partial<Product> = {
       ...dto,
       categoryId: dto.categoryId ? new Types.ObjectId(dto.categoryId) : undefined,
@@ -148,6 +152,24 @@ export class ProductsService {
     }
 
     return this.productsRepository.findActiveProducts(safePage, safeLimit);
+  }
+
+  private async ensureStockCanCoverActiveOrders(
+    productId: string,
+    nextStock: number,
+  ): Promise<void> {
+    if (nextStock < 0) {
+      throw new BadRequestException('Product stock cannot be negative');
+    }
+
+    const activeOrderQuantity =
+      await this.productsRepository.getActiveOrderQuantityForProduct(productId);
+
+    if (nextStock < activeOrderQuantity) {
+      throw new BadRequestException(
+        `Product stock cannot be lower than active order quantity (${activeOrderQuantity})`,
+      );
+    }
   }
 
   private async ensureCategoryExists(categoryId: string): Promise<void> {
