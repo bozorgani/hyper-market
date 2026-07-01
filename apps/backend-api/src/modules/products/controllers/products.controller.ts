@@ -7,24 +7,59 @@ import {
   Post,
   Put,
   Query,
+  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Permissions } from '../../permissions/decorators/permissions.decorator';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
+import { ProductImageStorageService } from '../services/product-image-storage.service';
 import { ProductsService } from '../services/products.service';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly productImageStorageService: ProductImageStorageService,
+  ) {}
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Permissions('products.create')
   createProduct(@Body() dto: CreateProductDto) {
     return this.productsService.createProduct(dto);
+  }
+
+
+  @Post('images/upload')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Permissions('products.update')
+  @UseInterceptors(FileInterceptor('image'))
+  uploadProductImage(
+    @UploadedFile()
+    file: {
+      originalname?: string;
+      mimetype?: string;
+      size?: number;
+      buffer?: Buffer;
+    },
+  ) {
+    return this.productImageStorageService.saveProductImage(file);
+  }
+
+  @Get('images/:fileName')
+  @Public()
+  serveProductImage(
+    @Param('fileName') fileName: string,
+    @Res() response: Response,
+  ) {
+    return response.sendFile(this.productImageStorageService.getImagePath(fileName));
   }
 
   @Get()

@@ -34,7 +34,11 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Card className="overflow-hidden text-right">
       <Link href={`/products/${product._id}`} className="block aspect-square bg-slate-100">
-        <div className="flex h-full items-center justify-center text-4xl">🛒</div>
+        {product.images?.[0] ? (
+          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover transition duration-300 hover:scale-105" />
+        ) : (
+          <div className="flex h-full items-center justify-center text-4xl">🛒</div>
+        )}
       </Link>
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">

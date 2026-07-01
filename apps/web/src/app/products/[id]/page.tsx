@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
+import { ProductGallery } from "@/components/product-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -86,8 +87,8 @@ export default function ProductDetailPage() {
 
   return (
     <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-2 md:gap-8">
-      <Card className="aspect-square p-6">
-        <div className="flex h-full items-center justify-center rounded-3xl bg-slate-50 text-8xl">🛍️</div>
+      <Card className="p-6">
+        <ProductGallery images={item.images} productName={item.name} />
       </Card>
       <section className="rounded-3xl bg-white p-6 text-right shadow-sm">
         <div className="flex flex-wrap gap-2">

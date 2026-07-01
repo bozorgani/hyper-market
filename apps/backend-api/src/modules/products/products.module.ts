@@ -4,6 +4,7 @@ import { CategoriesModule } from '../categories/categories.module';
 import { SearchModule } from '../search/search.module';
 import { ProductsController } from './controllers/products.controller';
 import { ProductsRepository } from './repositories/products.repository';
+import { ProductImageStorageService } from './services/product-image-storage.service';
 import { Product, ProductSchema } from './schemas/product.schema';
 import { ProductsService } from './services/products.service';
 
@@ -14,7 +15,7 @@ import { ProductsService } from './services/products.service';
     MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
   ],
   controllers: [ProductsController],
-  providers: [ProductsRepository, ProductsService],
-  exports: [ProductsRepository, ProductsService],
+  providers: [ProductsRepository, ProductsService, ProductImageStorageService],
+  exports: [ProductsRepository, ProductsService, ProductImageStorageService],
 })
 export class ProductsModule {}

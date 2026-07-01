@@ -13,6 +13,13 @@ export type ProductFormInput = {
   isActive?: boolean;
 };
 
+export type ProductImageUploadResponse = {
+  url: string;
+  fileName: string;
+  size: number;
+  mimeType: string;
+};
+
 export function useAdminProducts(page = 1) {
   return useQuery({
     queryKey: ["admin", "products", page],
@@ -43,6 +50,17 @@ export function useUpdateProduct(id: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "product", id] });
+    },
+  });
+}
+
+export function useUploadProductImage() {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      return (await api.post<ProductImageUploadResponse>("/products/images/upload", formData, { headers: { "Content-Type": "multipart/form-data" } })).data;
     },
   });
 }

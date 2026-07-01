@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { ProductImageManager } from "@/components/admin/product-image-manager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -97,10 +98,7 @@ export function ProductForm({
           <span className="text-sm font-semibold text-slate-600">موجودی</span>
           <Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} required />
         </label>
-        <label className="space-y-2">
-          <span className="text-sm font-semibold text-slate-600">آدرس تصویر</span>
-          <Input placeholder="UI آپلود تصویر در آینده" onChange={(e) => setForm({ ...form, images: e.target.value ? [e.target.value] : [] })} />
-        </label>
+        <ProductImageManager images={form.images ?? []} onChange={(images) => setForm({ ...form, images })} disabled={loading} />
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
           <span className="text-sm font-semibold text-slate-600">فعال باشد</span>
