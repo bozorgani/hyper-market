@@ -23,6 +23,15 @@ export function useMyOrders() {
   });
 }
 
+export function useOrder(orderId: string) {
+  return useQuery({
+    queryKey: ["orders", orderId],
+    queryFn: async () => (await api.get<Order>(`/orders/${orderId}`)).data,
+    enabled: Boolean(orderId),
+    retry: false,
+  });
+}
+
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({
