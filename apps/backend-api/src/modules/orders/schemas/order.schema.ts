@@ -20,6 +20,47 @@ export class OrderItem {
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
 
+
+@Schema({ _id: false, versionKey: false })
+export class DeliveryAddress {
+  @Prop({ type: String, required: true, trim: true })
+  recipientName!: string;
+
+  @Prop({ type: String, required: true, trim: true })
+  phoneNumber!: string;
+
+  @Prop({ type: String, required: true, trim: true })
+  province!: string;
+
+  @Prop({ type: String, required: true, trim: true })
+  city!: string;
+
+  @Prop({ type: String, required: true, trim: true })
+  addressLine!: string;
+
+  @Prop({ type: String, default: null, trim: true })
+  plate?: string | null;
+
+  @Prop({ type: String, default: null, trim: true })
+  unit?: string | null;
+
+  @Prop({ type: String, default: null, trim: true })
+  postalCode?: string | null;
+}
+
+export const DeliveryAddressSchema = SchemaFactory.createForClass(DeliveryAddress);
+
+@Schema({ _id: false, versionKey: false })
+export class DeliveryWindow {
+  @Prop({ type: Date, required: true })
+  date!: Date;
+
+  @Prop({ type: String, required: true, trim: true })
+  timeSlot!: string;
+}
+
+export const DeliveryWindowSchema = SchemaFactory.createForClass(DeliveryWindow);
+
 @Schema({
   collection: 'orders',
   timestamps: true,
@@ -42,6 +83,12 @@ export class Order {
     index: true,
   })
   status!: OrderStatus;
+
+  @Prop({ type: DeliveryAddressSchema, required: true })
+  deliveryAddress!: DeliveryAddress;
+
+  @Prop({ type: DeliveryWindowSchema, required: true })
+  deliveryWindow!: DeliveryWindow;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

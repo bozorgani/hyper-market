@@ -128,7 +128,19 @@ test('OrdersService creates order inside transaction and clears cart', async () 
     transactionService as never,
   );
 
-  const result = await service.createOrder(userId);
+  const result = await service.createOrder(userId, {
+    deliveryAddress: {
+      recipientName: 'Test User',
+      phoneNumber: '09123456789',
+      province: 'Tehran',
+      city: 'Tehran',
+      addressLine: 'Test address line',
+    },
+    deliveryWindow: {
+      date: new Date().toISOString(),
+      timeSlot: '09:00-12:00',
+    },
+  });
 
   assert.equal(result, order);
   assert.deepEqual(calls, [

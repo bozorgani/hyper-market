@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createIdempotencyKey } from "@/lib/idempotency";
 import { api } from "@/services/api";
-import type { Order, Payment } from "@/types/domain";
+import type { DeliveryAddress, DeliveryWindow, Order, Payment } from "@/types/domain";
 
 type CreateOrderInput = {
   idempotencyKey?: string;
+  deliveryAddress: DeliveryAddress;
+  deliveryWindow: DeliveryWindow;
 };
 
 type CreatePaymentInput = {
@@ -35,9 +37,13 @@ export function useOrder(orderId: string) {
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input?: CreateOrderInput) =>
+    mutationFn: async (input: CreateOrderInput) =>
       (
-        await api.post<Order>("/orders", {}, { headers: idempotencyHeaders(input?.idempotencyKey ?? createIdempotencyKey("order")) })
+        await api.post<Order>(
+          "/orders",
+          { deliveryAddress: input.deliveryAddress, deliveryWindow: input.deliveryWindow },
+          { headers: idempotencyHeaders(input.idempotencyKey ?? createIdempotencyKey("order")) },
+        )
       ).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders", "my"] });

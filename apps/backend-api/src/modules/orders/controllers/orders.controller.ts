@@ -6,6 +6,7 @@ import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { IdempotencyService } from '../../../infrastructure/idempotency/idempotency.service';
 import { Permissions } from '../../permissions/decorators/permissions.decorator';
 import { UserRole } from '../../users/enums/user-role.enum';
+import { CreateOrderDto } from '../dto/create-order.dto';
 import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
 import { OrdersService } from '../services/orders.service';
 
@@ -20,14 +21,15 @@ export class OrdersController {
   @Roles(UserRole.CUSTOMER)
   async createOrder(
     @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateOrderDto,
     @Headers('idempotency-key') idempotencyKey: string | undefined,
     @Res({ passthrough: true }) response: Response,
   ) {
     const result = await this.idempotencyService.execute(
       `orders:create:${user.sub}`,
       idempotencyKey,
-      { userId: user.sub },
-      () => this.ordersService.createOrder(user.sub),
+      { userId: user.sub, ...dto },
+      () => this.ordersService.createOrder(user.sub, dto),
     );
 
     response.setHeader('Idempotency-Status', result.status);

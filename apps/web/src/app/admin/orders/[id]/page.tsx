@@ -56,6 +56,35 @@ export default function AdminOrderDetailPage() {
 
           <OrderStatusTimeline status={order.status} />
 
+          {order.deliveryAddress || order.deliveryWindow ? (
+            <Card className="p-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                {order.deliveryAddress ? (
+                  <div>
+                    <p className="text-sm text-slate-500">آدرس تحویل</p>
+                    <p className="mt-2 font-bold leading-7 text-slate-900">
+                      {order.deliveryAddress.province}، {order.deliveryAddress.city}، {order.deliveryAddress.addressLine}
+                    </p>
+                    <p className="mt-1 text-sm leading-7 text-slate-500">
+                      تحویل‌گیرنده: {order.deliveryAddress.recipientName} · {order.deliveryAddress.phoneNumber}
+                    </p>
+                    {order.deliveryAddress.plate || order.deliveryAddress.unit ? (
+                      <p className="text-sm leading-7 text-slate-500">پلاک {order.deliveryAddress.plate ?? "-"} · واحد {order.deliveryAddress.unit ?? "-"}</p>
+                    ) : null}
+                    {order.deliveryAddress.postalCode ? <p className="text-sm leading-7 text-slate-500">کد پستی: {order.deliveryAddress.postalCode}</p> : null}
+                  </div>
+                ) : null}
+                {order.deliveryWindow ? (
+                  <div>
+                    <p className="text-sm text-slate-500">زمان ارسال</p>
+                    <p className="mt-2 font-bold text-slate-900">{formatPersianDate(order.deliveryWindow.date)}</p>
+                    <p className="mt-1 text-sm leading-7 text-slate-500">بازه تحویل: {order.deliveryWindow.timeSlot}</p>
+                  </div>
+                ) : null}
+              </div>
+            </Card>
+          ) : null}
+
           <Card className="overflow-hidden">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 text-sm text-slate-500">
               <p>اقلام سفارش</p>

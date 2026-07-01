@@ -75,12 +75,30 @@ export type CartSummary = {
 
 export type OrderStatus = "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
 
+export type DeliveryAddress = {
+  recipientName: string;
+  phoneNumber: string;
+  province: string;
+  city: string;
+  addressLine: string;
+  plate?: string | null;
+  unit?: string | null;
+  postalCode?: string | null;
+};
+
+export type DeliveryWindow = {
+  date: string;
+  timeSlot: string;
+};
+
 export type Order = {
   _id: string;
   userId: string;
   items: Array<CartItem & { priceAtPurchase: number }>;
   totalPrice: number;
   status: OrderStatus;
+  deliveryAddress?: DeliveryAddress;
+  deliveryWindow?: DeliveryWindow;
   createdAt?: string;
 };
 

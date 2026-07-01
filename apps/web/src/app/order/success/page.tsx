@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { AlertTriangle, CheckCircle2, PackageCheck, ReceiptText, RefreshCw, ShoppingBag, UserRound } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, MapPin, PackageCheck, ReceiptText, RefreshCw, ShoppingBag, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -104,6 +104,30 @@ function OrderSuccessContent() {
               <p className="text-sm leading-7 text-slate-500">مبلغ پرداخت: {formatPrice(payment.data?.amount ?? order.data.totalPrice)}</p>
               {payment.data?.transactionId ? <p className="truncate text-sm leading-7 text-slate-500">کد تراکنش: {payment.data.transactionId}</p> : null}
             </div>
+          </div>
+        ) : null}
+
+        {order.data?.deliveryAddress || order.data?.deliveryWindow ? (
+          <div className="mt-4 grid gap-3 text-right sm:grid-cols-2">
+            {order.data.deliveryAddress ? (
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <MapPin className="mb-3 h-5 w-5 text-sky-600" />
+                <p className="font-black text-slate-900">آدرس تحویل</p>
+                <p className="mt-3 text-sm leading-7 text-slate-500">
+                  {order.data.deliveryAddress.province}، {order.data.deliveryAddress.city}، {order.data.deliveryAddress.addressLine}
+                </p>
+                <p className="text-sm leading-7 text-slate-500">تحویل‌گیرنده: {order.data.deliveryAddress.recipientName} · {order.data.deliveryAddress.phoneNumber}</p>
+                {order.data.deliveryAddress.plate || order.data.deliveryAddress.unit ? <p className="text-sm leading-7 text-slate-500">پلاک {order.data.deliveryAddress.plate ?? "-"} · واحد {order.data.deliveryAddress.unit ?? "-"}</p> : null}
+              </div>
+            ) : null}
+            {order.data.deliveryWindow ? (
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <Clock className="mb-3 h-5 w-5 text-violet-600" />
+                <p className="font-black text-slate-900">زمان ارسال</p>
+                <p className="mt-3 text-sm leading-7 text-slate-500">تاریخ: {formatPersianDate(order.data.deliveryWindow.date)}</p>
+                <p className="text-sm leading-7 text-slate-500">بازه تحویل: {order.data.deliveryWindow.timeSlot}</p>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

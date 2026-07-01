@@ -12,6 +12,7 @@ import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { CartService } from '../../cart/services/cart.service';
 import { ProductsService } from '../../products/services/products.service';
 import { UserRole } from '../../users/enums/user-role.enum';
+import { CreateOrderDto } from '../dto/create-order.dto';
 import { OrderStatus } from '../enums/order-status.enum';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { Order, OrderItem } from '../schemas/order.schema';
@@ -35,7 +36,8 @@ export class OrdersService {
     private readonly eventBusService?: EventBusService,
   ) {}
 
-  async createOrder(userId: string): Promise<Order> {
+  async createOrder(userId: string, dto: CreateOrderDto): Promise<Order> {
+    this.validateDeliveryWindow(dto);
     const reducedProductIds: string[] = [];
 
     const order = await this.databaseTransactionService.executeInTransaction(
@@ -94,6 +96,20 @@ export class OrdersService {
             items: orderItems,
             totalPrice,
             status: OrderStatus.PENDING,
+            deliveryAddress: {
+              recipientName: dto.deliveryAddress.recipientName.trim(),
+              phoneNumber: dto.deliveryAddress.phoneNumber.trim(),
+              province: dto.deliveryAddress.province.trim(),
+              city: dto.deliveryAddress.city.trim(),
+              addressLine: dto.deliveryAddress.addressLine.trim(),
+              plate: dto.deliveryAddress.plate?.trim() || null,
+              unit: dto.deliveryAddress.unit?.trim() || null,
+              postalCode: dto.deliveryAddress.postalCode?.trim() || null,
+            },
+            deliveryWindow: {
+              date: new Date(dto.deliveryWindow.date),
+              timeSlot: dto.deliveryWindow.timeSlot,
+            },
           },
           session,
         );
@@ -229,6 +245,22 @@ export class OrdersService {
     );
 
     return updatedOrder;
+  }
+
+  private validateDeliveryWindow(dto: CreateOrderDto): void {
+    const deliveryDate = new Date(dto.deliveryWindow.date);
+    if (Number.isNaN(deliveryDate.getTime())) {
+      throw new BadRequestException('زمان تحویل معتبر نیست');
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(deliveryDate);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      throw new BadRequestException('زمان تحویل نمی‌تواند در گذشته باشد');
+    }
   }
 
   private ensureValidObjectId(id: string, message: string): void {

@@ -10,11 +10,13 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { PageHeader } from "@/components/ui/page-header";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { createIdempotencyKey } from "@/lib/idempotency";
 import { formatPrice } from "@/lib/utils";
+import type { DeliveryAddress, DeliveryWindow } from "@/types/domain";
 import { useCart } from "@/hooks/use-cart";
 import { useCreateOrder, useCreatePayment, useSimulatePaymentSuccess } from "@/hooks/use-orders";
 
@@ -44,8 +46,30 @@ function createCheckoutAttemptKeys(): CheckoutAttemptKeys {
   };
 }
 
+const deliveryTimeSlots = [
+  { value: "09:00-12:00", label: "۹ تا ۱۲" },
+  { value: "12:00-15:00", label: "۱۲ تا ۱۵" },
+  { value: "15:00-18:00", label: "۱۵ تا ۱۸" },
+  { value: "18:00-21:00", label: "۱۸ تا ۲۱" },
+];
+
 function stepIndex(step: CheckoutStep) {
   return checkoutSteps.findIndex((item) => item.key === step);
+}
+
+function todayDateInputValue() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isDeliveryAddressValid(address: DeliveryAddress) {
+  return (
+    address.recipientName.trim().length >= 2 &&
+    /^09\d{9}$/.test(address.phoneNumber.trim()) &&
+    address.province.trim().length >= 2 &&
+    address.city.trim().length >= 2 &&
+    address.addressLine.trim().length >= 10 &&
+    (!address.postalCode?.trim() || /^\d{10}$/.test(address.postalCode.trim()))
+  );
 }
 
 export default function CheckoutPage() {
@@ -59,6 +83,20 @@ export default function CheckoutPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("idle");
   const [attemptKeys, setAttemptKeys] = useState<CheckoutAttemptKeys | null>(null);
+  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
+    recipientName: "",
+    phoneNumber: "",
+    province: "",
+    city: "",
+    addressLine: "",
+    plate: "",
+    unit: "",
+    postalCode: "",
+  });
+  const [deliveryWindow, setDeliveryWindow] = useState<DeliveryWindow>({
+    date: todayDateInputValue(),
+    timeSlot: deliveryTimeSlots[0].value,
+  });
   const submittingRef = useRef(false);
 
   const detailedItems = cart.data?.items ?? [];
@@ -66,6 +104,7 @@ export default function CheckoutPage() {
   const mutationPending = createOrder.isPending || createPayment.isPending || simulateSuccess.isPending;
   const isSubmitting = mutationPending || submittingRef.current;
   const activeStepIndex = stepIndex(currentStep);
+  const deliveryFormValid = isDeliveryAddressValid(deliveryAddress) && Boolean(deliveryWindow.date && deliveryWindow.timeSlot);
   const cartErrorMessage = useMemo(() => {
     if (!cart.error) return "";
     return cart.error instanceof Error ? cart.error.message : "دریافت اطلاعات سبد خرید ناموفق بود.";
@@ -73,6 +112,13 @@ export default function CheckoutPage() {
 
   async function checkout() {
     if (submittingRef.current || mutationPending) return;
+
+    if (!deliveryFormValid) {
+      const message = "لطفاً آدرس تحویل و بازه زمانی ارسال را کامل و معتبر وارد کنید.";
+      setError(message);
+      showToast({ type: "error", title: "اطلاعات تحویل ناقص است", description: message });
+      return;
+    }
 
     const keys = attemptKeys ?? createCheckoutAttemptKeys();
     setAttemptKeys(keys);
@@ -83,7 +129,23 @@ export default function CheckoutPage() {
       trackAnalyticsEvent({ type: "CHECKOUT_START", metadata: { totalPrice, attemptId: keys.attemptId } });
 
       setCurrentStep("creating_order");
-      const order = await createOrder.mutateAsync({ idempotencyKey: keys.order });
+      const order = await createOrder.mutateAsync({
+        idempotencyKey: keys.order,
+        deliveryAddress: {
+          recipientName: deliveryAddress.recipientName.trim(),
+          phoneNumber: deliveryAddress.phoneNumber.trim(),
+          province: deliveryAddress.province.trim(),
+          city: deliveryAddress.city.trim(),
+          addressLine: deliveryAddress.addressLine.trim(),
+          plate: deliveryAddress.plate?.trim() || null,
+          unit: deliveryAddress.unit?.trim() || null,
+          postalCode: deliveryAddress.postalCode?.trim() || null,
+        },
+        deliveryWindow: {
+          date: `${deliveryWindow.date}T00:00:00.000Z`,
+          timeSlot: deliveryWindow.timeSlot,
+        },
+      });
       trackAnalyticsEvent({ type: "ORDER_CREATED", metadata: { orderId: order._id, amount: order.totalPrice, attemptId: keys.attemptId } });
 
       setCurrentStep("creating_payment");
@@ -194,6 +256,26 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
+
+              <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <h2 className="text-lg font-black">آدرس و زمان تحویل</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-500">ثبت سفارش بدون آدرس تحویل و انتخاب بازه ارسال امکان‌پذیر نیست.</p>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <Input value={deliveryAddress.recipientName} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, recipientName: e.target.value })} placeholder="نام تحویل‌گیرنده" disabled={isSubmitting} />
+                  <Input value={deliveryAddress.phoneNumber} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 11) })} placeholder="شماره موبایل مثل 09123456789" inputMode="numeric" maxLength={11} disabled={isSubmitting} />
+                  <Input value={deliveryAddress.province} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, province: e.target.value })} placeholder="استان" disabled={isSubmitting} />
+                  <Input value={deliveryAddress.city} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })} placeholder="شهر" disabled={isSubmitting} />
+                  <Input className="md:col-span-2" value={deliveryAddress.addressLine} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, addressLine: e.target.value })} placeholder="آدرس کامل" disabled={isSubmitting} />
+                  <Input value={deliveryAddress.plate ?? ''} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, plate: e.target.value })} placeholder="پلاک" disabled={isSubmitting} />
+                  <Input value={deliveryAddress.unit ?? ''} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, unit: e.target.value })} placeholder="واحد" disabled={isSubmitting} />
+                  <Input value={deliveryAddress.postalCode ?? ''} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, postalCode: e.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="کد پستی ۱۰ رقمی، اختیاری" inputMode="numeric" maxLength={10} disabled={isSubmitting} />
+                  <Input type="date" value={deliveryWindow.date} min={todayDateInputValue()} onChange={(e) => setDeliveryWindow({ ...deliveryWindow, date: e.target.value })} disabled={isSubmitting} />
+                  <select value={deliveryWindow.timeSlot} onChange={(e) => setDeliveryWindow({ ...deliveryWindow, timeSlot: e.target.value })} disabled={isSubmitting} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100">
+                    {deliveryTimeSlots.map((slot) => <option key={slot.value} value={slot.value}>{slot.label}</option>)}
+                  </select>
+                </div>
+                {!deliveryFormValid ? <p className="mt-3 text-xs leading-6 text-amber-600">شماره موبایل باید با 09 شروع شود؛ آدرس حداقل ۱۰ کاراکتر و کد پستی در صورت ورود باید ۱۰ رقم باشد.</p> : null}
+              </div>
             </Card>
 
             <Card className="p-6">
@@ -244,7 +326,7 @@ export default function CheckoutPage() {
                 </div>
               ) : null}
               <div className="mt-6 flex flex-col gap-3">
-                <Button type="button" className="w-full" onClick={() => setConfirmOpen(true)} disabled={isSubmitting}>
+                <Button type="button" className="w-full" onClick={() => setConfirmOpen(true)} disabled={isSubmitting || !deliveryFormValid}>
                   {isSubmitting ? "در حال پردازش پرداخت..." : error && attemptKeys ? "تلاش مجدد پرداخت" : "پرداخت و ثبت سفارش"}
                 </Button>
                 {error && attemptKeys ? (
