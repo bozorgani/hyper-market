@@ -37,7 +37,7 @@ export class SearchService {
       offset: options.offset ?? 0,
       filter,
       sort: options.sort ? [options.sort] : undefined,
-      attributesToRetrieve: ['id', 'title', 'price', 'stock', 'categoryName', 'image'],
+      attributesToRetrieve: ['id', 'title', 'price', 'discountPrice', 'effectivePrice', 'stock', 'categoryName', 'image'],
     });
 
     const hits = result.hits as ProductSearchDocument[];
@@ -80,7 +80,7 @@ export class SearchService {
 
     const result = await this.client.index(this.indexName).search(query, {
       limit: 8,
-      attributesToRetrieve: ['id', 'title', 'image', 'price', 'stock', 'categoryName'],
+      attributesToRetrieve: ['id', 'title', 'image', 'price', 'discountPrice', 'effectivePrice', 'stock', 'categoryName'],
       filter: 'isActive = true',
     });
 
@@ -89,6 +89,8 @@ export class SearchService {
       title: hit.title,
       image: hit.image,
       price: hit.price,
+      discountPrice: hit.discountPrice,
+      effectivePrice: hit.effectivePrice,
       stock: hit.stock,
       categoryName: hit.categoryName,
     }));
@@ -112,11 +114,11 @@ export class SearchService {
     }
 
     if (options.minPrice !== undefined) {
-      filters.push(`price >= ${options.minPrice}`);
+      filters.push(`effectivePrice >= ${options.minPrice}`);
     }
 
     if (options.maxPrice !== undefined) {
-      filters.push(`price <= ${options.maxPrice}`);
+      filters.push(`effectivePrice <= ${options.maxPrice}`);
     }
 
     if (options.minStock !== undefined) {

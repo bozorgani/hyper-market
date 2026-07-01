@@ -6,6 +6,8 @@ export type SearchProduct = {
   title: string;
   description?: string;
   price: number;
+  discountPrice?: number | null;
+  effectivePrice?: number;
   stock: number;
   categoryName: string;
   categoryId?: string;

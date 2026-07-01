@@ -28,6 +28,8 @@ export class ProductsService {
       isActive: dto.isActive ?? true,
     });
 
+    await this.searchIndexer.indexProduct(product);
+
     this.eventBusService.emit({
       type: EventType.PRODUCT_CREATED,
       payload: { product },

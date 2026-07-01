@@ -14,6 +14,8 @@ export type ProductSearchDocument = {
   title: string;
   description: string;
   price: number;
+  discountPrice: number | null;
+  effectivePrice: number;
   stock: number;
   categoryName: string;
   categoryId: string;
@@ -84,9 +86,9 @@ export class SearchIndexer implements OnModuleInit {
     const index = this.client.index(this.indexName);
     await index.updateSettings({
       searchableAttributes: ['title', 'description', 'categoryName'],
-      displayedAttributes: ['id', 'title', 'description', 'price', 'stock', 'categoryName', 'categoryId', 'image', 'isActive', 'createdAt'],
-      filterableAttributes: ['categoryId', 'categoryName', 'stock', 'price', 'isActive'],
-      sortableAttributes: ['price', 'stock', 'createdAt'],
+      displayedAttributes: ['id', 'title', 'description', 'price', 'discountPrice', 'effectivePrice', 'stock', 'categoryName', 'categoryId', 'image', 'isActive', 'createdAt'],
+      filterableAttributes: ['categoryId', 'categoryName', 'stock', 'price', 'discountPrice', 'effectivePrice', 'isActive'],
+      sortableAttributes: ['price', 'discountPrice', 'effectivePrice', 'stock', 'createdAt'],
       typoTolerance: {
         enabled: true,
       },
@@ -102,7 +104,9 @@ export class SearchIndexer implements OnModuleInit {
       id: getEntityId(product),
       title: product.name,
       description: product.description,
-      price: product.discountPrice ?? product.price,
+      price: product.price,
+      discountPrice: product.discountPrice ?? null,
+      effectivePrice: product.discountPrice ?? product.price,
       stock: product.stock,
       categoryName: category?.name ?? '',
       categoryId,

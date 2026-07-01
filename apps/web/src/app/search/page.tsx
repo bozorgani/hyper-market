@@ -176,7 +176,10 @@ function SearchContent() {
                     {product.title}
                   </Link>
                 </div>
-                <p className="mt-2 text-lg font-black text-rose-600">{formatPrice(product.price)}</p>
+                <p className="mt-2 text-lg font-black text-rose-600">{formatPrice(product.effectivePrice ?? product.discountPrice ?? product.price)}</p>
+                {product.discountPrice && product.discountPrice < product.price ? (
+                  <p className="text-sm text-slate-400 line-through">{formatPrice(product.price)}</p>
+                ) : null}
                 <p className="mt-1 text-xs text-slate-500">{product.categoryName}</p>
               </div>
             </Card>
