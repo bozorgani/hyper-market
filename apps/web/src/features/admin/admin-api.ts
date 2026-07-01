@@ -90,7 +90,10 @@ export function useCreateCategory() {
   return useMutation({
     mutationFn: async (input: CategoryFormInput) =>
       (await api.post<Category>("/categories", input)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "categories"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
   });
 }
 
@@ -99,7 +102,10 @@ export function useUpdateCategory() {
   return useMutation({
     mutationFn: async ({ id, input }: { id: string; input: CategoryFormInput }) =>
       (await api.put<Category>(`/categories/${id}`, input)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "categories"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
   });
 }
 
@@ -108,7 +114,10 @@ export function useDeleteCategory() {
   return useMutation({
     mutationFn: async (id: string) =>
       (await api.delete<Category>(`/categories/${id}`)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "categories"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
   });
 }
 
