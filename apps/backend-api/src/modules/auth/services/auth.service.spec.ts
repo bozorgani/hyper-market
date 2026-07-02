@@ -29,6 +29,7 @@ describe('AuthService', () => {
     createUser: jest.fn(),
     getUserByEmail: jest.fn(),
     getUserByEmailWithPassword: jest.fn(),
+    getUserById: jest.fn(),
     resetLoginSecurity: jest.fn(),
     incrementFailedLoginAttempts: jest.fn(),
   };
@@ -58,11 +59,15 @@ describe('AuthService', () => {
     createSession: jest.fn(),
     findActiveSession: jest.fn(),
     revokeSession: jest.fn(),
+    updateLastActive: jest.fn(),
   };
 
   const mockRefreshTokenService = {
     createRefreshToken: jest.fn(),
     refreshAccessToken: jest.fn(),
+    findByTokenHash: jest.fn(),
+    create: jest.fn(),
+    revokeToken: jest.fn(),
   };
 
   const mockAuditLogRepository = {
@@ -70,10 +75,11 @@ describe('AuthService', () => {
   };
 
   const mockRedisService = {
-    set: jest.fn(),
-    get: jest.fn(),
-    delete: jest.fn(),
-    exists: jest.fn(),
+    set: jest.fn().mockResolvedValue(undefined),
+    get: jest.fn().mockResolvedValue(null),
+    setIfNotExists: jest.fn().mockResolvedValue(false),
+    delete: jest.fn().mockResolvedValue(undefined),
+    exists: jest.fn().mockResolvedValue(false),
   };
 
   const mockEventBusService = {
@@ -158,6 +164,72 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('message');
       expect(mockOtpService.createPasswordResetOtp).toHaveBeenCalled();
+    });
+  });
+
+  describe('refreshToken', () => {
+    const validPayload = {
+      sub: '507f1f77bcf86cd799439011',
+      role: 'CUSTOMER',
+      sessionId: '507f1f77bcf86cd799439012',
+      deviceId: 'device-1',
+      tokenVersion: 1,
+      jti: 'jti-1',
+    };
+
+    beforeEach(() => {
+      mockTokenService.verifyRefreshToken.mockReturnValue(validPayload);
+      mockTokenHashService.hashToken.mockReturnValue('hashed');
+    });
+
+    it('throws ConflictException when a rotation is already in progress', async () => {
+      mockRedisService.setIfNotExists.mockResolvedValue(false);
+
+      await expect(service.refreshToken('raw-token', {})).rejects.toThrow(
+        ConflictException,
+      );
+      expect(mockRedisService.setIfNotExists).toHaveBeenCalledWith(
+        'auth:refresh-rotate:hashed',
+        '1',
+        15,
+      );
+      // No reads / mints happen once the lock is contended.
+      expect(mockRefreshTokenService.findByTokenHash).not.toHaveBeenCalled();
+      expect(mockRedisService.delete).not.toHaveBeenCalled();
+    });
+
+    it('rotates and releases the lock on success', async () => {
+      mockRedisService.setIfNotExists.mockResolvedValue(true);
+      mockRefreshTokenService.findByTokenHash.mockResolvedValue({
+        userId: 'user-1',
+        sessionId: 'session-1',
+        deviceId: 'device-1',
+        tokenFamilyId: 'family-1',
+        jti: 'jti-1',
+        revokedAt: null,
+        expiresAt: new Date(Date.now() + 60000),
+      });
+      mockUsersService.getUserById.mockResolvedValue({
+        _id: 'user-1',
+        role: 'CUSTOMER',
+        accountStatus: 'active',
+        tokenVersion: 1,
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('new-access');
+      mockTokenService.generateRefreshToken.mockReturnValue('new-refresh');
+      mockRefreshTokenService.create.mockResolvedValue({ _id: 'new-rt' });
+      mockRefreshTokenService.revokeToken.mockResolvedValue(undefined);
+      mockSessionService.updateLastActive.mockResolvedValue(undefined);
+
+      const result = await service.refreshToken('raw-token', {});
+
+      expect(result).toEqual({
+        accessToken: 'new-access',
+        refreshToken: 'new-refresh',
+      });
+      expect(mockRedisService.delete).toHaveBeenCalledWith(
+        'auth:refresh-rotate:hashed',
+      );
     });
   });
 });

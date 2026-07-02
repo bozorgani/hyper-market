@@ -298,31 +298,51 @@ export class AuthService {
   }
 
   async refreshToken(rawRefreshToken: string, context: AuthContext = {}): Promise<AuthTokens> {
+    // Signature/structure check only — cheap, no shared state.
     const payload = this.tokenService.verifyRefreshToken(rawRefreshToken);
     const refreshTokenHash = this.tokenHashService.hashToken(rawRefreshToken);
-    const storedRefreshToken = await this.refreshTokenService.findByTokenHash(
-      refreshTokenHash,
-    );
 
-    if (!storedRefreshToken) {
-      throw new UnauthorizedException('Invalid refresh token');
+    // Serialize rotation for the same token to prevent a race where two
+    // concurrent requests (e.g. multiple tabs sharing one refresh token)
+    // both pass validation and each mint a brand-new refresh token, leaving
+    // two valid tokens in the same family. If Redis is unavailable we
+    // fail-open (proceed without the lock) to preserve availability.
+    const lockKey = `auth:refresh-rotate:${refreshTokenHash}`;
+    let lockAcquired = false;
+    try {
+      lockAcquired = await this.redisService.setIfNotExists(lockKey, '1', 15);
+    } catch {
+      lockAcquired = true;
     }
 
-    if (storedRefreshToken.revokedAt) {
-      await this.handleRefreshTokenReuse(storedRefreshToken, payload, context);
-      throw new UnauthorizedException('Refresh token reuse detected');
+    if (!lockAcquired) {
+      throw new ConflictException('Refresh already in progress, please retry');
     }
 
-    if (storedRefreshToken.expiresAt <= new Date()) {
-      throw new UnauthorizedException('Refresh token expired');
-    }
+    try {
+      const storedRefreshToken = await this.refreshTokenService.findByTokenHash(
+        refreshTokenHash,
+      );
 
-    const user = await this.usersService.getUserById(payload.sub);
-    if (!user || user.tokenVersion !== payload.tokenVersion) {
-      throw new UnauthorizedException('Invalid token version');
-    }
+      if (!storedRefreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
 
-    const refreshExpiresAt = this.getRefreshTokenExpiryDate();
+      if (storedRefreshToken.revokedAt) {
+        await this.handleRefreshTokenReuse(storedRefreshToken, payload, context);
+        throw new UnauthorizedException('Refresh token reuse detected');
+      }
+
+      if (storedRefreshToken.expiresAt <= new Date()) {
+        throw new UnauthorizedException('Refresh token expired');
+      }
+
+      const user = await this.usersService.getUserById(payload.sub);
+      if (!user || user.tokenVersion !== payload.tokenVersion) {
+        throw new UnauthorizedException('Invalid token version');
+      }
+
+      const refreshExpiresAt = this.getRefreshTokenExpiryDate();
     const rotatedRefreshPayload: JwtPayload = {
       sub: payload.sub,
       role: payload.role,
@@ -362,6 +382,9 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken };
+    } finally {
+      await this.redisService.delete(lockKey).catch(() => undefined);
+    }
   }
 
   async logout(rawRefreshToken: string, context: AuthContext = {}) {

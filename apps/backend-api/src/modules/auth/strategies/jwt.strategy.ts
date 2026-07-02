@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../../users/services/users.service';
+import { AccountStatus } from '../../users/enums/account-status.enum';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 const ACCESS_TOKEN_COOKIE = 'hyper_market_access_token';
@@ -46,10 +47,29 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: JwtPayload): Promise<JwtPayload> {
     const user = await this.usersService.getUserById(payload.sub);
 
-    if (!user || user.tokenVersion !== payload.tokenVersion) {
+    if (!user) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    // Role / permission / ban changes are only reflected after a token-version
+    // bump (logout / password reset). Re-read the user so guards enforce the
+    // CURRENT role and account status instead of the (possibly stale) claims
+    // baked into the token when it was issued.
+    if (user.tokenVersion !== payload.tokenVersion) {
       throw new UnauthorizedException('Invalid token version');
     }
 
-    return payload;
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      throw new UnauthorizedException('Account is not active');
+    }
+
+    return {
+      sub: payload.sub,
+      role: user.role,
+      sessionId: payload.sessionId,
+      deviceId: payload.deviceId,
+      tokenVersion: user.tokenVersion,
+      jti: payload.jti,
+    };
   }
 }
