@@ -16,6 +16,8 @@ import { useToast } from "@/components/ui/toast";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { createIdempotencyKey } from "@/lib/idempotency";
 import { formatPrice } from "@/lib/utils";
+import { JalaliDatePicker } from "@/components/jalali-date-picker";
+import { IRAN_PROVINCES } from "@/data/iran-locations";
 import type { DeliveryAddress, DeliveryWindow } from "@/types/domain";
 import { useCart } from "@/hooks/use-cart";
 import { useCreateOrder, useCreatePayment, useSimulatePaymentSuccess } from "@/hooks/use-orders";
@@ -263,13 +265,46 @@ export default function CheckoutPage() {
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <Input value={deliveryAddress.recipientName} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, recipientName: e.target.value })} placeholder="نام تحویل‌گیرنده" disabled={isSubmitting} />
                   <Input value={deliveryAddress.phoneNumber} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 11) })} placeholder="شماره موبایل مثل 09123456789" inputMode="numeric" maxLength={11} disabled={isSubmitting} />
-                  <Input value={deliveryAddress.province} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, province: e.target.value })} placeholder="استان" disabled={isSubmitting} />
-                  <Input value={deliveryAddress.city} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })} placeholder="شهر" disabled={isSubmitting} />
+                  <select
+                    value={deliveryAddress.province}
+                    onChange={(e) =>
+                      setDeliveryAddress({ ...deliveryAddress, province: e.target.value, city: "" })
+                    }
+                    disabled={isSubmitting}
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
+                  >
+                    <option value="">انتخاب استان</option>
+                    {IRAN_PROVINCES.map((item) => (
+                      <option key={item.province} value={item.province}>
+                        {item.province}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={deliveryAddress.city}
+                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
+                    disabled={isSubmitting || !deliveryAddress.province}
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
+                  >
+                    <option value="">انتخاب شهر</option>
+                    {IRAN_PROVINCES.find((item) => item.province === deliveryAddress.province)?.cities.map(
+                      (city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ),
+                    )}
+                  </select>
                   <Input className="md:col-span-2" value={deliveryAddress.addressLine} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, addressLine: e.target.value })} placeholder="آدرس کامل" disabled={isSubmitting} />
                   <Input value={deliveryAddress.plate ?? ''} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, plate: e.target.value })} placeholder="پلاک" disabled={isSubmitting} />
                   <Input value={deliveryAddress.unit ?? ''} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, unit: e.target.value })} placeholder="واحد" disabled={isSubmitting} />
                   <Input value={deliveryAddress.postalCode ?? ''} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, postalCode: e.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="کد پستی ۱۰ رقمی، اختیاری" inputMode="numeric" maxLength={10} disabled={isSubmitting} />
-                  <Input type="date" value={deliveryWindow.date} min={todayDateInputValue()} onChange={(e) => setDeliveryWindow({ ...deliveryWindow, date: e.target.value })} disabled={isSubmitting} />
+                  <JalaliDatePicker
+                    value={deliveryWindow.date}
+                    min={todayDateInputValue()}
+                    onChange={(iso) => setDeliveryWindow({ ...deliveryWindow, date: iso })}
+                    disabled={isSubmitting}
+                  />
                   <select value={deliveryWindow.timeSlot} onChange={(e) => setDeliveryWindow({ ...deliveryWindow, timeSlot: e.target.value })} disabled={isSubmitting} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100">
                     {deliveryTimeSlots.map((slot) => <option key={slot.value} value={slot.value}>{slot.label}</option>)}
                   </select>

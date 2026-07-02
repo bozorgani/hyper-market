@@ -140,7 +140,14 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
-        if (!originalRequest._skipAuthRedirect) {
+        // User-facing auth form requests (login/register/otp/reset) must surface
+        // their own error messages instead of bouncing the user to /login.
+        const isUserAuthForm =
+          typeof originalRequest.url === "string" &&
+          /(\/auth\/(login|register|forgot-password|reset-password|verify-otp|send-verification-otp|verify-email|verify-phone))($|\?)/.test(
+            originalRequest.url,
+          );
+        if (!originalRequest._skipAuthRedirect && !isUserAuthForm) {
           redirectToLogin();
         }
         return Promise.reject(refreshError);

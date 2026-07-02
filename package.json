@@ -14,7 +14,8 @@
     "backend:test": "npm run test --workspace=apps/backend-api",
     "sync:state": "node scripts/sync-project-state.js",
     "prepare": "husky",
-    "search:reindex": "node scripts/reindex-products-search.js"
+    "search:reindex": "node scripts/reindex-products-search.js",
+    "seed:products": "node scripts/seed-products.js"
   },
   "engines": {
     "node": ">=20.0.0",

@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { formatJalaliDate } from "./jalali";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,12 +15,8 @@ export function formatPrice(value: number) {
 }
 
 export function formatPersianDate(value?: string) {
-  if (!value) return "ثبت نشده";
-  return new Intl.DateTimeFormat("fa-IR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(new Date(value));
+  // Render true Jalali (Shamsi) dates via the self-contained jalali utility.
+  return formatJalaliDate(value, true);
 }
 
 export function translateOrderStatus(status: string) {
