@@ -89,6 +89,9 @@ export class Order {
 
   @Prop({ type: DeliveryWindowSchema, required: true })
   deliveryWindow!: DeliveryWindow;
+
+  @Prop({ type: Date, default: null })
+  cancelledAt?: Date | null;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

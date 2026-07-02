@@ -63,13 +63,18 @@ export class CartService {
     quantity: number,
   ): Promise<CartSummary> {
     this.ensureValidObjectId(productId, 'Invalid product id');
-    const product = await this.productsService.getProductById(productId);
-
-    if (!product.isActive) {
-      throw new BadRequestException('Product is not active');
-    }
 
     await this.withCartMutationLock(userId, async () => {
+      // Read product state INSIDE the lock so the stock/active check and the
+      // cart mutation share the same critical section. Reading product.stock
+      // before acquiring the lock allowed a stale snapshot (TOCTOU) to be used
+      // for the validation once the lock was held.
+      const product = await this.productsService.getProductById(productId);
+
+      if (!product.isActive) {
+        throw new BadRequestException('Product is not active');
+      }
+
       const cart = await this.getOrCreateCart(userId);
       const existingItem = cart.items.find(
         (item) => getEntityId(item.productId) === productId,
@@ -98,17 +103,19 @@ export class CartService {
     quantity: number,
   ): Promise<CartSummary> {
     this.ensureValidObjectId(productId, 'Invalid product id');
-    const product = await this.productsService.getProductById(productId);
-
-    if (!product.isActive) {
-      throw new BadRequestException('Product is not active');
-    }
-
-    if (product.stock < quantity) {
-      throw new BadRequestException('Insufficient product stock');
-    }
 
     await this.withCartMutationLock(userId, async () => {
+      // Read product state INSIDE the lock (see addProductToCart).
+      const product = await this.productsService.getProductById(productId);
+
+      if (!product.isActive) {
+        throw new BadRequestException('Product is not active');
+      }
+
+      if (product.stock < quantity) {
+        throw new BadRequestException('Insufficient product stock');
+      }
+
       const cart = await this.getOrCreateCart(userId);
       const existingItem = cart.items.find(
         (item) => getEntityId(item.productId) === productId,

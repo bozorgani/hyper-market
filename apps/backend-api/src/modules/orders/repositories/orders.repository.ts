@@ -36,6 +36,29 @@ export class OrdersRepository {
       .exec();
   }
 
+  /**
+   * Conditional, atomic status transition. Succeeds (and returns the new
+   * document) only when the order's current status is one of `allowedFrom`.
+   * Used by cancellation so that concurrent / retried cancel requests cannot
+   * both pass the transition and double-restore inventory.
+   */
+  async transitionStatus(
+    id: string,
+    allowedFrom: OrderStatus[],
+    toStatus: OrderStatus,
+    extra: Partial<Order> = {},
+    session?: ClientSession,
+  ): Promise<Order | null> {
+    if (!isValidObjectId(id)) return null;
+    return this.orderModel
+      .findOneAndUpdate(
+        { _id: id, status: { $in: allowedFrom } },
+        { $set: { status: toStatus, ...extra } },
+        { returnDocument: 'after', session },
+      )
+      .exec();
+  }
+
   async findAll(): Promise<Order[]> {
     return this.orderModel.find().sort({ createdAt: -1 }).lean().exec();
   }

@@ -176,18 +176,21 @@ export class OrdersService {
   ): Promise<Order> {
     this.ensureValidObjectId(orderId, 'Invalid order id');
 
-    const order = await this.ordersRepository.findById(orderId);
-    if (!order) {
+    // User-facing legality check against the current status. The *actual* write
+    // is performed as a conditional, atomic transition (inside the transaction
+    // for cancellation) to avoid TOCTOU between this read and the mutation.
+    const current = await this.ordersRepository.findById(orderId);
+    if (!current) {
       throw new NotFoundException('Order not found');
     }
 
-    const allowedStatuses = ORDER_STATUS_TRANSITIONS[order.status];
+    const allowedStatuses = ORDER_STATUS_TRANSITIONS[current.status];
     if (!allowedStatuses.includes(status)) {
       throw new BadRequestException('Invalid order status transition');
     }
 
     if (status === OrderStatus.CANCELLED) {
-      return this.cancelOrder(orderId, order, session);
+      return this.cancelOrder(orderId, session);
     }
 
     const updatedOrder = await this.ordersRepository.updateStatus(
@@ -204,45 +207,67 @@ export class OrdersService {
 
   private async cancelOrder(
     orderId: string,
-    order: Order,
     session?: ClientSession,
   ): Promise<Order> {
-    const productIds = order.items.map((item) => getEntityId(item.productId));
+    const cancellableStatuses = [
+      OrderStatus.PENDING,
+      OrderStatus.PAID,
+      OrderStatus.PROCESSING,
+    ];
 
-    const restoreStockAndCancel = async (activeSession?: ClientSession) => {
-      for (const item of order.items) {
+    const restoredProductIds: string[] = [];
+
+    const run = async (activeSession?: ClientSession): Promise<Order> => {
+      // Conditional, atomic transition: only succeeds if the order is currently
+      // in a cancellable state. This makes cancellation idempotent — concurrent
+      // or retried cancel requests find the order already CANCELLED and the
+      // filter matches nothing, so inventory is restored exactly once.
+      const transitioned = await this.ordersRepository.transitionStatus(
+        orderId,
+        cancellableStatuses,
+        OrderStatus.CANCELLED,
+        { cancelledAt: new Date() },
+        activeSession,
+      );
+
+      if (!transitioned) {
+        // Already cancelled (or not cancellable): re-read and return without
+        // touching inventory. Same logical result for the caller.
+        const existing = await this.ordersRepository.findById(orderId);
+        if (!existing) {
+          throw new NotFoundException('Order not found');
+        }
+        return existing;
+      }
+
+      for (const item of transitioned.items) {
+        const productId = getEntityId(item.productId);
+        restoredProductIds.push(productId);
         await this.productsService.restoreStock(
-          getEntityId(item.productId),
+          productId,
           item.quantity,
           activeSession,
           false,
         );
       }
 
-      const updatedOrder = await this.ordersRepository.updateStatus(
-        orderId,
-        OrderStatus.CANCELLED,
-        activeSession,
-      );
-
-      if (!updatedOrder) {
-        throw new NotFoundException('Order not found');
-      }
-
-      return updatedOrder;
+      return transitioned;
     };
 
     const updatedOrder = session
-      ? await restoreStockAndCancel(session)
+      ? await run(session)
       : await this.databaseTransactionService.executeInTransaction((activeSession) =>
-          restoreStockAndCancel(activeSession),
+          run(activeSession),
         );
 
-    await Promise.all(
-      productIds.map((productId) =>
-        this.productsService.syncProductToSearch(productId),
-      ),
-    );
+    // Search sync happens after the transaction (reads latest committed stock).
+    if (restoredProductIds.length > 0) {
+      await Promise.all(
+        restoredProductIds.map((productId) =>
+          this.productsService.syncProductToSearch(productId),
+        ),
+      );
+    }
 
     return updatedOrder;
   }
