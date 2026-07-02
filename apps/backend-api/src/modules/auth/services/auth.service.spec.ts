@@ -12,6 +12,7 @@ import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { MailService } from '../../mail/mail.service';
 import { SmsIrService } from '../../mail/sms-ir.service';
 import { OtpRepository } from '../repositories/otp.repository';
+import { EventBusService } from '../../../core/events/event-bus.service';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { AccountStatus } from '../../users/enums/account-status.enum';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
@@ -75,6 +76,10 @@ describe('AuthService', () => {
     exists: jest.fn(),
   };
 
+  const mockEventBusService = {
+    emit: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -91,6 +96,7 @@ describe('AuthService', () => {
         { provide: MailService, useValue: {} },
         { provide: SmsIrService, useValue: {} },
         { provide: OtpRepository, useValue: {} },
+        { provide: EventBusService, useValue: mockEventBusService },
       ],
     }).compile();
 

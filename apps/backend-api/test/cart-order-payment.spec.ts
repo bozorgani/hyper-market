@@ -40,6 +40,7 @@ test('CartService returns detailed cart items and total price', async () => {
   };
   const productsService = {
     getProductById: async () => product,
+    getProductsByIds: async () => [product],
   };
   const service = new CartService(cartRepository as never, productsService as never);
 
@@ -89,6 +90,11 @@ test('OrdersService creates order inside transaction and clears cart', async () 
     },
   };
   const productsService = {
+    getProductById: async (_id: string, session: unknown) => {
+      assert.equal(session, 'session');
+      calls.push('get-product');
+      return createProduct({ _id: productId });
+    },
     reduceStock: async (_id: string, _quantity: number, session: unknown, syncSearch: boolean) => {
       assert.equal(session, 'session');
       assert.equal(syncSearch, false);
@@ -100,12 +106,10 @@ test('OrdersService creates order inside transaction and clears cart', async () 
     },
   };
   const cartService = {
-    getCartByUserId: async () => cart,
-    validateCartStock: async () => calls.push('validate-cart'),
-    getOrderItemsFromCart: async () => [
-      { productId, quantity: 2, priceAtPurchase: 100 },
-    ],
-    calculateCartTotal: async () => 200,
+    getCartByUserId: async (_userId: string, session: unknown) => {
+      assert.equal(session, 'session');
+      return cart;
+    },
     clearCart: async (_userId: string, session: unknown) => {
       assert.equal(session, 'session');
       calls.push('clear-cart');
@@ -144,8 +148,8 @@ test('OrdersService creates order inside transaction and clears cart', async () 
 
   assert.equal(result, order);
   assert.deepEqual(calls, [
-    'validate-cart',
     'transaction-start',
+    'get-product',
     'reduce-stock',
     'create-order',
     'clear-cart',
