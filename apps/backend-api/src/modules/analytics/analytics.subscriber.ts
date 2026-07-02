@@ -54,6 +54,7 @@ export class AnalyticsSubscriber implements OnModuleInit, OnModuleDestroy {
       userId: userId ?? null,
       sessionId: sessionId ?? null,
       deviceId: deviceId ?? null,
+      dedupeKey: event.dedupeKey ?? null,
       type: analyticsType,
       metadata: {
         ...metadata,

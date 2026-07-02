@@ -8,6 +8,7 @@ type TrackEventInput = {
   metadata?: Record<string, unknown>;
   sessionId?: string | null;
   deviceId?: string | null;
+  dedupeKey?: string | null;
 };
 
 @Injectable()
@@ -22,6 +23,7 @@ export class AnalyticsService {
         metadata: input.metadata ?? {},
         sessionId: input.sessionId ?? null,
         deviceId: input.deviceId ?? null,
+        dedupeKey: input.dedupeKey ?? null,
         timestamp: new Date(),
       })
       .catch(() => undefined);

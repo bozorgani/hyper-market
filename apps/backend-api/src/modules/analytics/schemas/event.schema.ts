@@ -33,6 +33,12 @@ export class AnalyticsEvent {
   @Prop({ type: Date, default: Date.now, index: true })
   timestamp!: Date;
 
+  // Idempotency key propagated from the durable event bus. Sparse+unique so
+  // relay redeliveries never create duplicate analytics rows, while events
+  // emitted without a key (e.g. directly from the client) are unaffected.
+  @Prop({ type: String, default: null, sparse: true, unique: true, index: true })
+  dedupeKey?: string | null;
+
   @Prop({ type: String, default: null, index: true })
   sessionId?: string | null;
 
