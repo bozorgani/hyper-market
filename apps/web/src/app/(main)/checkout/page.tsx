@@ -207,14 +207,12 @@ export default function CheckoutPage() {
           timeSlot: deliveryWindow.timeSlot,
         },
       });
-      trackAnalyticsEvent({ type: "ORDER_CREATED", metadata: { orderId: order._id, amount: order.totalPrice, attemptId: keys.attemptId } });
 
       setCurrentStep("creating_payment");
       await createPayment.mutateAsync({ orderId: order._id, idempotencyKey: keys.paymentCreate });
 
       setCurrentStep("confirming_payment");
       await simulateSuccess.mutateAsync({ orderId: order._id, idempotencyKey: keys.paymentSuccess });
-      trackAnalyticsEvent({ type: "PAYMENT_SUCCESS", metadata: { orderId: order._id, amount: order.totalPrice, attemptId: keys.attemptId } });
 
       setCurrentStep("redirecting");
       showToast({ type: "success", title: "پرداخت آزمایشی با موفقیت انجام شد" });

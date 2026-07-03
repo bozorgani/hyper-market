@@ -7,8 +7,6 @@ export type AnalyticsEventType =
   | "ADD_TO_CART"
   | "REMOVE_FROM_CART"
   | "CHECKOUT_START"
-  | "ORDER_CREATED"
-  | "PAYMENT_SUCCESS"
   | "SEARCH_QUERY"
   | "LOGIN"
   | "REGISTER";

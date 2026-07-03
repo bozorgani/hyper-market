@@ -15,7 +15,10 @@
     "sync:state": "node scripts/sync-project-state.js",
     "prepare": "husky",
     "search:reindex": "node scripts/reindex-products-search.js",
-    "seed:products": "node scripts/seed-products.js"
+    "seed:products": "node scripts/seed-products.js",
+    "seed:permissions": "node scripts/seed-permissions.js",
+    "seed:admin": "node scripts/seed-admin.js",
+    "seed:all": "node scripts/seed-all.js"
   },
   "engines": {
     "node": ">=20.0.0",

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { TokenService } from '../../infrastructure/security/token.service';
@@ -8,6 +8,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { AnalyticsService } from './analytics.service';
 import { TrackEventDto } from './dto/track-event.dto';
+import { AnalyticsEventType } from './schemas/event.schema';
 
 const ACCESS_TOKEN_COOKIE = 'hyper_market_access_token';
 
@@ -22,6 +23,15 @@ export class AnalyticsController {
   @Public()
   @Throttle({ default: { limit: 600, ttl: 60000 } })
   trackEvent(@Body() body: TrackEventDto, @Req() request: Request) {
+    // Server-authoritative events must not be tracked via public API (prevents double-counting)
+    const serverOnlyEvents = [
+      AnalyticsEventType.ORDER_CREATED,
+      AnalyticsEventType.PAYMENT_SUCCESS,
+    ];
+    if (serverOnlyEvents.includes(body.type as AnalyticsEventType)) {
+      throw new BadRequestException('This event type is server-side only');
+    }
+
     const authenticatedUser = this.getAuthenticatedUserIfPresent(request);
 
     this.analyticsService.trackEvent({

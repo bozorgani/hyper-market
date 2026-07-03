@@ -13,7 +13,11 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "seed:permissions": "node ../../scripts/seed-permissions.js",
+    "seed:admin": "node ../../scripts/seed-admin.js",
+    "seed:products": "node ../../scripts/seed-products.js",
+    "seed:all": "node ../../scripts/seed-all.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.27",
