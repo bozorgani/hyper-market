@@ -27,29 +27,48 @@ export default function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const [productToDelete, setProductToDelete] = useState<{ id: string; name: string } | null>(null);
   const { showToast } = useToast();
-  const products = useAdminProducts();
+  const isSearchMode = Boolean(query.trim() || minStock || maxPrice);
+  // statusFilter is forwarded to the server so pagination counts stay accurate
+  // (the public list defaults to active-only; admin can request active/inactive/all).
+  const products = useAdminProducts(
+    page,
+    statusFilter === "all" ? undefined : statusFilter === "active",
+    10,
+  );
   const search = useAdminProductSearch({ q: query, minStock: minStock || undefined, maxPrice: maxPrice || undefined });
   const deleteProduct = useDeleteProduct();
-  const isSearchMode = Boolean(query.trim() || minStock || maxPrice);
   const sourceError = isSearchMode ? search.error : products.error;
   const sourceErrorMessage = sourceError instanceof Error ? sourceError.message : "دریافت اطلاعات محصولات ناموفق بود.";
   const isLoading = isSearchMode ? search.isLoading : products.isLoading;
 
   const rows = useMemo(() => {
-    const baseRows = isSearchMode
-      ? (search.data ?? []).map((item) => ({ id: item.id, name: item.title, price: item.price, stock: item.stock, isActive: undefined as boolean | undefined }))
-      : (products.data?.items ?? []).map((item) => ({ id: item._id, name: item.name, price: item.discountPrice ?? item.price, stock: item.stock, isActive: item.isActive }));
+    if (isSearchMode) {
+      return (search.data ?? []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        stock: item.stock,
+        isActive: undefined as boolean | undefined,
+      }));
+    }
+    return (products.data?.items ?? []).map((item) => ({
+      id: item._id,
+      name: item.name,
+      price: item.discountPrice ?? item.price,
+      stock: item.stock,
+      isActive: item.isActive,
+    }));
+  }, [isSearchMode, products.data?.items, search.data]);
 
-    return baseRows.filter((item) => {
-      if (isSearchMode) return true;
-      if (statusFilter === "active") return item.isActive;
-      if (statusFilter === "inactive") return !item.isActive;
-      return true;
-    });
-  }, [isSearchMode, products.data?.items, search.data, statusFilter]);
+  const totalItems = isSearchMode ? rows.length : (products.data?.total ?? 0);
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const paginatedRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Search results are not server-paginated, so paginate them client-side;
+  // the default list already comes back as a single server page.
+  const paginatedRows = useMemo(
+    () => (isSearchMode ? rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) : rows),
+    [isSearchMode, rows, page],
+  );
 
   function resetFilters() {
     setQuery("");
@@ -89,7 +108,9 @@ export default function AdminProductsPage() {
             <option value="active">فقط فعال</option>
             <option value="inactive">فقط غیرفعال</option>
           </select>
-          <Button type="button" variant="outline" onClick={resetFilters}>پاک‌کردن فیلترها</Button>
+          <Button type="button" variant="outline" onClick={resetFilters}>
+            پاک‌کردن فیلترها
+          </Button>
         </div>
         {isSearchMode ? <p className="mt-3 text-xs text-amber-600">در حالت جستجوی مدیریتی، وضعیت فعال/غیرفعال از API جستجو برنمی‌گردد؛ بنابراین فیلتر وضعیت غیرفعال می‌شود.</p> : null}
       </Card>
@@ -106,7 +127,7 @@ export default function AdminProductsPage() {
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 text-sm text-slate-500">
             <p>{isSearchMode ? "نتایج جستجوی مدیریتی" : "فهرست محصولات ثبت‌شده"}</p>
-            <p>{formatNumber(rows.length)} مورد</p>
+            <p>{formatNumber(totalItems)} مورد</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] text-right text-sm">
@@ -140,13 +161,13 @@ export default function AdminProductsPage() {
               </tbody>
             </table>
           </div>
-          {!isLoading && rows.length === 0 ? (
+          {!isLoading && totalItems === 0 ? (
             <div className="p-4">
               <EmptyState title="محصولی یافت نشد" description="فیلترها یا عبارت جستجو را تغییر دهید تا نتیجه‌ای نمایش داده شود." actions={<Button type="button" onClick={resetFilters}>پاک‌کردن فیلترها</Button>} />
             </div>
           ) : null}
-          {!isLoading && rows.length > 0 ? (
-            <AdminPagination page={page} totalPages={totalPages} totalItems={rows.length} pageSize={PAGE_SIZE} onPageChange={setPage} />
+          {!isLoading && totalItems > 0 ? (
+            <AdminPagination page={page} totalPages={totalPages} totalItems={totalItems} pageSize={PAGE_SIZE} onPageChange={setPage} />
           ) : null}
         </Card>
       ) : null}

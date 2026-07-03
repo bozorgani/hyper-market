@@ -43,7 +43,7 @@ export function ProductForm({
         isActive: initialProduct.isActive,
       });
     }
-  }, [initialProduct]);
+  }, [initialProduct?._id]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

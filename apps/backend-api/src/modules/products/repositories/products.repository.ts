@@ -146,9 +146,10 @@ export class ProductsRepository {
     page: number,
     limit: number,
     search?: string,
+    isActive?: boolean,
   ): Promise<ProductListResult> {
     const skip = (page - 1) * limit;
-    const filter: Record<string, unknown> = { isActive: true, deletedAt: null };
+    const filter: Record<string, unknown> = { deletedAt: null, isActive: isActive ?? true };
     if (search) {
       filter.name = { $regex: escapeRegExp(search), $options: "i" };
     }
@@ -171,12 +172,13 @@ export class ProductsRepository {
     page: number,
     limit: number,
     search?: string,
+    isActive?: boolean,
   ): Promise<ProductListResult> {
     const skip = (page - 1) * limit;
     const filter: Record<string, unknown> = {
       categoryId: new Types.ObjectId(categoryId),
-      isActive: true,
       deletedAt: null,
+      isActive: isActive ?? true,
     };
     if (search) {
       filter.name = { $regex: escapeRegExp(search), $options: "i" };

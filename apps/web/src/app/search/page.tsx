@@ -176,7 +176,7 @@ function SearchContent() {
                     {product.stock > 0 ? "موجود" : "ناموجود"}
                   </Badge>
                   <Link href={`/products/${product.id}`} className="line-clamp-2 flex-1 font-bold leading-7 text-slate-900">
-                    {product.title}
+                    {product.name}
                   </Link>
                 </div>
                 <p className="mt-2 text-lg font-black text-rose-600">{formatPrice(product.effectivePrice ?? product.discountPrice ?? product.price)}</p>

@@ -69,12 +69,14 @@ export class ProductsController {
     @Query('limit') limit?: string,
     @Query('categoryId') categoryId?: string,
     @Query('search') search?: string,
+    @Query('isActive') isActive?: string,
   ) {
     return this.productsService.listProducts(
       this.toPositiveInteger(page, 1),
       this.toPositiveInteger(limit, 20),
       categoryId,
       search?.trim() || undefined,
+      this.toOptionalBoolean(isActive),
     );
   }
 
@@ -109,5 +111,11 @@ export class ProductsController {
     }
 
     return parsed;
+  }
+
+  private toOptionalBoolean(value: string | undefined): boolean | undefined {
+    if (value === "true") return true;
+    if (value === "false") return false;
+    return undefined;
   }
 }

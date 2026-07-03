@@ -20,10 +20,11 @@ export type ProductImageUploadResponse = {
   mimeType: string;
 };
 
-export function useAdminProducts(page = 1) {
+export function useAdminProducts(page = 1, isActive?: boolean, limit = 100) {
   return useQuery({
-    queryKey: ["admin", "products", page],
-    queryFn: async () => (await api.get<ProductListResponse>("/products", { params: { page, limit: 100 } })).data,
+    queryKey: ["admin", "products", page, isActive, limit],
+    queryFn: async () =>
+      (await api.get<ProductListResponse>("/products", { params: { page, limit, isActive } })).data,
   });
 }
 

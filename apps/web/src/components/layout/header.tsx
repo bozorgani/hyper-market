@@ -90,7 +90,7 @@ export function Header() {
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">🛍️</div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-slate-900">{item.title}</p>
+                    <p className="truncate text-sm font-bold text-slate-900">{item.name}</p>
                     <p className="text-xs text-slate-500">{formatPrice(item.price)}</p>
                   </div>
                 </Link>
