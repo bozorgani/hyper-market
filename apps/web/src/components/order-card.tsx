@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
-import { OrderStatusBadge, PaymentStatusBadge } from "@/components/admin/admin-status-badge";
+import { OrderStatusBadge, PaymentStatusBadge } from "@/components/order/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatNumber, formatPersianDate, formatPrice } from "@/lib/utils";

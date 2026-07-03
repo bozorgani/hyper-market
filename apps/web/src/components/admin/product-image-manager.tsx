@@ -2,6 +2,7 @@
 
 import { ImagePlus, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/components/ui/status-message";
@@ -100,8 +101,8 @@ export function ProductImageManager({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {images.map((image, index) => (
             <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="aspect-square bg-slate-100">
-                <img src={image} alt={`تصویر ${index + 1}`} className="h-full w-full object-cover" />
+              <div className="relative aspect-square bg-slate-100">
+                <Image src={image} alt={`تصویر ${index + 1}`} fill unoptimized sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" />
               </div>
               <div className="space-y-2 p-3">
                 <p className="truncate text-xs text-slate-500">{image}</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useModalA11y } from "@/hooks/use-modal-a11y";
 
 export function ConfirmDialog({
   open,
@@ -23,6 +24,8 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  useModalA11y(open, onCancel);
+
   if (!open) return null;
 
   return (

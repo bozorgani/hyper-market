@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/services/api";
 
 export type SearchProduct = {
@@ -26,6 +26,7 @@ export function useProductSearch(params: {
   return useQuery({
     queryKey: ["search", "products", params],
     queryFn: async () => (await api.get<SearchProduct[]>("/search/products", { params })).data,
+    placeholderData: keepPreviousData,
   });
 }
 

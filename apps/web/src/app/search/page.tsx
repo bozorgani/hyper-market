@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAnalytics } from "@/hooks/use-analytics";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useCategories } from "@/hooks/use-products";
 import { useProductSearch } from "@/hooks/use-search";
 import { formatNumber, formatPrice } from "@/lib/utils";
@@ -47,11 +48,13 @@ function SearchContent() {
   const [sort, setSort] = useState("createdAt:desc");
   const categories = useCategories();
   const { trackSearch } = useAnalytics();
+  const debouncedMinPrice = useDebounce(minPrice, 400);
+  const debouncedMaxPrice = useDebounce(maxPrice, 400);
   const search = useProductSearch({
     q: query,
     categoryId: categoryId || undefined,
-    minPrice: minPrice || undefined,
-    maxPrice: maxPrice || undefined,
+    minPrice: debouncedMinPrice || undefined,
+    maxPrice: debouncedMaxPrice || undefined,
     minStock: availableOnly ? "1" : undefined,
     sort,
   });

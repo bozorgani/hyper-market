@@ -1,10 +1,11 @@
 "use client";
 
 import { X } from "lucide-react";
-import { PaymentStatusBadge } from "@/components/admin/admin-status-badge";
+import { PaymentStatusBadge } from "@/components/order/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAdminPayment } from "@/features/admin/admin-api";
+import { useModalA11y } from "@/hooks/use-modal-a11y";
 import { formatPrice, translatePaymentMethod } from "@/lib/utils";
 
 function PaymentInfoRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
@@ -26,6 +27,7 @@ export function PaymentDetailModal({
   onClose: () => void;
 }) {
   const payment = useAdminPayment(orderId ?? "");
+  useModalA11y(open, onClose);
 
   if (!open) return null;
 

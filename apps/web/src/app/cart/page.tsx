@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { AlertTriangle, Minus, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -154,7 +155,7 @@ export default function CartPage() {
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 text-2xl">
                       {item.image ? (
-                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                        <Image src={item.image} alt={item.name} fill unoptimized sizes="64px" className="object-cover" />
                       ) : (
                         "🛒"
                       )}

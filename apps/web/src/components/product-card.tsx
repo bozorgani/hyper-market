@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -33,9 +34,16 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <Card className="overflow-hidden text-right">
-      <Link href={`/products/${product._id}`} className="block aspect-square bg-slate-100">
+      <Link href={`/products/${product._id}`} className="relative block aspect-square bg-slate-100">
         {product.images?.[0] ? (
-          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover transition duration-300 hover:scale-105" />
+          <Image
+            src={product.images[0]}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            unoptimized
+            className="object-cover transition duration-300 hover:scale-105"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl">🛒</div>
         )}
