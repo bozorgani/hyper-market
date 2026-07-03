@@ -3,20 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { motion } from "framer-motion";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
 import { firstValidationError, loginSchema, normalizeDigits, normalizePhoneNumber } from "@/lib/validation/auth";
 import { useAuthStore } from "@/store/auth-store";
-
-const features = [
-  { title: "ورود با ایمیل یا موبایل", description: "بدون تغییر در API، همان flow فعلی ورود با تجربه‌ای شفاف‌تر در اختیار شماست." },
-  { title: "نشست ایمن", description: "session و refresh flow سمت فرانت حفظ شده و پس از ورود به‌صورت خودکار استفاده می‌شود." },
-  { title: "دسترسی سریع", description: "بعد از ورود، مستقیم به پروفایل و سپس سفارش‌ها و خریدهای شما هدایت می‌شوید." },
-  { title: "رابط فارسی یکپارچه", description: "فرم‌ها، خطاها و پیام‌های موفقیت با UX هماهنگ و راست‌به‌چپ نمایش داده می‌شوند." },
-];
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,6 +19,7 @@ export default function LoginPage() {
   const { showToast } = useToast();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -60,36 +56,108 @@ export default function LoginPage() {
   return (
     <AuthShell
       eyebrow="ورود سریع و امن"
-      title="ورود به حساب کاربری"
-      description="با ایمیل یا شماره موبایل وارد شوید و خرید، سفارش‌ها و وضعیت حساب خود را در محیطی یکپارچه مدیریت کنید."
-      features={features}
-      footer={
-        <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/register" className="font-semibold text-rose-600">ثبت‌نام</Link>
-          <Link href="/verify-otp" className="font-semibold text-slate-700">تأیید کد پیامکی / ایمیلی</Link>
-        </div>
-      }
+      title="به حساب خود برگردید"
+      description="وارد حساب کاربری شوید و به تمام سفارش‌ها، لیست علاقه‌مندی‌ها و تخفیف‌های اختصاصی خود دسترسی پیدا کنید."
     >
-      <h2 className="text-2xl font-black">ورود به حساب</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-500">ایمیل یا شماره موبایل و رمز عبور خود را وارد کنید.</p>
+      {/* Form Header */}
+      <div className="mb-7">
+        <h2 className="text-xl font-black text-slate-900">ورود به حساب</h2>
+        <p className="mt-1.5 text-sm text-slate-500">ایمیل یا شماره موبایل و رمز عبور خود را وارد کنید</p>
+      </div>
 
-      <form onSubmit={submit} className="mt-6 space-y-4">
-        <Input
-          value={identifier}
-          onChange={(e) => setIdentifier(normalizeDigits(e.target.value))}
-          onBlur={() => {
-            if (identifier && !identifier.includes("@")) setIdentifier(normalizePhoneNumber(identifier));
-          }}
-          placeholder="ایمیل یا شماره موبایل مثل 0912..."
-          required
-          inputMode="text"
-        />
-        <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" type="password" required />
-        {error ? <StatusMessage variant="error">{error}</StatusMessage> : null}
-        <Button type="submit" className="w-full" disabled={loading || !identifier.trim() || !password.trim()}>
-          {loading ? "در حال ورود..." : "ورود"}
-        </Button>
+      {/* Form */}
+      <form onSubmit={submit} className="space-y-4">
+        {/* Identifier Field */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-slate-600">ایمیل یا شماره موبایل</label>
+          <div className="relative">
+            <Mail className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={identifier}
+              onChange={(e) => setIdentifier(normalizeDigits(e.target.value))}
+              onBlur={() => {
+                if (identifier && !identifier.includes("@")) setIdentifier(normalizePhoneNumber(identifier));
+              }}
+              placeholder="example@email.com یا 0912..."
+              required
+              inputMode="text"
+              className={cn(
+                "h-12 w-full rounded-xl border bg-white pr-10 pl-4 text-right text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
+                error
+                  ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
+                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Password Field */}
+        <div>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="text-xs font-semibold text-slate-600">رمز عبور</label>
+            <button type="button" className="text-xs font-medium text-emerald-600 transition hover:text-emerald-700">
+              فراموشی رمز عبور
+            </button>
+          </div>
+          <div className="relative">
+            <Lock className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="رمز عبور خود را وارد کنید"
+              type={showPassword ? "text" : "password"}
+              required
+              className={cn(
+                "h-12 w-full rounded-xl border bg-white pr-10 pl-10 text-right text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
+                error
+                  ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
+                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}>
+            <StatusMessage variant="error">{error}</StatusMessage>
+          </motion.div>
+        )}
+
+        {/* Submit Button */}
+        <motion.div whileTap={{ scale: 0.98 }}>
+          <button
+            type="submit"
+            disabled={loading || !identifier.trim() || !password.trim()}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-emerald-500 to-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                در حال ورود...
+              </>
+            ) : (
+              <>
+                ورود به حساب
+                <ArrowLeft className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </motion.div>
       </form>
+
+      {/* Footer */}
+      <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <span>حساب ندارید؟{" "}<Link href="/register" className="font-bold text-emerald-600 transition hover:text-emerald-700">ثبت‌نام کنید</Link></span>
+        <Link href="/verify-otp" className="font-medium text-slate-500 transition hover:text-emerald-600">تأیید کد پیامکی / ایمیلی</Link>
+      </div>
     </AuthShell>
   );
 }

@@ -1,13 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ShieldCheck } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { ShieldCheck, ShoppingCart, Truck, Headphones, ArrowLeftRight, CreditCard } from "lucide-react";
 
 type AuthFeature = {
   title: string;
   description: string;
+  icon?: React.ReactNode;
 };
+
+const defaultFeatures: AuthFeature[] = [
+  { title: "خرید آسان", description: "هزاران محصول با بهترین قیمت و ارسال سریع", icon: <ShoppingCart className="h-5 w-5" /> },
+  { title: "ارسال سریع", description: "تحویل اکسپرس در بازه زمانی انتخابی شما", icon: <Truck className="h-5 w-5" /> },
+  { title: "پشتیبانی ۲۴/۷", description: "تیم پشتیبانی همیشه در کنار شماست", icon: <Headphones className="h-5 w-5" /> },
+  { title: "پرداخت امن", description: "تراکنش‌های رمزنگاری‌شده و درگاه مطمئن", icon: <CreditCard className="h-5 w-5" /> },
+];
 
 export function AuthShell({
   eyebrow,
@@ -20,41 +27,139 @@ export function AuthShell({
   eyebrow: string;
   title: string;
   description: string;
-  features: AuthFeature[];
+  features?: AuthFeature[];
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) {
-  return (
-    <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl items-center px-4 py-10">
-      <div className="grid w-full gap-6 lg:grid-cols-[1.05fr,0.95fr]">
-        <motion.section
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="overflow-hidden rounded-3xl bg-gradient-to-bl from-rose-600 to-orange-500 p-6 text-right text-white shadow-xl md:p-8"
-        >
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur">
-            <ShieldCheck className="h-4 w-4" />
-            {eyebrow}
-          </div>
-          <h1 className="mt-5 text-3xl font-black leading-tight md:text-4xl">{title}</h1>
-          <p className="mt-4 max-w-xl leading-8 text-white/85">{description}</p>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {features.map((feature) => (
-              <div key={feature.title} className="rounded-2xl bg-white/15 p-4 backdrop-blur">
-                <p className="font-black">{feature.title}</p>
-                <p className="mt-2 text-sm leading-7 text-white/80">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </motion.section>
+  const featureList = features ?? defaultFeatures;
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="p-6 text-right md:p-8">
-            {children}
-            {footer ? <div className="mt-6">{footer}</div> : null}
-          </Card>
-        </motion.div>
+  return (
+    <div className="flex min-h-screen">
+      {/* Left Branding Panel - Desktop Only */}
+      <div className="relative hidden w-[480px] shrink-0 overflow-hidden bg-slate-950 lg:flex lg:flex-col lg:justify-between">
+        {/* Background Pattern */}
+        <div className="absolute inset-0">
+          {/* Gradient orbs */}
+          <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-emerald-500/20 blur-[100px]" />
+          <div className="absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-emerald-600/15 blur-[120px]" />
+          <div className="absolute left-1/2 top-1/3 h-48 w-48 rounded-full bg-teal-500/10 blur-[80px]" />
+          {/* Grid pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+              backgroundSize: "32px 32px",
+            }}
+          />
+        </div>
+
+        {/* Top Section */}
+        <div className="relative z-10 flex-1 p-10 pt-14">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/30">
+                <ShoppingCart className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-white">هایپرمارکت</h2>
+                <p className="text-xs text-emerald-400/80">Hyper Market</p>
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="mt-12">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-4 py-1.5 text-xs font-semibold text-emerald-400 backdrop-blur">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                {eyebrow}
+              </div>
+              <h1 className="mt-5 text-3xl font-black leading-snug text-white">{title}</h1>
+              <p className="mt-4 max-w-sm leading-7 text-slate-400">{description}</p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Bottom Features */}
+        <div className="relative z-10 space-y-3 p-10 pt-0">
+          {featureList.map((feature, idx) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 + idx * 0.08, duration: 0.4 }}
+              className="flex items-start gap-3.5 rounded-2xl bg-white/5 p-3.5 backdrop-blur transition hover:bg-white/[0.08]"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                {feature.icon ?? <ArrowLeftRight className="h-5 w-5" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-white">{feature.title}</p>
+                <p className="mt-0.5 text-xs leading-5 text-slate-500">{feature.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </main>
+
+      {/* Right Form Panel */}
+      <div className="flex flex-1 flex-col">
+        {/* Mobile Header */}
+        <div className="lg:hidden border-b border-slate-100 bg-white px-5 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/20">
+              <ShoppingCart className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-900">هایپرمارکت</p>
+              <p className="text-xs text-slate-400">{eyebrow}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Content */}
+        <div className="flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="w-full max-w-md"
+          >
+            {/* Desktop: show eyebrow badge */}
+            <div className="hidden lg:block mb-6">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-700">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                {eyebrow}
+              </div>
+            </div>
+
+            {/* Form Card */}
+            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
+              {children}
+              {footer ? <div className="mt-6 border-t border-slate-100 pt-5">{footer}</div> : null}
+            </div>
+
+            {/* Desktop Trust Badges */}
+            <div className="mt-8 hidden items-center justify-center gap-6 text-xs text-slate-400 lg:flex">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                <span>اتصال امن SSL</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <CreditCard className="h-3.5 w-3.5 text-emerald-500" />
+                <span>پرداخت مطمئن</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Headphones className="h-3.5 w-3.5 text-emerald-500" />
+                <span>پشتیبانی ۲۴/۷</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </div>
   );
 }

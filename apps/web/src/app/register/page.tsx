@@ -3,20 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Mail, Phone, Lock, Eye, EyeOff, ArrowLeft, Loader2, UserPlus } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
 import { firstValidationError, normalizeDigits, normalizePhoneNumber, registerSchema } from "@/lib/validation/auth";
 import { api } from "@/services/api";
-
-const features = [
-  { title: "ثبت‌نام ساده", description: "می‌توانید با ایمیل، شماره موبایل یا هر دو ثبت‌نام را آغاز کنید." },
-  { title: "سازگار با OTP", description: "بعد از ثبت‌نام، مستقیماً به مسیر تأیید هدایت می‌شوید تا فعال‌سازی حساب کامل شود." },
-  { title: "سازگاری با بک‌اند فعلی", description: "بدون تغییر API یا جریان auth، فقط UX فرم و پیام‌ها بهبود داده شده است." },
-  { title: "راهنمای شفاف", description: "در همان فرم، خطاهای ورودی و وضعیت موفقیت ثبت‌نام واضح‌تر نمایش داده می‌شود." },
-];
+import { cn } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -24,6 +18,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -68,43 +63,166 @@ export default function RegisterPage() {
     }
   }
 
+  // Password strength indicator
+  const passwordStrength = useMemo(() => {
+    if (!password) return { level: 0, label: "", color: "" };
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    if (score <= 2) return { level: 1, label: "ضعیف", color: "bg-red-400" };
+    if (score <= 3) return { level: 2, label: "متوسط", color: "bg-amber-400" };
+    return { level: 3, label: "قوی", color: "bg-emerald-500" };
+  }, [password]);
+
   return (
     <AuthShell
       eyebrow="ایجاد حساب جدید"
-      title="ثبت‌نام در هایپرمارکت"
-      description="حساب کاربری خود را بسازید تا خرید، سفارش‌ها و جریان تأیید OTP را در رابط اصلی فروشگاه تجربه کنید."
-      features={features}
-      footer={
-        <p className="text-sm text-slate-500">
-          حساب دارید؟ <Link href="/login" className="font-semibold text-rose-600">وارد شوید</Link>
-        </p>
-      }
+      title="عضویت در هایپرمارکت"
+      description="با ساخت حساب کاربری، از تخفیف‌های اختصاصی، پیگیری سفارش‌ها و تجربه خرید شخصی‌سازی‌شده بهره‌مند شوید."
     >
-      <h2 className="text-2xl font-black">ثبت‌نام</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-500">حداقل یکی از فیلدهای ایمیل یا موبایل را وارد کنید و سپس رمز عبور خود را بسازید.</p>
+      {/* Form Header */}
+      <div className="mb-7">
+        <h2 className="text-xl font-black text-slate-900">ثبت‌نام</h2>
+        <p className="mt-1.5 text-sm text-slate-500">اطلاعات خود را وارد کنید تا حساب جدید بسازید</p>
+      </div>
 
-      <form onSubmit={submit} className="mt-6 space-y-4">
-        <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ایمیل" type="email" />
-        <Input
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(normalizeDigits(e.target.value))}
-          onBlur={() => setPhoneNumber(normalizePhoneNumber(phoneNumber))}
-          placeholder="شماره موبایل مثل 0912..."
-          inputMode="numeric"
-          maxLength={11}
-        />
-        <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور قوی" type="password" required />
+      {/* Form */}
+      <form onSubmit={submit} className="space-y-4">
+        {/* Email Field */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-slate-600">ایمیل</label>
+          <div className="relative">
+            <Mail className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@email.com"
+              type="email"
+              dir="ltr"
+              className={cn(
+                "h-12 w-full rounded-xl border bg-white pr-10 pl-4 text-left text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
+                error
+                  ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
+                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Phone Field */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-slate-600">شماره موبایل</label>
+          <div className="relative">
+            <Phone className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(normalizeDigits(e.target.value))}
+              onBlur={() => setPhoneNumber(normalizePhoneNumber(phoneNumber))}
+              placeholder="09123456789"
+              inputMode="numeric"
+              maxLength={11}
+              className={cn(
+                "h-12 w-full rounded-xl border bg-white pr-10 pl-4 text-right text-sm text-slate-900 outline-none transition placeholder:text-slate-400 font-mono",
+                error
+                  ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
+                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+              )}
+            />
+          </div>
+          <p className="mt-1 text-xs text-slate-400">حداقل یکی از فیلدهای ایمیل یا موبایل الزامی است</p>
+        </div>
+
+        {/* Password Field */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-slate-600">رمز عبور</label>
+          <div className="relative">
+            <Lock className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="حداقل ۸ کاراکتر شامل حروف و اعداد"
+              type={showPassword ? "text" : "password"}
+              required
+              className={cn(
+                "h-12 w-full rounded-xl border bg-white pr-10 pl-10 text-right text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
+                error
+                  ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
+                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {/* Password Strength Bar */}
+          {password && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-medium text-slate-400">قدرت رمز عبور</span>
+                <span className={`text-[10px] font-semibold ${passwordStrength.level === 3 ? "text-emerald-600" : passwordStrength.level === 2 ? "text-amber-600" : "text-red-600"}`}>
+                  {passwordStrength.label}
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                      passwordStrength.level >= i ? passwordStrength.color : "bg-slate-100"
+                    }`}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Warning/Error Messages */}
         {!email.trim() && !phoneNumber.trim() ? (
-          <StatusMessage variant="warning">برای ادامه، یکی از فیلدهای ایمیل یا شماره موبایل را تکمیل کنید.</StatusMessage>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <StatusMessage variant="warning">برای ادامه، یکی از فیلدهای ایمیل یا شماره موبایل را تکمیل کنید.</StatusMessage>
+          </motion.div>
         ) : null}
-        {error ? (
-          <StatusMessage variant="warning">شماره موبایل باید ۱۱ رقم و با 09 شروع شود. رمز عبور باید شامل حرف بزرگ، حرف کوچک، عدد و کاراکتر ویژه باشد.</StatusMessage>
-        ) : null}
-        {error ? <StatusMessage variant="error">{error}</StatusMessage> : null}
-        <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
-          {loading ? "در حال ثبت..." : "ثبت‌نام"}
-        </Button>
+        {error && (
+          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}>
+            <StatusMessage variant="error">{error}</StatusMessage>
+          </motion.div>
+        )}
+
+        {/* Submit Button */}
+        <motion.div whileTap={{ scale: 0.98 }}>
+          <button
+            type="submit"
+            disabled={loading || !canSubmit}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-emerald-500 to-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                در حال ثبت...
+              </>
+            ) : (
+              <>
+                <UserPlus className="h-4 w-4" />
+                ساخت حساب کاربری
+              </>
+            )}
+          </button>
+        </motion.div>
       </form>
+
+      {/* Footer */}
+      <p className="text-center text-sm text-slate-500">
+        حساب دارید؟{" "}
+        <Link href="/login" className="font-bold text-emerald-600 transition hover:text-emerald-700">وارد شوید</Link>
+      </p>
     </AuthShell>
   );
 }

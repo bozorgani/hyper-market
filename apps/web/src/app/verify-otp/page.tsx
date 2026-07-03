@@ -3,20 +3,14 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Mail, Phone, KeyRound, ArrowLeft, Loader2, ShieldCheck, RefreshCw } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
 import { firstValidationError, normalizeDigits, normalizeOtpCode, normalizePhoneNumber, verifyOtpSchema } from "@/lib/validation/auth";
 import { api } from "@/services/api";
-
-const features = [
-  { title: "پوشش چند سناریو", description: "هم تأیید موبایل، هم تأیید ایمیل و هم بازیابی رمز عبور از همین فرم قابل انجام است." },
-  { title: "پیش‌پر کردن هوشمند", description: "اگر از ثبت‌نام وارد این صفحه شوید، مقصد و نوع OTP به‌صورت خودکار تکمیل می‌شود." },
-  { title: "بدون تغییر در API", description: "همان endpointهای فعلی auth استفاده می‌شوند و فقط تجربه کاربری بهتر شده است." },
-  { title: "بازگشت سریع", description: "پس از موفقیت، کاربر به صفحه ورود هدایت می‌شود تا جریان ورود نهایی شود." },
-];
+import { cn } from "@/lib/utils";
 
 function VerifyOtpContent() {
   const router = useRouter();
@@ -30,6 +24,7 @@ function VerifyOtpContent() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,15 +45,9 @@ function VerifyOtpContent() {
 
     try {
       if (type === "phone_verify") {
-        await api.post("/auth/verify-phone", {
-          phoneNumber: normalizedTarget,
-          code: normalizedCode,
-        });
+        await api.post("/auth/verify-phone", { phoneNumber: normalizedTarget, code: normalizedCode });
       } else if (type === "email_verify") {
-        await api.post("/auth/verify-email", {
-          email: normalizedTarget,
-          code: normalizedCode,
-        });
+        await api.post("/auth/verify-email", { email: normalizedTarget, code: normalizedCode });
       } else {
         await api.post("/auth/verify-otp", {
           target: type === "password_reset" && !normalizedTarget.includes("@") ? normalizePhoneNumber(target) : normalizedTarget,
@@ -67,7 +56,7 @@ function VerifyOtpContent() {
         });
       }
 
-      const message = "کد تأیید با موفقیت ثبت شد. در حال انتقال به صفحه ورود...";
+      const message = "کد تأیید با موفقیت ثبت شد. در حال انتقال...";
       setSuccess(message);
       showToast({ type: "success", title: "تأیید با موفقیت انجام شد" });
       window.setTimeout(() => router.replace("/login"), 900);
@@ -80,49 +69,203 @@ function VerifyOtpContent() {
     }
   }
 
+  async function handleResend() {
+    if (!target.trim()) return;
+    setResendLoading(true);
+    try {
+      const normalizedTarget = type === "phone_verify" ? normalizePhoneNumber(target) : target.trim().toLowerCase();
+      if (type === "phone_verify") {
+        await api.post("/auth/send-verification-otp", { phoneNumber: normalizedTarget, type: "phone_verify" });
+      } else {
+        await api.post("/auth/send-verification-otp", { email: normalizedTarget, type: "email_verify" });
+      }
+      showToast({ type: "success", title: "کد جدید ارسال شد" });
+    } catch {
+      showToast({ type: "error", title: "ارسال مجدد کد ناموفق بود" });
+    } finally {
+      setResendLoading(false);
+    }
+  }
+
+  const isPhone = type === "phone_verify" || (!target.includes("@") && type === "password_reset");
+
   return (
     <AuthShell
       eyebrow="تأیید هویت با OTP"
-      title="تأیید کد یک‌بارمصرف"
-      description="کد ارسال‌شده به ایمیل یا موبایل خود را وارد کنید تا فعال‌سازی حساب یا عملیات بازیابی رمز عبور کامل شود."
-      features={features}
-      footer={
-        <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/login" className="font-semibold text-rose-600">بازگشت به ورود</Link>
-          <Link href="/register" className="font-semibold text-slate-700">نیاز به ساخت حساب دارید؟</Link>
-        </div>
-      }
+      title="کد تأیید خود را وارد کنید"
+      description="کد ۶ رقمی ارسال‌شده به ایمیل یا موبایل خود را وارد کنید تا فعال‌سازی حساب کامل شود."
     >
-      <h2 className="text-2xl font-black">ورود کد تأیید</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-500">در صورت ورود از مسیر ثبت‌نام، فیلدهای مقصد و نوع تأیید به‌صورت خودکار تکمیل می‌شوند.</p>
+      {/* Form Header */}
+      <div className="mb-7">
+        <h2 className="text-xl font-black text-slate-900">تأیید کد یک‌بارمصرف</h2>
+        <p className="mt-1.5 text-sm text-slate-500">
+          {initialTarget ? (
+            <>کد ارسال‌شده به <span className="font-semibold text-slate-700">{initialTarget}</span> را وارد کنید</>
+          ) : (
+            "در صورت ورود از مسیر ثبت‌نام، فیلدها به‌صورت خودکار تکمیل می‌شوند"
+          )}
+        </p>
+      </div>
 
-      <form onSubmit={submit} className="mt-6 space-y-4">
-        <Input
-          value={target}
-          onChange={(e) => setTarget(normalizeDigits(e.target.value))}
-          onBlur={() => {
-            if (type === "phone_verify" || (!target.includes("@") && type === "password_reset")) setTarget(normalizePhoneNumber(target));
-          }}
-          placeholder="ایمیل یا شماره موبایل"
-          required
-        />
-        <select value={type} onChange={(e) => setType(e.target.value)} className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100">
-          <option value="phone_verify">تأیید موبایل</option>
-          <option value="email_verify">تأیید ایمیل</option>
-          <option value="password_reset">بازیابی رمز عبور</option>
-        </select>
-        <Input value={code} onChange={(e) => setCode(normalizeOtpCode(e.target.value))} placeholder="کد ۶ رقمی" required maxLength={6} inputMode="numeric" />
-        <StatusMessage variant="warning">شماره موبایل باید ۱۱ رقم و با 09 شروع شود؛ کد تأیید هم دقیقاً ۶ رقم است.</StatusMessage>
-        {success ? <StatusMessage variant="success">{success}</StatusMessage> : null}
-        {error ? <StatusMessage variant="error">{error}</StatusMessage> : null}
-        <Button type="submit" className="w-full" disabled={loading || !target.trim() || !code.trim()}>
-          {loading ? "در حال تأیید..." : "تأیید"}
-        </Button>
+      {/* Form */}
+      <form onSubmit={submit} className="space-y-4">
+        {/* Target Field */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-slate-600">ایمیل یا شماره موبایل</label>
+          <div className="relative">
+            {isPhone ? (
+              <Phone className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            ) : (
+              <Mail className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            )}
+            <input
+              value={target}
+              onChange={(e) => setTarget(normalizeDigits(e.target.value))}
+              onBlur={() => {
+                if (isPhone) setTarget(normalizePhoneNumber(target));
+              }}
+              placeholder={isPhone ? "09123456789" : "example@email.com"}
+              required
+              className={cn(
+                "h-12 w-full rounded-xl border bg-white pr-10 pl-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
+                isPhone ? "text-right font-mono" : "text-left",
+                error ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50" : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Type Selector */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-slate-600">نوع تأیید</label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { value: "phone_verify", label: "تأیید موبایل", icon: <Phone className="h-3.5 w-3.5" /> },
+              { value: "email_verify", label: "تأیید ایمیل", icon: <Mail className="h-3.5 w-3.5" /> },
+              { value: "password_reset", label: "بازیابی رمز", icon: <KeyRound className="h-3.5 w-3.5" /> },
+            ].map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setType(option.value)}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-xs font-semibold transition",
+                  type === option.value
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50",
+                )}
+              >
+                {option.icon}
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* OTP Code Input */}
+        <div>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="text-xs font-semibold text-slate-600">کد تأیید ۶ رقمی</label>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resendLoading || !target.trim()}
+              className="flex items-center gap-1 text-xs font-medium text-emerald-600 transition hover:text-emerald-700 disabled:opacity-50"
+            >
+              {resendLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              ارسال مجدد کد
+            </button>
+          </div>
+          <div className="flex gap-2.5" dir="ltr">
+            {code.split("").map((_, idx) => (
+              <div key={idx} className="relative flex-1">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={code[idx] ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    const newCode = code.split("");
+                    newCode[idx] = val[val.length - 1] ?? "";
+                    setCode(newCode.join(""));
+                    if (val && idx < 5) {
+                      const next = e.target.nextElementSibling as HTMLInputElement;
+                      next?.focus();
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Backspace" && !code[idx] && idx > 0) {
+                      const prev = (e.target as HTMLInputElement).previousElementSibling as HTMLInputElement;
+                      prev?.focus();
+                    }
+                  }}
+                  className={cn(
+                    "h-14 w-full rounded-xl border-2 text-center text-xl font-bold outline-none transition",
+                    error ? "border-red-300 focus:border-red-400" : "border-slate-200 focus:border-emerald-400",
+                    code[idx] && "border-emerald-400 text-emerald-600",
+                  )}
+                />
+              </div>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-slate-400 text-center">
+            کد ۶ رقمی ارسال‌شده به ایمیل یا موبایل خود را وارد کنید
+          </p>
+        </div>
+
+        {/* Messages */}
+        {success ? (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+            <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm text-emerald-700">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", bounce: 0.5 }}
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500"
+              >
+                <ShieldCheck className="h-3.5 w-3.5 text-white" />
+              </motion.div>
+              {success}
+            </div>
+          </motion.div>
+        ) : null}
+        {error && !success ? (
+          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}>
+            <StatusMessage variant="error">{error}</StatusMessage>
+          </motion.div>
+        ) : null}
+
+        {/* Submit Button */}
+        <motion.div whileTap={{ scale: 0.98 }}>
+          <button
+            type="submit"
+            disabled={loading || !target.trim() || code.length < 6}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-emerald-500 to-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                در حال تأیید...
+              </>
+            ) : (
+              <>
+                تأیید کد
+                <ArrowLeft className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </motion.div>
       </form>
+
+      {/* Footer */}
+      <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <Link href="/login" className="font-bold text-emerald-600 transition hover:text-emerald-700">بازگشت به ورود</Link>
+        <Link href="/register" className="font-medium text-slate-500 transition hover:text-emerald-600">نیاز به ساخت حساب دارید؟</Link>
+      </div>
     </AuthShell>
   );
 }
-
 
 export default function VerifyOtpPage() {
   return (
