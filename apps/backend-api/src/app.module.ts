@@ -21,6 +21,14 @@ import { ProductsModule } from './modules/products/products.module';
 import { SearchModule } from './modules/search/search.module';
 import { UsersModule } from './modules/users/users.module';
 
+// Rate limiting (ThrottlerModule + global ThrottlerGuard) is required in
+// production for brute-force / abuse protection. In development and staging it
+// is intentionally disabled so legitimate manual testing (e.g. a handful of
+// rapid auth attempts) does not get 429'd. Flip APP_ENV/NODE_ENV to 'production'
+// to re-enable it. See PROJECT_MAP risk: "in-memory throttling (not Redis-shared)".
+const isProduction =
+  process.env.APP_ENV === 'production' || process.env.NODE_ENV === 'production';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,23 +39,27 @@ import { UsersModule } from './modules/users/users.module';
       cache: true,
     }),
     MongooseModule.forRootAsync(databaseConfig),
-    ThrottlerModule.forRoot([
-      {
-        name: 'default',
-        ttl: 60000,
-        limit: 100,
-      },
-      {
-        name: 'auth',
-        ttl: 60000,
-        limit: 5,
-      },
-      {
-        name: 'sensitive',
-        ttl: 60000,
-        limit: 10,
-      },
-    ]),
+    ...(isProduction
+      ? [
+          ThrottlerModule.forRoot([
+            {
+              name: 'default',
+              ttl: 60000,
+              limit: 100,
+            },
+            {
+              name: 'auth',
+              ttl: 60000,
+              limit: 5,
+            },
+            {
+              name: 'sensitive',
+              ttl: 60000,
+              limit: 10,
+            },
+          ]),
+        ]
+      : []),
     EventBusModule,
     InfrastructureModule,
     SecurityModule,
@@ -63,10 +75,14 @@ import { UsersModule } from './modules/users/users.module';
   ],
   controllers: [],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    ...(isProduction
+      ? [
+          {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard,
+          },
+        ]
+      : []),
   ],
 })
 export class AppModule implements NestModule {
