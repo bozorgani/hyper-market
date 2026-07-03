@@ -2,11 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import type { Category, Product, ProductListResponse } from "@/types/domain";
 
-export function useProducts(page: number, categoryId?: string) {
+export function useProducts(page: number, categoryId?: string, search?: string) {
   return useQuery({
-    queryKey: ["products", page, categoryId],
+    queryKey: ["products", page, categoryId, search],
     queryFn: async () => {
-      const { data } = await api.get<ProductListResponse>("/products", { params: { page, limit: 12, categoryId } });
+      const { data } = await api.get<ProductListResponse>("/products", {
+        params: { page, limit: 12, categoryId, search },
+      });
       return data;
     },
   });

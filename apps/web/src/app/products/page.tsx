@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCategories, useProducts } from "@/hooks/use-products";
+import { useDebounce } from "@/hooks/use-debounce";
 import { formatNumber } from "@/lib/utils";
 
 function ProductCardSkeleton() {
@@ -31,26 +32,23 @@ function ProductCardSkeleton() {
 
 export default function ProductsPage() {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [categoryId, setCategoryId] = useState<string | undefined>();
-  const products = useProducts(page, categoryId);
+  const debouncedSearch = useDebounce(searchInput, 300);
+  const products = useProducts(page, categoryId, debouncedSearch || undefined);
   const categories = useCategories();
 
-  const filteredProducts = useMemo(() => {
-    const items = products.data?.items ?? [];
-    if (!search.trim()) return items;
-    return items.filter((product) => product.name.toLowerCase().includes(search.toLowerCase()));
-  }, [products.data?.items, search]);
+  const items = products.data?.items ?? [];
+  const hasProducts = items.length > 0;
 
   function resetFilters() {
-    setSearch("");
+    setSearchInput("");
     setCategoryId(undefined);
     setPage(1);
   }
 
   const categoriesLoadFailed = categories.isError;
   const productsErrorMessage = products.error instanceof Error ? products.error.message : "امکان دریافت محصولات وجود ندارد.";
-  const hasProducts = filteredProducts.length > 0;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 text-right">
@@ -61,14 +59,21 @@ export default function ProductsPage() {
           badge={
             !products.isLoading && !products.isError && hasProducts ? (
               <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
-                {formatNumber(filteredProducts.length)} محصول در این صفحه
+                {formatNumber(items.length)} محصول در این صفحه
               </div>
             ) : undefined
           }
         />
 
         <div className="mt-4 grid gap-3 md:grid-cols-[1fr_220px_auto]">
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="جستجوی محصول..." />
+          <Input
+            value={searchInput}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+              setPage(1);
+            }}
+            placeholder="جستجوی محصول..."
+          />
           <select
             value={categoryId ?? ""}
             onChange={(e) => {
@@ -130,7 +135,7 @@ export default function ProductsPage() {
 
       {!products.isLoading && !products.isError && hasProducts ? (
         <section className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {filteredProducts.map((product) => (
+          {items.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}
         </section>
@@ -141,7 +146,7 @@ export default function ProductsPage() {
           قبلی
         </Button>
         <span className="text-sm font-semibold">صفحه {formatNumber(page)}</span>
-        <Button type="button" variant="outline" disabled={(products.data?.items.length ?? 0) < 12} onClick={() => setPage((value) => value + 1)}>
+        <Button type="button" variant="outline" disabled={items.length < 12} onClick={() => setPage((value) => value + 1)}>
           بعدی
         </Button>
       </div>

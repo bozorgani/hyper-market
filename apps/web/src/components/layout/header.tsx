@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Search, ShoppingCart, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,11 +18,32 @@ export function Header() {
   const logout = useAuthStore((state) => state.logout);
   const { showToast } = useToast();
   const [query, setQuery] = useState("");
+  const [isSuggestOpen, setIsSuggestOpen] = useState(false);
+  const searchRef = useRef<HTMLFormElement>(null);
   const debouncedQuery = useDebounce(query, 300);
   const suggestions = useSearchSuggest(debouncedQuery);
 
+  // Close the suggestions panel on outside click or Escape.
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSuggestOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsSuggestOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setIsSuggestOpen(false);
     const normalizedQuery = query.trim();
     router.push(normalizedQuery ? `/search?q=${encodeURIComponent(normalizedQuery)}` : "/search");
     setQuery("");
@@ -33,7 +54,7 @@ export function Header() {
     showToast({ type: "info", title: "از حساب کاربری خارج شدید" });
   }
 
-  const showSuggestPanel = query.trim().length >= 2;
+  const showSuggestPanel = isSuggestOpen && query.trim().length >= 2;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -42,11 +63,14 @@ export function Header() {
           هایپرمارکت
         </Link>
 
-        <form onSubmit={submitSearch} className="relative min-w-0">
+        <form ref={searchRef} onSubmit={submitSearch} className="relative min-w-0">
           <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setIsSuggestOpen(event.target.value.trim().length >= 2);
+            }}
             placeholder="جستجو در محصولات..."
             className="h-11 bg-slate-100 pr-10"
           />
@@ -58,7 +82,10 @@ export function Header() {
                 <Link
                   key={item.id}
                   href={`/products/${item.id}`}
-                  onClick={() => setQuery("")}
+                  onClick={() => {
+                    setQuery("");
+                    setIsSuggestOpen(false);
+                  }}
                   className="flex items-center gap-3 rounded-xl p-3 hover:bg-slate-50"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">🛍️</div>

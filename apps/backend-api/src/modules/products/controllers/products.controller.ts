@@ -68,11 +68,13 @@ export class ProductsController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('categoryId') categoryId?: string,
+    @Query('search') search?: string,
   ) {
     return this.productsService.listProducts(
       this.toPositiveInteger(page, 1),
       this.toPositiveInteger(limit, 20),
       categoryId,
+      search?.trim() || undefined,
     );
   }
 

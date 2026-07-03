@@ -12,6 +12,13 @@ export type ProductListResult = {
   limit: number;
 };
 
+// Escape regex metacharacters so user-supplied search text matches literally
+// instead of being interpreted as a regex pattern (which can throw on input
+// like "c++" or "(test").
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 @Injectable()
 export class ProductsRepository {
   constructor(
@@ -135,9 +142,16 @@ export class ProductsRepository {
       .exec();
   }
 
-  async findActiveProducts(page: number, limit: number): Promise<ProductListResult> {
+  async findActiveProducts(
+    page: number,
+    limit: number,
+    search?: string,
+  ): Promise<ProductListResult> {
     const skip = (page - 1) * limit;
-    const filter = { isActive: true, deletedAt: null };
+    const filter: Record<string, unknown> = { isActive: true, deletedAt: null };
+    if (search) {
+      filter.name = { $regex: escapeRegExp(search), $options: "i" };
+    }
     const [items, total] = await Promise.all([
       this.productModel
         .find(filter)
@@ -156,13 +170,17 @@ export class ProductsRepository {
     categoryId: string,
     page: number,
     limit: number,
+    search?: string,
   ): Promise<ProductListResult> {
     const skip = (page - 1) * limit;
-    const filter = {
+    const filter: Record<string, unknown> = {
       categoryId: new Types.ObjectId(categoryId),
       isActive: true,
       deletedAt: null,
     };
+    if (search) {
+      filter.name = { $regex: escapeRegExp(search), $options: "i" };
+    }
     const [items, total] = await Promise.all([
       this.productModel
         .find(filter)

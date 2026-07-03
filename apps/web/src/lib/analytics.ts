@@ -20,7 +20,11 @@ type AnalyticsPayload = {
 
 const DEVICE_KEY = "hyper_market_device_id";
 
-const lastTrackedAt = new Map<string, number>();
+// Stores the absolute timestamp until which an event key is suppressed.
+// Using an expiry (instead of a "last sent" timestamp) lets us purge entries
+// that can no longer suppress anything, which is what bounds the map size.
+const throttleExpiresAt = new Map<string, number>();
+const MAX_THROTTLE_ENTRIES = 1000;
 
 function getThrottleWindowMs(type: AnalyticsEventType): number {
   switch (type) {
@@ -41,14 +45,33 @@ function getThrottleWindowMs(type: AnalyticsEventType): number {
 function shouldSendAnalyticsEvent(payload: AnalyticsPayload): boolean {
   const key = `${payload.type}:${JSON.stringify(payload.metadata ?? {})}`;
   const now = Date.now();
-  const lastSentAt = lastTrackedAt.get(key) ?? 0;
+  const expiresAt = throttleExpiresAt.get(key) ?? 0;
 
-  if (now - lastSentAt < getThrottleWindowMs(payload.type)) {
+  if (now < expiresAt) {
     return false;
   }
 
-  lastTrackedAt.set(key, now);
+  throttleExpiresAt.set(key, now + getThrottleWindowMs(payload.type));
+  if (throttleExpiresAt.size > MAX_THROTTLE_ENTRIES) {
+    pruneThrottleEntries(now);
+  }
   return true;
+}
+
+// Keep the in-memory throttle map bounded so it cannot grow for every distinct
+// (type + metadata) pair the user ever triggers. Expired entries are dropped
+// first; if we are still over the cap, the oldest insertions are evicted.
+function pruneThrottleEntries(now: number): void {
+  for (const [key, expiresAt] of throttleExpiresAt) {
+    if (expiresAt <= now) {
+      throttleExpiresAt.delete(key);
+    }
+  }
+  while (throttleExpiresAt.size > MAX_THROTTLE_ENTRIES) {
+    const oldest = throttleExpiresAt.keys().next().value;
+    if (oldest === undefined) break;
+    throttleExpiresAt.delete(oldest);
+  }
 }
 
 function getDeviceId(): string | null {

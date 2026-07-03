@@ -144,16 +144,17 @@ export class ProductsService {
     page = 1,
     limit = 20,
     categoryId?: string,
+    search?: string,
   ): Promise<ProductListResult> {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.min(Math.max(limit, 1), 100);
 
     if (categoryId) {
       this.ensureValidObjectId(categoryId, 'Invalid category id');
-      return this.productsRepository.findByCategory(categoryId, safePage, safeLimit);
+      return this.productsRepository.findByCategory(categoryId, safePage, safeLimit, search);
     }
 
-    return this.productsRepository.findActiveProducts(safePage, safeLimit);
+    return this.productsRepository.findActiveProducts(safePage, safeLimit, search);
   }
 
   private async ensureStockCanCoverActiveOrders(
