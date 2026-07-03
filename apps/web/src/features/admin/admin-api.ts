@@ -146,6 +146,36 @@ export function useAdminPayment(orderId: string) {
   });
 }
 
+/**
+ * Batch-fetch payments for many orders in a SINGLE request (fixes the N+1 on
+ * the admin payments/orders tables).
+ */
+export function useAdminPayments(orderIds: string[]) {
+  const key = [...orderIds].sort().join(",");
+  return useQuery({
+    queryKey: ["admin", "payments", "batch", key],
+    queryFn: async () => {
+      if (orderIds.length === 0) return [] as Payment[];
+      return (
+        await api.get<Payment[]>("/payments/batch", {
+          params: { orderIds: orderIds.join(",") },
+        })
+      ).data;
+    },
+    enabled: orderIds.length > 0,
+    staleTime: 30_000,
+  });
+}
+
+/** Fetch a single admin order by id (replaces loading the whole list + .find). */
+export function useAdminOrder(id: string) {
+  return useQuery({
+    queryKey: ["admin", "order", id],
+    queryFn: async () => (await api.get<Order>(`/orders/${id}`)).data,
+    enabled: Boolean(id),
+  });
+}
+
 export function useAdminAnalyticsDashboard() {
   return useQuery({
     queryKey: ["admin", "analytics", "dashboard"],

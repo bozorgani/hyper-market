@@ -25,6 +25,18 @@ export class PaymentsRepository {
       .exec();
   }
 
+  async findByOrderIds(orderIds: string[]): Promise<Payment[]> {
+    const validIds = orderIds.filter((id) => isValidObjectId(id));
+    if (validIds.length === 0) {
+      return [];
+    }
+    return this.paymentModel
+      .find({ orderId: { $in: validIds } })
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
+  }
+
   async findPendingByOrderId(orderId: string): Promise<Payment | null> {
     if (!isValidObjectId(orderId)) return null;
     return this.paymentModel

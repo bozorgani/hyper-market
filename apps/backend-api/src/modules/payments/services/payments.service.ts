@@ -137,6 +137,24 @@ export class PaymentsService {
     return payment;
   }
 
+  async findPaymentsByOrderIds(
+    orderIds: string[],
+    userId: string,
+    role: string,
+  ): Promise<Payment[]> {
+    if (!Array.isArray(orderIds) || orderIds.length === 0) {
+      return [];
+    }
+
+    const payments = await this.paymentsRepository.findByOrderIds(orderIds);
+    if (this.isAdminRole(role)) {
+      return payments;
+    }
+
+    // Customers may only see payments for their own orders.
+    return payments.filter((payment) => getEntityId(payment.userId) === userId);
+  }
+
   async updateOrderStatusAfterPayment(
     orderId: string,
     userId: string,

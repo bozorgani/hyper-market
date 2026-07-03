@@ -139,11 +139,12 @@ export function jalaliToISODate(jy: number, jm: number, jd: number): string {
 
 /** Convert an ISO `YYYY-MM-DD` string to a Jalali date (or null if invalid). */
 export function isoToJalali(iso: string): JalaliDate | null {
-  if (!iso) return null;
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!match) return null;
-  const g = jdnToGregorian(gregorianToJDN(Number(match[1]), Number(match[2]), Number(match[3])));
-  return toJalali(`${g.year}-${String(g.month).padStart(2, "0")}-${String(g.day).padStart(2, "0")}`);
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+  // The ISO value is already a Gregorian calendar date, so convert straight to
+  // Jalali. The previous ISO -> JDN -> Gregorian -> string -> JDN -> Jalali
+  // round-trip was redundant (and a rounding-risk); toJalali reads the same
+  // Y/M/D from the string via UTC midnight.
+  return toJalali(iso);
 }
 
 const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";

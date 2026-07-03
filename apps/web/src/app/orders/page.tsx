@@ -11,9 +11,9 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMyOrders } from "@/hooks/use-orders";
+import { useMyOrders, usePaymentsBatch } from "@/hooks/use-orders";
 import { formatNumber } from "@/lib/utils";
-import type { OrderStatus } from "@/types/domain";
+import type { OrderStatus, Payment } from "@/types/domain";
 
 const statuses: Array<{ value: OrderStatus | "all"; label: string }> = [
   { value: "all", label: "همه" },
@@ -27,6 +27,18 @@ const statuses: Array<{ value: OrderStatus | "all"; label: string }> = [
 
 export default function OrdersPage() {
   const orders = useMyOrders();
+  const orderIds = useMemo(
+    () => (orders.data ?? []).map((order) => order._id),
+    [orders.data],
+  );
+  const payments = usePaymentsBatch(orderIds);
+  const paymentMap = useMemo(() => {
+    const map = new Map<string, Payment>();
+    for (const payment of payments.data ?? []) {
+      map.set(payment.orderId, payment);
+    }
+    return map;
+  }, [payments.data]);
   const [status, setStatus] = useState<OrderStatus | "all">("all");
   const [query, setQuery] = useState("");
   const errorMessage = orders.error instanceof Error ? orders.error.message : "دریافت سفارش‌ها ناموفق بود.";
@@ -128,7 +140,14 @@ export default function OrdersPage() {
         {!orders.isLoading && !orders.isError ? (
           <div className="mt-5 space-y-4">
             {filteredOrders.map((order) => (
-              <OrderCard key={order._id} order={order} />
+              <OrderCard
+                key={order._id}
+                order={order}
+                payment={paymentMap.get(order._id)}
+                paymentLoading={payments.isLoading}
+                paymentError={payments.isError}
+                onRetryPayment={() => payments.refetch()}
+              />
             ))}
             {orders.data?.length === 0 ? (
               <EmptyState

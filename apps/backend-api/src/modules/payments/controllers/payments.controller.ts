@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post, Query, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { IdempotencyService } from '../../../infrastructure/idempotency/idempotency.service';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
@@ -53,6 +53,17 @@ export class PaymentsController {
 
     response.setHeader('Idempotency-Status', result.status);
     return result.data;
+  }
+
+  @Get('batch')
+  getPaymentsBatch(
+    @CurrentUser() user: JwtPayload,
+    @Query('orderIds') orderIds?: string,
+  ) {
+    const ids = orderIds
+      ? orderIds.split(',').map((id) => id.trim()).filter(Boolean)
+      : [];
+    return this.paymentsService.findPaymentsByOrderIds(ids, user.sub, user.role);
   }
 
   @Get(':orderId')

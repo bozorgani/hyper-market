@@ -84,3 +84,24 @@ export function usePayment(orderId: string) {
     retry: false,
   });
 }
+
+/**
+ * Batch-fetch payments for many orders in a SINGLE request (fixes the N+1
+ * where every order card/row fired its own GET /payments/:orderId).
+ */
+export function usePaymentsBatch(orderIds: string[]) {
+  const key = [...orderIds].sort().join(",");
+  return useQuery({
+    queryKey: ["payments", "batch", key],
+    queryFn: async () => {
+      if (orderIds.length === 0) return [] as Payment[];
+      return (
+        await api.get<Payment[]>("/payments/batch", {
+          params: { orderIds: orderIds.join(",") },
+        })
+      ).data;
+    },
+    enabled: orderIds.length > 0,
+    staleTime: 30_000,
+  });
+}

@@ -8,20 +8,20 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAdminOrders } from "@/features/admin/admin-api";
+import { useAdminOrder } from "@/features/admin/admin-api";
 import { formatNumber, formatPersianDate, formatPrice } from "@/lib/utils";
 
 export default function AdminOrderDetailPage() {
   const params = useParams<{ id: string }>();
-  const orders = useAdminOrders();
-  const order = (orders.data ?? []).find((item) => item._id === params.id);
-  const errorMessage = orders.error instanceof Error ? orders.error.message : "دریافت اطلاعات سفارش ناموفق بود.";
+  const orderQuery = useAdminOrder(params.id);
+  const order = orderQuery.data;
+  const errorMessage = orderQuery.error instanceof Error ? orderQuery.error.message : "دریافت اطلاعات سفارش ناموفق بود.";
 
   return (
     <main className="space-y-5 text-right">
       <PageHeader title={`جزئیات سفارش #${params.id.slice(-8)}`} description="نمای کامل وضعیت سفارش، مبلغ، اقلام و تایم‌لاین پردازش در این صفحه نمایش داده می‌شود." />
 
-      {orders.isLoading ? (
+      {orderQuery.isLoading ? (
         <Card className="p-5">
           <Skeleton className="h-8 w-48" />
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
@@ -32,8 +32,8 @@ export default function AdminOrderDetailPage() {
         </Card>
       ) : null}
 
-      {!orders.isLoading && orders.isError ? <ErrorState title="بارگذاری سفارش انجام نشد" description={errorMessage} actions={undefined} /> : null}
-      {!orders.isLoading && !orders.isError && !order ? <EmptyState title="سفارش پیدا نشد" description="ممکن است سفارش حذف شده باشد یا شناسه واردشده معتبر نباشد." /> : null}
+      {!orderQuery.isLoading && orderQuery.isError ? <ErrorState title="بارگذاری سفارش انجام نشد" description={errorMessage} actions={undefined} /> : null}
+      {!orderQuery.isLoading && !orderQuery.isError && !order ? <EmptyState title="سفارش پیدا نشد" description="ممکن است سفارش حذف شده باشد یا شناسه واردشده معتبر نباشد." /> : null}
 
       {order ? (
         <>

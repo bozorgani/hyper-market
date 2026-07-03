@@ -60,7 +60,12 @@ function stepIndex(step: CheckoutStep) {
 }
 
 function todayDateInputValue() {
-  return new Date().toISOString().slice(0, 10);
+  // Use the user's LOCAL date components, not UTC. new Date().toISOString()
+  // returns UTC, which for Iran (UTC+3:30) is the previous day between 00:00
+  // and 03:30 local — making "today" appear disabled in the date picker.
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
 function isDeliveryAddressValid(address: DeliveryAddress) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { PaymentDetailModal } from "@/components/admin/payment-detail-modal";
 import { PaymentRow } from "@/components/admin/payment-row";
@@ -11,7 +11,8 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAdminOrders } from "@/features/admin/admin-api";
+import { useAdminOrders, useAdminPayments } from "@/features/admin/admin-api";
+import type { Payment } from "@/types/domain";
 
 const PAGE_SIZE = 10;
 
@@ -22,19 +23,33 @@ type PaymentMeta = {
 
 export default function AdminPaymentsPage() {
   const orders = useAdminOrders();
+  const orderIds = useMemo(
+    () => (orders.data ?? []).map((order) => order._id),
+    [orders.data],
+  );
+  const payments = useAdminPayments(orderIds);
+  const paymentMap = useMemo(() => {
+    const map = new Map<string, Payment>();
+    for (const payment of payments.data ?? []) {
+      map.set(payment.orderId, payment);
+    }
+    return map;
+  }, [payments.data]);
+  const paymentMetaMap = useMemo(() => {
+    const meta: Record<string, PaymentMeta> = {};
+    for (const payment of payments.data ?? []) {
+      meta[payment.orderId] = {
+        status: payment.status,
+        transactionId: payment.transactionId ?? null,
+      };
+    }
+    return meta;
+  }, [payments.data]);
+
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [paymentMetaMap, setPaymentMetaMap] = useState<Record<string, PaymentMeta>>({});
-
-  const handlePaymentLoaded = useCallback((payload: { orderId: string; status?: string; transactionId?: string | null }) => {
-    setPaymentMetaMap((current) => {
-      const prev = current[payload.orderId];
-      if (prev?.status === payload.status && prev?.transactionId === payload.transactionId) return current;
-      return { ...current, [payload.orderId]: { status: payload.status, transactionId: payload.transactionId } };
-    });
-  }, []);
 
   const filteredOrders = useMemo(() => {
     return (orders.data ?? []).filter((order) => {
@@ -88,8 +103,8 @@ export default function AdminPaymentsPage() {
                   <PaymentRow
                     key={order._id}
                     order={order}
+                    payment={paymentMap.get(order._id)}
                     onOpenDetail={setSelectedOrderId}
-                    onPaymentLoaded={handlePaymentLoaded}
                   />
                 ))}
               </tbody>

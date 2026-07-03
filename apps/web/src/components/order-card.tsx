@@ -5,9 +5,8 @@ import { RefreshCw } from "lucide-react";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/admin/admin-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { usePayment } from "@/hooks/use-orders";
 import { formatNumber, formatPersianDate, formatPrice } from "@/lib/utils";
-import type { Order, OrderStatus } from "@/types/domain";
+import type { Order, OrderStatus, Payment } from "@/types/domain";
 
 const orderProgress: OrderStatus[] = ["pending", "paid", "processing", "shipped", "delivered"];
 
@@ -16,11 +15,27 @@ function progressIndex(status: OrderStatus) {
   return orderProgress.indexOf(status);
 }
 
-export function OrderCard({ order }: { order: Order }) {
-  const payment = usePayment(order._id);
+export function OrderCard({
+  order,
+  payment,
+  paymentLoading,
+  paymentError,
+  onRetryPayment,
+}: {
+  order: Order;
+  payment?: Payment | null;
+  paymentLoading?: boolean;
+  paymentError?: boolean;
+  onRetryPayment?: () => void;
+}) {
+  // The parent fetches payments in a single batch and passes the result down,
+  // so this card no longer fires its own GET /payments/:orderId (fixes N+1).
+  // `payment === undefined && paymentLoading` => still loading (skeleton).
+  const loading = Boolean(paymentLoading) && payment === undefined;
+  const data = payment ?? null;
   const activeProgressIndex = progressIndex(order.status);
   const isCancelled = order.status === "cancelled";
-  const paymentErrorMessage = payment.error instanceof Error ? payment.error.message : "وضعیت پرداخت نامشخص است.";
+  const paymentErrorMessage = "وضعیت پرداخت نامشخص است.";
 
   return (
     <Card className="p-5 text-right">
@@ -33,7 +48,7 @@ export function OrderCard({ order }: { order: Order }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <OrderStatusBadge status={order.status} />
-          {payment.isLoading ? <PaymentStatusBadge /> : <PaymentStatusBadge status={payment.data?.status} />}
+          {loading ? <PaymentStatusBadge /> : <PaymentStatusBadge status={data?.status} />}
         </div>
       </div>
 
@@ -72,17 +87,17 @@ export function OrderCard({ order }: { order: Order }) {
 
       <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm leading-7 text-slate-500">
-          {payment.isError ? (
+          {paymentError ? (
             <p className="text-red-600">{paymentErrorMessage}</p>
-          ) : payment.data?.transactionId ? (
-            <p className="truncate">کد تراکنش: {payment.data.transactionId}</p>
+          ) : data?.transactionId ? (
+            <p className="truncate">کد تراکنش: {data.transactionId}</p>
           ) : (
             <p>برای مشاهده جزئیات بیشتر، وضعیت سفارش را باز کنید.</p>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          {payment.isError ? (
-            <Button type="button" variant="outline" onClick={() => payment.refetch()}>
+          {paymentError && onRetryPayment ? (
+            <Button type="button" variant="outline" onClick={onRetryPayment}>
               <RefreshCw className="h-4 w-4" />
               بررسی مجدد پرداخت
             </Button>
