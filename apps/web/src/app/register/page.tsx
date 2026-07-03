@@ -94,8 +94,12 @@ export default function RegisterPage() {
           maxLength={11}
         />
         <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور قوی" type="password" required />
-        {!email.trim() && !phoneNumber.trim() ? <StatusMessage variant="warning">برای ادامه، یکی از فیلدهای ایمیل یا شماره موبایل را تکمیل کنید.</StatusMessage> : null}
-        <StatusMessage variant="warning">شماره موبایل باید ۱۱ رقم و با 09 شروع شود. رمز عبور باید شامل حرف بزرگ، حرف کوچک، عدد و کاراکتر ویژه باشد.</StatusMessage>
+        {!email.trim() && !phoneNumber.trim() ? (
+          <StatusMessage variant="warning">برای ادامه، یکی از فیلدهای ایمیل یا شماره موبایل را تکمیل کنید.</StatusMessage>
+        ) : null}
+        {error ? (
+          <StatusMessage variant="warning">شماره موبایل باید ۱۱ رقم و با 09 شروع شود. رمز عبور باید شامل حرف بزرگ، حرف کوچک، عدد و کاراکتر ویژه باشد.</StatusMessage>
+        ) : null}
         {error ? <StatusMessage variant="error">{error}</StatusMessage> : null}
         <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
           {loading ? "در حال ثبت..." : "ثبت‌نام"}

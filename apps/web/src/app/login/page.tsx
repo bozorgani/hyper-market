@@ -82,7 +82,7 @@ export default function LoginPage() {
           }}
           placeholder="ایمیل یا شماره موبایل مثل 0912..."
           required
-          inputMode="email"
+          inputMode="text"
         />
         <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رمز عبور" type="password" required />
         {error ? <StatusMessage variant="error">{error}</StatusMessage> : null}
