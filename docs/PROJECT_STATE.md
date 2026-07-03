@@ -95,6 +95,7 @@ cart
 categories
 mail
 orders
+outbox
 payments
 permissions
 products
@@ -107,16 +108,17 @@ Module implementation matrix:
 
 | Module | Module file | Controllers | Services | Repositories | Schemas | DTOs |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| analytics | yes | 1 | 1 | 1 | 1 | 1 |
+| analytics | yes | 1 | 1 | 1 | 1 | 0 |
 | audit | yes | 0 | 0 | 1 | 1 | 0 |
-| auth | yes | 1 | 4 | 3 | 3 | 10 |
-| cart | yes | 1 | 1 | 1 | 1 | 2 |
-| categories | yes | 1 | 1 | 1 | 1 | 2 |
+| auth | yes | 1 | 4 | 3 | 3 | 0 |
+| cart | yes | 1 | 1 | 1 | 1 | 0 |
+| categories | yes | 1 | 1 | 1 | 1 | 0 |
 | mail | yes | 0 | 2 | 0 | 0 | 0 |
-| orders | yes | 1 | 1 | 1 | 1 | 2 |
-| payments | yes | 1 | 1 | 1 | 1 | 2 |
+| orders | yes | 1 | 1 | 1 | 1 | 0 |
+| outbox | yes | 0 | 1 | 1 | 1 | 0 |
+| payments | yes | 1 | 1 | 1 | 1 | 0 |
 | permissions | yes | 0 | 0 | 1 | 1 | 0 |
-| products | yes | 1 | 1 | 1 | 1 | 2 |
+| products | yes | 1 | 2 | 1 | 1 | 0 |
 | queue | yes | 0 | 1 | 0 | 0 | 0 |
 | search | yes | 1 | 2 | 0 | 0 | 0 |
 | users | yes | 1 | 1 | 1 | 1 | 0 |
@@ -138,44 +140,13 @@ Infrastructure/core detected:
 Detected dependencies:
 
 ```text
-@tanstack/react-query
-axios
-class-variance-authority
-clsx
-framer-motion
-lucide-react
-next
-react
-react-dom
-tailwind-merge
-zustand
+
 ```
 
 Detected App Router routes:
 
 ```text
-/
-/admin
-/admin/analytics
-/admin/categories
-/admin/orders
-/admin/orders/[id]
-/admin/payments
-/admin/products
-/admin/products/[id]
-/admin/products/new
-/admin/users
-/cart
-/checkout
-/login
-/order/success
-/orders
-/products
-/products/[id]
-/profile
-/register
-/search
-/verify-otp
+
 ```
 
 Detected characteristics from code:
@@ -193,21 +164,13 @@ Detected characteristics from code:
 Detected dependencies:
 
 ```text
-next
-react
-react-dom
-zustand
+
 ```
 
 Detected App Router routes:
 
 ```text
-/
-/dashboard
-/forgot-password
-/login
-/register
-/verify-otp
+
 ```
 
 Detected characteristics from code:
@@ -274,16 +237,17 @@ POST   /cart/add    [Roles(UserRole.CUSTOMER)]
 POST   /cart/clear    [Roles(UserRole.CUSTOMER)]
 GET    /cart/my    [Roles(UserRole.CUSTOMER)]
 POST   /cart/remove    [Roles(UserRole.CUSTOMER)]
+POST   /cart/update    [Roles(UserRole.CUSTOMER)]
 ```
 
 ### apps/backend-api/src/modules/categories/controllers/categories.controller.ts
 
 ```text
 GET    /categories    [Public()]
-POST   /categories    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
-DELETE /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+POST   /categories    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.create')]
+DELETE /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.delete')]
 GET    /categories/:id    [Public()]
-PUT    /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+PUT    /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.update')]
 ```
 
 ### apps/backend-api/src/infrastructure/health/health.controller.ts
@@ -306,6 +270,7 @@ GET    /orders/my    [Roles(UserRole.CUSTOMER)]
 
 ```text
 GET    /payments/:orderId
+GET    /payments/batch
 POST   /payments/create
 POST   /payments/simulate-success
 ```
@@ -318,13 +283,15 @@ POST   /products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('p
 DELETE /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.delete')]
 GET    /products/:id    [Public()]
 PUT    /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
+GET    /products/images/:fileName    [Public()]
+POST   /products/images/upload    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
 ```
 
 ### apps/backend-api/src/modules/users/controllers/users.controller.ts
 
 ```text
-GET    /users    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
-GET    /users/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+GET    /users    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('users.read')]
+GET    /users/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('users.read')]
 PATCH  /users/:id/block    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('users.ban')]
 PATCH  /users/:id/unblock    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('users.ban')]
 ```

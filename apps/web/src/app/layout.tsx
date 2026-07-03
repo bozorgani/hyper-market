@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Header } from "@/components/layout/header";
-import { BottomNav } from "@/components/layout/bottom-nav";
 import { Providers } from "@/providers";
 
 export const metadata: Metadata = {
@@ -30,11 +28,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl">
-      <body className="min-h-screen bg-slate-50 text-right text-slate-950 antialiased">
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <Providers>
-          <Header />
           {children}
-          <BottomNav />
         </Providers>
       </body>
     </html>
