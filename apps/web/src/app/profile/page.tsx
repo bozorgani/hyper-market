@@ -1,63 +1,217 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
-import { translateRole } from "@/lib/utils";
+import { useToast } from "@/components/ui/toast";
+import { cn, formatNumber, formatPrice, translateRole } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+import {
+  User, Settings, Heart, MapPin, Bell, Shield, CreditCard,
+  ChevronLeft, LogOut, Star, Package, Clock,
+  CheckCircle2, Truck, Camera, Gift, Globe,
+} from "lucide-react";
 
-function InfoRow({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) {
-  return (
-    <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className={mono ? "ltr mt-2 break-all text-left font-mono text-sm text-slate-900" : "mt-2 font-semibold text-slate-900"}>
-        {value || "ثبت نشده"}
-      </p>
-    </div>
-  );
-}
+const mockOrders = [
+  { id: "۱", status: "delivered" as const, date: "۲ تیر ۱۴۰۵", total: 285000, items: 5 },
+  { id: "۲", status: "in_progress" as const, date: "۳ تیر ۱۴۰۵", total: 145000, items: 3 },
+];
+
+const statusConfig = {
+  delivered: { label: "تحویل شده", color: "text-emerald-600", bg: "bg-emerald-50", Icon: CheckCircle2 },
+  in_progress: { label: "در حال ارسال", color: "text-blue-600", bg: "bg-blue-50", Icon: Truck },
+  cancelled: { label: "لغو شده", color: "text-red-600", bg: "bg-red-50", Icon: Clock },
+};
+
+const menuItems = [
+  { icon: Package, label: "سفارش‌های من", href: "/orders", color: "text-blue-600", bg: "bg-blue-50" },
+  { icon: Heart, label: "علاقه‌مندی‌ها", href: "/products", color: "text-rose-600", bg: "bg-rose-50" },
+  { icon: MapPin, label: "آدرس‌های من", href: "/checkout", color: "text-emerald-600", bg: "bg-emerald-50" },
+  { icon: Gift, label: "کد هدیه و تخفیف", href: "/checkout", color: "text-amber-600", bg: "bg-amber-50" },
+  { icon: Bell, label: "اعلان‌ها", href: "#", color: "text-purple-600", bg: "bg-purple-50" },
+  { icon: Shield, label: "حریم خصوصی", href: "#", color: "text-slate-600", bg: "bg-slate-100" },
+  { icon: Settings, label: "تنظیمات", href: "#", color: "text-slate-500", bg: "bg-slate-100" },
+];
 
 export default function ProfilePage() {
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const { showToast } = useToast();
+  const router = useRouter();
+
+  function handleLogout() {
+    void logout();
+    showToast({ type: "info", title: "از حساب کاربری خارج شدید" });
+  }
 
   return (
     <ProtectedRoute>
-      <main className="mx-auto max-w-5xl px-4 py-8 text-right">
-        <PageHeader
-          title="پروفایل کاربری"
-          description="اطلاعات پایه نشست احراز هویت و نقش فعلی شما در این بخش نمایش داده می‌شود."
-        />
+      <main className="mx-auto max-w-3xl px-4 py-8 text-right">
+        {/* Profile Header Card */}
+        <div className="relative overflow-hidden rounded-3xl mb-6">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-bl from-rose-600 via-rose-500 to-orange-500 h-48" />
+          {/* Decorative circles */}
+          <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-white/[0.08]" />
+          <div className="absolute -bottom-6 -left-6 w-28 h-28 rounded-full bg-white/[0.06]" />
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1.15fr,0.85fr]">
-          <Card className="p-6">
-            <h2 className="text-lg font-black">اطلاعات حساب</h2>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <InfoRow label="نقش کاربر" value={translateRole(user?.role)} />
-              <InfoRow label="شماره موبایل" value={user?.phoneNumber} />
-              <InfoRow label="ایمیل" value={user?.email} />
-              <InfoRow label="شناسه کاربر" value={user?.id} mono />
+          <div className="relative px-5 pt-5 pb-0">
+            {/* Settings icon */}
+            <div className="flex items-center justify-end mb-8">
+              <div className="w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                <Settings className="w-[18px] h-[18px] text-white" />
+              </div>
             </div>
-          </Card>
 
-          <Card className="p-6">
-            <h2 className="text-lg font-black">نشست فعال</h2>
-            <div className="mt-5 space-y-3">
-              <InfoRow label="Session ID" value={user?.sessionId} mono />
-              <InfoRow label="Device ID" value={user?.deviceId} mono />
+            {/* Avatar & Info */}
+            <div className="flex items-end gap-4 mb-4">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-lg">
+                  <div className="w-[68px] h-[68px] rounded-xl bg-white/20 flex items-center justify-center">
+                    <User className="w-9 h-9 text-white/80" />
+                  </div>
+                </div>
+                <div className="absolute -bottom-1.5 -left-1.5 w-7 h-7 bg-white rounded-lg shadow-sm flex items-center justify-center">
+                  <Camera className="w-3.5 h-3.5 text-slate-500" />
+                </div>
+              </div>
+
+              <div className="flex-1 pb-1">
+                <h1 className="text-white font-black text-lg leading-tight">
+                  {user?.email ? user.email.split("@")[0] : "کاربر"} {user?.phoneNumber || ""}
+                </h1>
+                <p className="text-white/70 text-xs mt-0.5">
+                  {user?.email || user?.phoneNumber || "حساب کاربری"}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-yellow-300 text-yellow-300" />
+                    {translateRole(user?.role)}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="mt-6 flex flex-col gap-3">
-              <Link href="/orders">
-                <Button type="button" className="w-full">مشاهده سفارش‌ها</Button>
-              </Link>
-              <Link href="/products">
-                <Button type="button" variant="outline" className="w-full">بازگشت به محصولات</Button>
-              </Link>
-            </div>
-          </Card>
+          </div>
         </div>
+
+        {/* Stats Row */}
+        <div className="bg-white rounded-2xl shadow-card p-4 grid grid-cols-3 gap-4 mb-6 -mt-2">
+          <div className="flex flex-col items-center gap-1">
+            <Package className="w-5 h-5 text-blue-600" />
+            <span className="font-black text-base text-slate-900">{formatNumber(mockOrders.length)}</span>
+            <span className="text-[10px] text-slate-400">سفارش</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <Heart className="w-5 h-5 text-rose-600" />
+            <span className="font-black text-base text-slate-900">—</span>
+            <span className="text-[10px] text-slate-400">علاقه‌مندی</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <Star className="w-5 h-5 text-amber-500" />
+            <span className="font-black text-base text-slate-900">۰</span>
+            <span className="text-[10px] text-slate-400">امتیاز</span>
+          </div>
+        </div>
+
+        {/* Recent Orders */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-black text-sm text-slate-800">سفارش‌های اخیر</h2>
+            <Link href="/orders" className="text-xs text-rose-600 font-medium flex items-center gap-0.5 hover:underline">
+              مشاهده همه
+              <ChevronLeft className="w-3.5 h-3.5 rotate-180" />
+            </Link>
+          </div>
+
+          <div className="space-y-2.5">
+            {mockOrders.map((order) => {
+              const config = statusConfig[order.status];
+              const StatusIcon = config.Icon;
+              return (
+                <Link key={order.id} href="/orders">
+                  <Card className="p-3.5 flex items-center gap-3 hover:shadow-card-hover transition-shadow cursor-pointer">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", config.bg)}>
+                      <StatusIcon className={cn("w-5 h-5", config.color)} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-bold text-slate-800">
+                          {formatNumber(order.items)} قلم کالا
+                        </p>
+                        <span className="font-bold text-sm text-slate-800">
+                          {formatPrice(order.total)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[11px] text-slate-400">{order.date}</span>
+                        <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md", config.bg, config.color)}>
+                          {config.label}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Account Info */}
+        <Card className="p-6 mb-4">
+          <h2 className="text-lg font-black mb-4">اطلاعات حساب</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <InfoRow label="نقش کاربر" value={translateRole(user?.role)} />
+            <InfoRow label="شماره موبایل" value={user?.phoneNumber} />
+            <InfoRow label="ایمیل" value={user?.email} />
+            <InfoRow label="شناسه کاربر" value={user?.id} mono />
+            <InfoRow label="Session ID" value={user?.sessionId} mono />
+            <InfoRow label="Device ID" value={user?.deviceId} mono />
+          </div>
+        </Card>
+
+        {/* Menu Items */}
+        <Card className="overflow-hidden divide-y divide-slate-50 mb-4">
+          {menuItems.map((item) => (
+            <Link key={item.label} href={item.href}>
+              <div className="flex items-center gap-3.5 px-5 py-3.5 hover:bg-slate-50 transition-colors">
+                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", item.bg)}>
+                  <item.icon className={cn("w-[18px] h-[18px]", item.color)} />
+                </div>
+                <p className="flex-1 text-sm font-medium text-slate-800">{item.label}</p>
+                <ChevronLeft className="w-4 h-4 text-slate-300 rotate-180" />
+              </div>
+            </Link>
+          ))}
+        </Card>
+
+        {/* Logout */}
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleLogout}
+          className="w-full h-12 text-red-600 hover:bg-red-50 rounded-2xl text-sm font-bold gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          خروج از حساب
+        </Button>
       </main>
     </ProtectedRoute>
+  );
+}
+
+function InfoRow({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) {
+  return (
+    <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3.5">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className={cn(
+        "mt-1.5 font-semibold text-slate-900 text-sm",
+        mono && "ltr break-all text-left font-mono"
+      )}>
+        {value || "ثبت نشده"}
+      </p>
+    </div>
   );
 }
