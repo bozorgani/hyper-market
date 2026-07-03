@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts, useCategories } from "@/hooks/use-products";
+import { useAuthStore } from "@/store/auth-store";
 
 const categoryIcons: Record<string, string> = {
   default: "🛒",
@@ -21,6 +22,7 @@ const features = [
 export default function HomePage() {
   const products = useProducts(1);
   const categories = useCategories();
+  const user = useAuthStore((s) => s.user);
   const items = products.data?.items ?? [];
   const categoryList = categories.data ?? [];
 
@@ -170,12 +172,18 @@ export default function HomePage() {
         <section className="mt-8 rounded-2xl bg-gradient-to-l from-slate-900 to-slate-800 p-6 sm:p-8">
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-right">
             <div className="flex-1">
-              <h3 className="text-lg font-black text-white">از تخفیف‌های ویژه باخبر شوید</h3>
-              <p className="mt-1.5 text-sm text-slate-400">ایمیل یا شماره موبایل خود را ثبت کنید تا از جدیدترین تخفیف‌ها و محصولات باخبر شوید.</p>
+              <h3 className="text-lg font-black text-white">
+                {user ? "سفارش‌های شما در انتظار است" : "از تخفیف‌های ویژه باخبر شوید"}
+              </h3>
+              <p className="mt-1.5 text-sm text-slate-400">
+                {user
+                  ? "وضعیت سفارش‌های اخیر و تخفیف‌های اختصاصی خود را ببینید."
+                  : "ایمیل یا شماره موبایل خود را ثبت کنید تا از جدیدترین تخفیف‌ها و محصولات باخبر شوید."}
+              </p>
             </div>
-            <Link href="/register">
+            <Link href={user ? "/orders" : "/register"}>
               <button className="shrink-0 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-900/30 transition hover:bg-emerald-600">
-                ثبت‌نام کنید
+                {user ? "مشاهده سفارش‌ها" : "ثبت‌نام کنید"}
               </button>
             </Link>
           </div>
