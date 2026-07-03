@@ -7,7 +7,10 @@ import { useEffect, useRef } from "react";
 // on every parent re-render; the latest close handler is read through a ref.
 export function useModalA11y(open: boolean, onClose: () => void): void {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;

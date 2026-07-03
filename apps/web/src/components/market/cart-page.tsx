@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Trash2, Minus, Plus, ArrowLeft, Truck } from "lucide-react";
-import { formatPrice, getDiscountPercent, getCategoryName } from "@/data/mock-data";
+import { formatPrice, getCategoryName } from "@/data/mock-data";
 import { useMarketStore } from "@/store/market-store";
 
 export function CartPage() {

@@ -16,7 +16,6 @@ import {
   Menu,
   ReceiptText,
   Shield,
-  TrendingUp,
   Users,
   X,
 } from "lucide-react";
@@ -63,6 +62,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, [hydrated, router, user?.role]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
   }, [pathname]);
 

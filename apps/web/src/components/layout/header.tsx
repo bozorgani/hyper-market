@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ShoppingCart, UserRound, MapPin, X, ChevronLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -13,7 +12,6 @@ import { useSearchSuggest } from "@/hooks/use-search";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
-import { cn } from "@/lib/utils";
 
 export function Header() {
   const router = useRouter();
@@ -68,6 +66,7 @@ export function Header() {
     setQuery("");
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function handleLogout() {
     void logout();
     showToast({ type: "info", title: "از حساب کاربری خارج شدید" });

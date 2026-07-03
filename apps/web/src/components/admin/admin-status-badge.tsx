@@ -14,12 +14,6 @@ const orderStyles: Record<string, string> = {
   cancelled: "bg-red-50 text-red-600 ring-1 ring-red-200/50",
 };
 
-const paymentStyles: Record<string, string> = {
-  pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50",
-  paid: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
-  failed: "bg-red-50 text-red-600 ring-1 ring-red-200/50",
-  cancelled: "bg-slate-100 text-slate-500 ring-1 ring-slate-200/50",
-};
 
 // Wrap with enhanced styles
 export function EnhancedOrderStatusBadge({ status }: { status: string }) {

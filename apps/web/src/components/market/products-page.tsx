@@ -3,13 +3,13 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { SlidersHorizontal } from "lucide-react";
-import { type Product, categories, products, formatPrice, getDiscountPercent, getProductsByCategory, getCategoryName } from "@/data/mock-data";
-import { useMarketStore, type Page } from "@/store/market-store";
+import { type Product, categories, products, formatPrice, getDiscountPercent, getCategoryName } from "@/data/mock-data";
+import { useMarketStore } from "@/store/market-store";
 
 type SortOption = "popular" | "cheapest" | "expensive" | "discount";
 
 export function ProductsPage() {
-  const { currentPage, navigate, addToCart, searchQuery, setSearchQuery } = useMarketStore();
+  const { currentPage, navigate, addToCart, searchQuery, } = useMarketStore();
   const [selectedCat, setSelectedCat] = useState<string | undefined>(undefined);
   const [sort, setSort] = useState<SortOption>("popular");
   const [showSort, setShowSort] = useState(false);

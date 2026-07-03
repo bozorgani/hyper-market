@@ -3,9 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingCart, ChevronLeft, Tag } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ShoppingCart, Tag } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useAddToCart } from "@/hooks/use-cart";
 import { formatNumber, formatPrice } from "@/lib/utils";

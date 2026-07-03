@@ -1,7 +1,7 @@
 "use client";
 
 import L from "leaflet";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MapPin, Navigation, Crosshair, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +43,19 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
 
   const startLat = initialLat ?? TEHRAN_CENTER[0];
   const startLng = initialLng ?? TEHRAN_CENTER[1];
+
+  const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string> => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=fa`
+      );
+      const data = await res.json();
+      if (data.display_name) {
+        return data.display_name.split(",").slice(0, 3).join(",").trim();
+      }
+    } catch { /* fallback */ }
+    return `عرض: ${lat.toFixed(4)}، طول: ${lng.toFixed(4)}`;
+  }, []);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -94,21 +107,8 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
       markerRef.current = null;
       if (linkEl.parentNode) document.head.removeChild(linkEl);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reverseGeocode, startLat, startLng]);
 
-  const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=fa`
-      );
-      const data = await res.json();
-      if (data.display_name) {
-        return data.display_name.split(",").slice(0, 3).join(",").trim();
-      }
-    } catch { /* fallback */ }
-    return `عرض: ${lat.toFixed(4)}، طول: ${lng.toFixed(4)}`;
-  };
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) return;

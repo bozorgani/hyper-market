@@ -19,11 +19,6 @@ export default function AdminPaymentsPage() {
   const orders = useAdminOrders();
   const orderIds = useMemo(() => (orders.data ?? []).map((order) => order._id), [orders.data]);
   const payments = useAdminPayments(orderIds);
-  const paymentMap = useMemo(() => {
-    const map = new Map<string, (typeof payments.data extends (infer T)[] | undefined ? T : never)>();
-    for (const payment of payments.data ?? []) map.set(payment.orderId, payment);
-    return map;
-  }, [payments.data]);
   const paymentMetaMap = useMemo(() => {
     const meta: Record<string, { status?: string; transactionId?: string | null }> = {};
     for (const payment of payments.data ?? []) {

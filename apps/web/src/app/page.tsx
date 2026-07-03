@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts, useCategories } from "@/hooks/use-products";
-import { formatNumber } from "@/lib/utils";
 
 const categoryIcons: Record<string, string> = {
   default: "🛒",

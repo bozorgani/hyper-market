@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, Lock, Eye, EyeOff, ArrowLeft, Loader2, UserPlus } from "lucide-react";
+import { Mail, Phone, Lock, Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";

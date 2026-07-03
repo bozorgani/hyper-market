@@ -28,6 +28,7 @@ export function MapPicker({ initialLocation, onClose, onConfirm }: MapPickerProp
   const [position, setPosition] = useState<[number, number]>(initialLocation ? [initialLocation.lat, initialLocation.lng] : DEFAULT_CENTER);
   const [address, setAddress] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [mapReady, setMapReady] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);

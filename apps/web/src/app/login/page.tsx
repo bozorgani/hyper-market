@@ -6,7 +6,6 @@ import { FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { Button } from "@/components/ui/button";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
 import { firstValidationError, loginSchema, normalizeDigits, normalizePhoneNumber } from "@/lib/validation/auth";

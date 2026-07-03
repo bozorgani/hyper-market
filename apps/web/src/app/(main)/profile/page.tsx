@@ -1,18 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PageHeader } from "@/components/ui/page-header";
 import { useToast } from "@/components/ui/toast";
 import { cn, formatNumber, formatPrice, translateRole } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 import {
-  User, Settings, Heart, MapPin, Bell, Shield, CreditCard,
+  User, Settings, Heart, MapPin, Bell, Shield,
   ChevronLeft, LogOut, Star, Package, Clock,
-  CheckCircle2, Truck, Camera, Gift, Globe,
+  CheckCircle2, Truck, Camera, Gift,
 } from "lucide-react";
 
 const mockOrders = [
@@ -40,7 +38,6 @@ export default function ProfilePage() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const { showToast } = useToast();
-  const router = useRouter();
 
   function handleLogout() {
     void logout();

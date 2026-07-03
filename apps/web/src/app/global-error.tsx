@@ -1,10 +1,6 @@
 "use client";
 
-// Catches errors thrown in the root layout itself. Replaces the whole document,
-// so it must render its own <html>/<body>. Styles are inline on purpose so the
-// fallback works even if the app's CSS layer failed to load.
 export default function GlobalError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };

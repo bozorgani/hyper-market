@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Clock, CreditCard, Check, Truck, ArrowLeft, Tag, X, Gift } from "lucide-react";
+import { MapPin, Clock, CreditCard, Check, Truck, ArrowLeft, X, Gift } from "lucide-react";
 import { formatPrice } from "@/data/mock-data";
 import { useMarketStore } from "@/store/market-store";
 import dynamic from "next/dynamic";
@@ -41,6 +41,10 @@ export function CheckoutPage() {
   const discountAmount = Math.round(total * discountPercent / 100);
   const deliveryFee = total >= 500000 ? 0 : 25000;
   const finalTotal = total - discountAmount + deliveryFee;
+  const [orderNumber] = useState(() => {
+     
+    return Math.floor(Math.random() * 900000 + 100000).toLocaleString("fa-IR");
+  });
 
   if (orderPlaced) {
     return (
@@ -55,7 +59,7 @@ export function CheckoutPage() {
         <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-right">
           <p className="text-xs text-slate-500">مبلغ پرداختی</p>
           <p className="text-xl font-black text-emerald-600">{formatPrice(finalTotal)} <span className="text-sm font-normal text-slate-400">تومان</span></p>
-          <p className="text-xs text-slate-400 mt-1">شماره سفارش: {Math.floor(Math.random() * 900000 + 100000).toLocaleString("fa-IR")}</p>
+          <p className="text-xs text-slate-400 mt-1">شماره سفارش: {orderNumber}</p>
         </div>
         <button
           onClick={() => { setOrderPlaced(false); clearCart(); navigate({ type: "home" }); }}

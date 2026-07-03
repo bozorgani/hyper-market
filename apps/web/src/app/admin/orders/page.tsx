@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, Eye, RefreshCw, Package } from "lucide-react";
+import { Search, Eye, RefreshCw, Package } from "lucide-react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { OrderStatusBadge } from "@/components/admin/admin-status-badge";
 import { Button } from "@/components/ui/button";

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, lazy, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { MapPin, Navigation, ChevronDown, Tag, X, Gift, Ticket, Percent, Loader2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
@@ -116,7 +116,7 @@ export default function CheckoutPage() {
     date: todayDateInputValue(),
     timeSlot: deliveryTimeSlots[0].value,
   });
-  const submittingRef = useRef(false);
+  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
 
   // Map state
   const [showMap, setShowMap] = useState(false);
@@ -133,7 +133,7 @@ export default function CheckoutPage() {
   const discountAmount = appliedDiscount ? Math.round(totalPrice * (appliedDiscount.percent / 100)) : 0;
   const finalPrice = totalPrice - discountAmount;
   const mutationPending = createOrder.isPending || createPayment.isPending || simulateSuccess.isPending;
-  const isSubmitting = mutationPending || submittingRef.current;
+  const isSubmitting = mutationPending || isLocalSubmitting;
   const activeStepIndex = stepIndex(currentStep);
   const deliveryFormValid = isDeliveryAddressValid(deliveryAddress) && Boolean(deliveryWindow.date && deliveryWindow.timeSlot);
   const cartErrorMessage = useMemo(() => {
@@ -172,7 +172,7 @@ export default function CheckoutPage() {
   }
 
   async function checkout() {
-    if (submittingRef.current || mutationPending) return;
+    if (isLocalSubmitting || mutationPending) return;
 
     if (!deliveryFormValid) {
       const message = "لطفاً آدرس تحویل و بازه زمانی ارسال را کامل و معتبر وارد کنید.";
@@ -183,7 +183,7 @@ export default function CheckoutPage() {
 
     const keys = attemptKeys ?? createCheckoutAttemptKeys();
     setAttemptKeys(keys);
-    submittingRef.current = true;
+    setIsLocalSubmitting(true);
     setError("");
 
     try {
@@ -221,7 +221,7 @@ export default function CheckoutPage() {
       router.push(`/order/success?orderId=${order._id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "پرداخت ناموفق بود.";
-      submittingRef.current = false;
+      setIsLocalSubmitting(false);
       setError(message);
       setConfirmOpen(false);
       showToast({ type: "error", title: "پرداخت انجام نشد", description: message });

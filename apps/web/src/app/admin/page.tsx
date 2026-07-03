@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { ReceiptText, TrendingUp, Users, Boxes, ArrowUpRight, Clock, ShoppingCart, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { AdminStatCard } from "@/components/admin/admin-stat-card";
-import { formatPrice, translateOrderStatus } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import { useAdminOrders, useAdminProducts, useAdminUsers } from "@/features/admin/admin-api";
 import { OrderStatusBadge } from "@/components/order/status-badge";
 
@@ -15,10 +15,12 @@ export default function AdminDashboardPage() {
   const products = useAdminProducts();
   const orders = useAdminOrders();
   const users = useAdminUsers();
-  const paidOrders = (orders.data ?? []).filter((order) => order.status === "paid");
-  const revenue = paidOrders.reduce((sum, order) => sum + order.totalPrice, 0);
 
-  const revenueByDay = useMemo(() => {
+  const { revenue, revenueByDay } = useMemo(() => {
+    const ordersList = orders.data ?? [];
+    const paidOrders = ordersList.filter((order) => order.status === "paid");
+    const revenue = paidOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+
     const DAYS = 7;
     const buckets = new Array<number>(DAYS).fill(0);
     const startOfToday = new Date();
@@ -35,8 +37,8 @@ export default function AdminDashboardPage() {
       }
     }
     const max = Math.max(0, ...buckets);
-    return { values: buckets, max };
-  }, [paidOrders]);
+    return { revenue, revenueByDay: { values: buckets, max } };
+  }, [orders.data]);
 
   const recentOrders = (orders.data ?? []).slice(0, 6);
   const today = new Date().getDay();
@@ -44,6 +46,12 @@ export default function AdminDashboardPage() {
     const dayIdx = (today - 6 + i + 7) % 7;
     return persianDays[dayIdx === 6 ? 0 : dayIdx + 1];
   });
+
+  const activeProductsCount = useMemo(() => {
+    const items = products.data?.items;
+    if (!Array.isArray(items)) return 0;
+    return items.filter((p: { isActive?: boolean }) => p.isActive).length;
+  }, [products.data?.items]);
 
   return (
     <div className="space-y-6">
@@ -89,7 +97,7 @@ export default function AdminDashboardPage() {
           icon={Boxes}
           gradient="bg-amber-500"
           delay={0.16}
-          hint={products.data?.total ? `${products.data?.items?.filter((p: any) => p.isActive).length ?? 0} فعال` : undefined}
+          hint={products.data?.total ? `${activeProductsCount} فعال` : undefined}
         />
         <AdminStatCard
           title="کل کاربران"
@@ -188,7 +196,7 @@ export default function AdminDashboardPage() {
                   className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-slate-50/80"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                    <ReceiptText className="h-4.5 w-4.5 text-slate-500" />
+                    <ReceiptText className="h-4 w-4 text-slate-500" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-slate-800">#{order._id.slice(-8)}</p>

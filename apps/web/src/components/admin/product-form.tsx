@@ -32,6 +32,7 @@ export function ProductForm({
 
   useEffect(() => {
     if (initialProduct) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         name: initialProduct.name,
         description: initialProduct.description,
@@ -43,6 +44,7 @@ export function ProductForm({
         isActive: initialProduct.isActive,
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialProduct?._id]);
 
   function submit(event: FormEvent<HTMLFormElement>) {

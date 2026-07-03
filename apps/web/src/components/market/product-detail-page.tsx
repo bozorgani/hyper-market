@@ -1,8 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { ArrowRight, Minus, Plus, ShoppingCart, Share2, Heart, Star, Package } from "lucide-react";
-import { type Product, getProductById, getProductsByCategory, formatPrice, getDiscountPercent, getCategoryName } from "@/data/mock-data";
+import {  getProductById, getProductsByCategory, formatPrice, getDiscountPercent, getCategoryName } from "@/data/mock-data";
 import { useMarketStore } from "@/store/market-store";
 
 export function ProductDetailPage() {
