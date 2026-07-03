@@ -2,28 +2,28 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Search, Filter, Eye, RefreshCw, Package } from "lucide-react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { OrderStatusBadge } from "@/components/admin/admin-status-badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
-import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { useAdminOrders, useUpdateOrderStatus } from "@/features/admin/admin-api";
-import { formatPersianDate, formatPrice, translateOrderStatus } from "@/lib/utils";
+import { formatPersianDate, formatPrice, translateOrderStatus, cn } from "@/lib/utils";
 import type { OrderStatus } from "@/types/domain";
 
-const statuses: Array<{ value: OrderStatus | "all"; label: string }> = [
-  { value: "all", label: "همه" },
-  { value: "pending", label: "در انتظار" },
-  { value: "paid", label: "پرداخت‌شده" },
-  { value: "processing", label: "در حال پردازش" },
-  { value: "shipped", label: "ارسال‌شده" },
-  { value: "delivered", label: "تحویل‌شده" },
-  { value: "cancelled", label: "لغوشده" },
+const statuses: Array<{ value: OrderStatus | "all"; label: string; color: string }> = [
+  { value: "all", label: "همه", color: "bg-slate-100 text-slate-600" },
+  { value: "pending", label: "در انتظار", color: "bg-amber-50 text-amber-700" },
+  { value: "paid", label: "پرداخت‌شده", color: "bg-emerald-50 text-emerald-700" },
+  { value: "processing", label: "در حال پردازش", color: "bg-blue-50 text-blue-700" },
+  { value: "shipped", label: "ارسال‌شده", color: "bg-violet-50 text-violet-700" },
+  { value: "delivered", label: "تحویل‌شده", color: "bg-slate-100 text-slate-600" },
+  { value: "cancelled", label: "لغوشده", color: "bg-red-50 text-red-600" },
 ];
 
 const PAGE_SIZE = 10;
@@ -59,61 +59,150 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <main className="space-y-5 text-right">
-      <PageHeader title="مدیریت سفارش‌ها" description="جستجو، فیلتر، پایش سفارش‌ها و تغییر وضعیت آن‌ها از این بخش انجام می‌شود." />
+    <div className="space-y-5">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-black text-slate-900">مدیریت سفارش‌ها</h1>
+        <p className="mt-1 text-sm text-slate-500">جستجو، فیلتر، پایش و تغییر وضعیت سفارش‌ها</p>
+      </div>
 
-      <Card className="p-4">
-        <div className="grid gap-3 xl:grid-cols-[1fr_auto]">
-          <Input value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="جستجو بر اساس شناسه سفارش..." />
-          <Button type="button" variant="outline" onClick={() => { setQuery(""); setStatus("all"); setPage(1); }}>پاک‌کردن فیلترها</Button>
+      {/* Filters */}
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+              placeholder="جستجو بر اساس شناسه سفارش..."
+              className="pr-10"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setQuery(""); setStatus("all"); setPage(1); }}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50"
+            >
+              <RefreshCw className="h-4 w-4" />
+              پاک‌کردن
+            </button>
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {statuses.map((item) => (
-            <Button key={item.value} type="button" variant={status === item.value ? "default" : "outline"} onClick={() => { setStatus(item.value); setPage(1); }}>
+            <button
+              key={item.value}
+              onClick={() => { setStatus(item.value); setPage(1); }}
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+                status === item.value
+                  ? "bg-slate-900 text-white shadow-md"
+                  : "text-slate-500 hover:bg-slate-100",
+              )}
+            >
               {item.label}
-            </Button>
+            </button>
           ))}
         </div>
-      </Card>
+      </div>
 
-      {orders.isError ? <ErrorState title="بارگذاری سفارش‌ها انجام نشد" description={errorMessage} actions={<Button type="button" variant="outline" onClick={() => orders.refetch()}>تلاش مجدد</Button>} /> : null}
+      {/* Error State */}
+      {orders.isError ? (
+        <ErrorState title="بارگذاری سفارش‌ها انجام نشد" description={errorMessage} actions={<Button type="button" variant="outline" onClick={() => orders.refetch()}>تلاش مجدد</Button>} />
+      ) : null}
 
-      {!orders.isError ? (
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 text-sm text-slate-500">
-            <p>فهرست سفارش‌ها</p>
-            <p>{filteredOrders.length} مورد</p>
+      {/* Orders Table */}
+      {!orders.isError && (
+        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+          {/* Table Header */}
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-slate-400" />
+              <span className="text-sm font-semibold text-slate-700">فهرست سفارش‌ها</span>
+            </div>
+            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+              {filteredOrders.length} مورد
+            </span>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-right text-sm">
-              <thead className="bg-slate-50 text-slate-500"><tr><th className="p-4">سفارش</th><th className="p-4">تاریخ</th><th className="p-4">مبلغ</th><th className="p-4">وضعیت</th><th className="p-4">تغییر وضعیت</th><th className="p-4">جزئیات</th></tr></thead>
-              <tbody>
-                {orders.isLoading ? Array.from({ length: 5 }).map((_, index) => <tr key={index}><td className="p-4" colSpan={6}><Skeleton className="h-10 w-full" /></td></tr>) : null}
+
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full min-w-[900px] text-right text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/50">
+                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">سفارش</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">تاریخ</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">مبلغ</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">وضعیت</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">تغییر وضعیت</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">جزئیات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {orders.isLoading ? Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index}><td className="p-5" colSpan={6}><Skeleton className="h-12 w-full rounded-xl" /></td></tr>
+                )) : null}
                 {!orders.isLoading && paginatedOrders.map((order) => (
-                  <tr key={order._id} className="border-b border-slate-100 transition hover:bg-slate-50/80">
-                    <td className="p-4 font-bold">#{order._id.slice(-8)}</td>
-                    <td className="p-4">{formatPersianDate(order.createdAt)}</td>
-                    <td className="p-4">{formatPrice(order.totalPrice)}</td>
-                    <td className="p-4"><OrderStatusBadge status={order.status} /></td>
-                    <td className="p-4">
-                      <select value={order.status} onChange={(e) => handleStatusChange(order._id, e.target.value)} className="h-10 rounded-xl border border-slate-200 px-3 text-sm">
+                  <motion.tr
+                    key={order._id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="transition hover:bg-slate-50/50"
+                  >
+                    <td className="px-5 py-3.5">
+                      <span className="font-bold text-slate-800">#{order._id.slice(-8)}</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-500">{formatPersianDate(order.createdAt)}</td>
+                    <td className="px-5 py-3.5 font-semibold text-slate-800">{formatPrice(order.totalPrice)}</td>
+                    <td className="px-5 py-3.5"><OrderStatusBadge status={order.status} /></td>
+                    <td className="px-5 py-3.5">
+                      <select
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                        className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                      >
                         {statuses.filter((item) => item.value !== "all").map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
                       </select>
                     </td>
-                    <td className="p-4"><Link href={`/admin/orders/${order._id}`}><Button type="button" variant="outline">مشاهده</Button></Link></td>
-                  </tr>
+                    <td className="px-5 py-3.5">
+                      <Link href={`/admin/orders/${order._id}`} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-200">
+                        <Eye className="h-3.5 w-3.5" />
+                        مشاهده
+                      </Link>
+                    </td>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden divide-y divide-slate-50">
+            {orders.isLoading ? Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="p-4"><Skeleton className="h-28 w-full rounded-xl" /></div>
+            )) : null}
+            {!orders.isLoading && paginatedOrders.map((order) => (
+              <Link key={order._id} href={`/admin/orders/${order._id}`} className="block p-4 transition hover:bg-slate-50/50">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-800">#{order._id.slice(-8)}</span>
+                  <OrderStatusBadge status={order.status} />
+                </div>
+                <div className="mt-2 flex items-center justify-between text-sm">
+                  <span className="text-slate-500">{formatPersianDate(order.createdAt)}</span>
+                  <span className="font-bold text-slate-800">{formatPrice(order.totalPrice)}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
           {!orders.isLoading && filteredOrders.length === 0 ? (
-            <div className="p-4">
+            <div className="p-8">
               <EmptyState title="سفارشی یافت نشد" description="فیلتر وضعیت یا عبارت جستجو را تغییر دهید." actions={<Button type="button" onClick={() => { setQuery(""); setStatus("all"); setPage(1); }}>بازنشانی فیلترها</Button>} />
             </div>
           ) : null}
           {!orders.isLoading && filteredOrders.length > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={filteredOrders.length} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
-        </Card>
-      ) : null}
-    </main>
+        </div>
+      )}
+    </div>
   );
 }
