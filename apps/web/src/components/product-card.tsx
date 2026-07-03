@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { motion } from "framer-motion";
+import { ShoppingCart, ChevronLeft, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { useAddToCart } from "@/hooks/use-cart";
 import { formatNumber, formatPrice } from "@/lib/utils";
@@ -19,22 +19,25 @@ export function ProductCard({ product }: { product: Product }) {
     ? Math.max(0, Math.round(((product.price - product.discountPrice) / product.price) * 100))
     : 0;
 
-  async function handleAddToCart() {
+  async function handleAddToCart(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
     try {
       await addToCart.mutateAsync({ productId: product._id, quantity: 1 });
-      showToast({ type: "success", title: "محصول به سبد خرید اضافه شد" });
+      showToast({ type: "success", title: "به سبد اضافه شد" });
     } catch (error) {
-      showToast({
-        type: "error",
-        title: "افزودن محصول ناموفق بود",
-        description: error instanceof Error ? error.message : undefined,
-      });
+      showToast({ type: "error", title: "افزودن ناموفق", description: error instanceof Error ? error.message : undefined });
     }
   }
 
   return (
-    <Card className="overflow-hidden text-right">
-      <Link href={`/products/${product._id}`} className="relative block aspect-square bg-slate-100">
+    <motion.div
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2 }}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-md"
+    >
+      {/* Image */}
+      <Link href={`/products/${product._id}`} className="relative block aspect-square bg-slate-50 overflow-hidden">
         {product.images?.[0] ? (
           <Image
             src={product.images[0]}
@@ -42,29 +45,59 @@ export function ProductCard({ product }: { product: Product }) {
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             unoptimized
-            className="object-cover transition duration-300 hover:scale-105"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl">🛒</div>
         )}
+        {/* Discount Badge */}
+        {discountPercent > 0 && (
+          <div className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded-lg bg-red-500 px-2 py-1 text-white shadow-sm">
+            <Tag className="h-3 w-3" />
+            <span className="text-[11px] font-bold">{formatNumber(discountPercent)}%</span>
+          </div>
+        )}
+        {/* Stock Status */}
+        {product.stock < 1 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+            <span className="rounded-xl bg-red-500 px-3 py-1.5 text-xs font-bold text-white">ناموجود</span>
+          </div>
+        )}
       </Link>
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <Badge className={product.stock > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}>
-            {product.stock > 0 ? `${formatNumber(product.stock)} عدد` : "ناموجود"}
-          </Badge>
-          <Link href={`/products/${product._id}`} className="line-clamp-2 flex-1 font-bold leading-7 text-slate-900">
-            {product.name}
-          </Link>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        {/* Stock */}
+        {product.stock > 0 && product.stock < 10 && (
+          <p className="text-[10px] font-semibold text-amber-600 mb-1.5">فقط {formatNumber(product.stock)} عدد باقیمانده!</p>
+        )}
+
+        {/* Name */}
+        <Link href={`/products/${product._id}`} className="line-clamp-2 text-sm font-bold leading-6 text-slate-800 transition group-hover:text-emerald-700">
+          {product.name}
+        </Link>
+
+        {/* Price */}
+        <div className="mt-auto pt-3">
+          {discountPercent > 0 && (
+            <p className="text-xs text-slate-400 line-through">{formatPrice(product.price)}</p>
+          )}
+          <div className="flex items-end justify-between gap-2">
+            <p className="text-base font-black text-slate-900 sm:text-lg">{formatPrice(price)}</p>
+            <p className="text-[10px] text-slate-400">تومان</p>
+          </div>
         </div>
-        {discountPercent > 0 ? <Badge className="mt-3 bg-rose-50 text-rose-700">{formatNumber(discountPercent)}٪ تخفیف</Badge> : null}
-        <p className="mt-2 text-lg font-black text-slate-950">{formatPrice(price)}</p>
-        {product.discountPrice ? <p className="text-sm text-slate-400 line-through">{formatPrice(product.price)}</p> : null}
-        <Button type="button" disabled={product.stock < 1 || addToCart.isPending} onClick={handleAddToCart} className="mt-4 w-full">
-          <ShoppingCart className="h-4 w-4" />
-          {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد"}
-        </Button>
+
+        {/* Add to Cart */}
+        <button
+          onClick={handleAddToCart}
+          disabled={product.stock < 1 || addToCart.isPending}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-50 py-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98]"
+        >
+          <ShoppingCart className="h-3.5 w-3.5" />
+          {addToCart.isPending ? "..." : "افزودن به سبد"}
+        </button>
       </div>
-    </Card>
+    </motion.div>
   );
 }
