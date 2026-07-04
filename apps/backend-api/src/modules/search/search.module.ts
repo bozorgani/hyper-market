@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '../../infrastructure/logger/logger.service';
 import { CategoriesModule } from '../categories/categories.module';
@@ -8,10 +9,15 @@ import { SearchIndexer } from './search.indexer';
 import { SearchQueueService } from './search-queue.service';
 import { SearchWorker } from './search.worker';
 import { SearchService } from './search.service';
-import { SearchSubscriber } from './search.subscriber';
+import { Product, ProductSchema } from '../products/schemas/product.schema';
 
 @Module({
-  imports: [CategoriesModule],
+  imports: [
+    CategoriesModule,
+    MongooseModule.forFeature([
+      { name: Product.name, schema: ProductSchema },
+    ]),
+  ],
   controllers: [SearchController, AdminSearchController],
   providers: [
     // ── Shared Meilisearch client (singleton) ────────────────────────
@@ -24,7 +30,6 @@ import { SearchSubscriber } from './search.subscriber';
     SearchService,
     SearchIndexer,
     SearchQueueService,
-    SearchSubscriber,
     SearchWorker,
   ],
   exports: [SearchIndexer, SearchService, MEILISEARCH_CLIENT],

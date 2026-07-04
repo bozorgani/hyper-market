@@ -1,8 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Post, Query } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { SearchService } from './search.service';
+import { SearchIndexer } from './search.indexer';
 
 function toNumber(value: string | undefined): number | undefined {
   if (value === undefined || value === '') return undefined;
@@ -44,7 +45,10 @@ export class SearchController {
 
 @Controller('admin/search')
 export class AdminSearchController {
-  constructor(private readonly searchService: SearchService) {}
+  constructor(
+    private readonly searchService: SearchService,
+    private readonly searchIndexer: SearchIndexer,
+  ) {}
 
   @Get('products')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
@@ -65,5 +69,16 @@ export class AdminSearchController {
       maxStock: toNumber(maxStock),
       sort,
     });
+  }
+
+  /**
+   * POST /admin/search/reindex — full reindex of all products.
+   * Clears the Meilisearch index and rebuilds from MongoDB.
+   * Fixes stale/orphan documents and ID mismatches.
+   */
+  @Post('reindex')
+  @Roles(UserRole.SUPER_ADMIN)
+  reindexAll() {
+    return this.searchIndexer.reindexAll();
   }
 }

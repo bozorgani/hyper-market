@@ -585,11 +585,10 @@ action
 
 ## 7. Missing / Broken Features
 
-- Payment module is mock/abstraction only; no real Zarinpal/Stripe gateway flow is implemented.
+- No missing or broken features detected by the sync script.
 
 ## 8. High Priority TODOs
 
-- Payment module is mock/abstraction only; no real Zarinpal/Stripe gateway flow is implemented
 - Add transaction usage to critical order/payment/cart flows if not already applied.
 - Add tests for auth, permissions, cart/order/payment, search, and analytics flows.
 
@@ -686,7 +685,6 @@ Rules from docs:
 
 ## 10. Risks / Technical Debt
 
-- Payment is not production-ready because real gateway integration is missing.
 - Meilisearch index can become stale because no bulk reindex command was detected.
 - Permission model is partly static in code even though permission schema exists.
 - No comprehensive automated test suite was detected by this script.
