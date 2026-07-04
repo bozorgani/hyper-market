@@ -23,6 +23,11 @@ const mockProduct: Product = {
   images: [],
   categoryId: new Types.ObjectId(CATEGORY_ID),
   isActive: true,
+  brand: 'Samsung',
+  sku: 'SAM-GAL-S24-128',
+  unit: 'عدد',
+  weight: 196,
+  tags: ['موبایل', 'سامسونگ'],
   deletedAt: null,
 } as Product;
 

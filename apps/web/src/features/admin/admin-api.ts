@@ -11,6 +11,11 @@ export type ProductFormInput = {
   images?: string[];
   categoryId: string;
   isActive?: boolean;
+  brand?: string;
+  sku?: string;
+  unit?: string;
+  weight?: number;
+  tags?: string[];
 };
 
 export type ProductImageUploadResponse = {

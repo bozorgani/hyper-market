@@ -75,6 +75,21 @@ export function ProductCard({ product }: { product: Product }) {
           {product.name}
         </Link>
 
+        {/* Brand + Unit */}
+        {(product.brand || product.unit) ? (
+          <div className="mt-1 flex items-center gap-1.5">
+            {product.brand ? (
+              <span className="text-[10px] font-semibold text-slate-400">{product.brand}</span>
+            ) : null}
+            {product.brand && product.unit ? (
+              <span className="text-slate-300">·</span>
+            ) : null}
+            {product.unit ? (
+              <span className="text-[10px] text-slate-400">هر {product.unit}</span>
+            ) : null}
+          </div>
+        ) : null}
+
         {/* Price */}
         <div className="mt-auto pt-3">
           {discountPercent > 0 && (

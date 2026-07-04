@@ -41,4 +41,32 @@ export class CreateProductDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  /** Brand name */
+  @IsOptional()
+  @IsString()
+  brand?: string;
+
+  /** Stock-Keeping Unit — unique warehouse code */
+  @IsOptional()
+  @IsString()
+  sku?: string;
+
+  /** Measurement unit (e.g. عدد, کیلوگرم, لیتر) */
+  @IsOptional()
+  @IsString()
+  unit?: string;
+
+  /** Weight in grams */
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  weight?: number;
+
+  /** Searchable tags */
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  tags?: string[];
 }

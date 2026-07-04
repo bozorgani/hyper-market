@@ -16,10 +16,16 @@ export type ProductSearchDocument = {
   price: number;
   discountPrice: number | null;
   effectivePrice: number;
+  discountPercentage: number;
   stock: number;
   categoryName: string;
   categoryId: string;
   image: string | null;
+  brand: string | null;
+  sku: string | null;
+  unit: string | null;
+  weight: number | null;
+  tags: string[];
   isActive: boolean;
   createdAt: string;
 };
@@ -145,10 +151,17 @@ export class SearchIndexer implements OnModuleInit {
     // Update settings — this also ensures the primaryKey is set correctly
     await index.updateSettings({
       primaryKey: 'id',
-      searchableAttributes: ['title', 'description', 'categoryName'],
-      displayedAttributes: ['id', 'title', 'description', 'price', 'discountPrice', 'effectivePrice', 'stock', 'categoryName', 'categoryId', 'image', 'isActive', 'createdAt'],
-      filterableAttributes: ['categoryId', 'categoryName', 'stock', 'price', 'discountPrice', 'effectivePrice', 'isActive'],
-      sortableAttributes: ['price', 'discountPrice', 'effectivePrice', 'stock', 'createdAt'],
+      searchableAttributes: ['title', 'description', 'categoryName', 'brand', 'sku', 'tags'],
+      displayedAttributes: [
+        'id', 'title', 'description', 'price', 'discountPrice', 'effectivePrice',
+        'discountPercentage', 'stock', 'categoryName', 'categoryId', 'image',
+        'brand', 'sku', 'unit', 'weight', 'tags', 'isActive', 'createdAt',
+      ],
+      filterableAttributes: [
+        'categoryId', 'categoryName', 'stock', 'price', 'discountPrice',
+        'effectivePrice', 'discountPercentage', 'isActive', 'brand', 'tags',
+      ],
+      sortableAttributes: ['price', 'discountPrice', 'effectivePrice', 'discountPercentage', 'stock', 'createdAt'],
       typoTolerance: {
         enabled: true,
       },
@@ -160,6 +173,11 @@ export class SearchIndexer implements OnModuleInit {
     const category = await this.categoriesService.getCategoryById(categoryId);
     const productWithTimestamps = product as ProductWithTimestamps;
 
+    const discountPercentage =
+      product.discountPrice && product.price > 0
+        ? Math.max(0, Math.round(((product.price - product.discountPrice) / product.price) * 100))
+        : 0;
+
     return {
       id: getEntityId(product),
       title: product.name,
@@ -167,10 +185,16 @@ export class SearchIndexer implements OnModuleInit {
       price: product.price,
       discountPrice: product.discountPrice ?? null,
       effectivePrice: product.discountPrice ?? product.price,
+      discountPercentage,
       stock: product.stock,
       categoryName: category?.name ?? '',
       categoryId,
       image: product.images?.[0] ?? null,
+      brand: product.brand ?? null,
+      sku: product.sku ?? null,
+      unit: product.unit ?? null,
+      weight: product.weight ?? null,
+      tags: product.tags ?? [],
       isActive: product.isActive,
       createdAt: productWithTimestamps.createdAt?.toISOString?.() ?? new Date().toISOString(),
     };

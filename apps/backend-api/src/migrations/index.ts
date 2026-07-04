@@ -45,4 +45,40 @@ export const migrations: Migration[] = [
       console.log(`[MIGRATION 0001] Seeded ${docs.length} permission entries for ${Object.keys(ROLE_PERMISSIONS).length} roles.`);
     },
   },
+
+  // ── 0002: Add brand, sku, unit, weight, tags fields to products ────
+  {
+    id: '0002',
+    description: 'Add brand, sku, unit, weight, tags fields to existing products',
+    up: async (connection) => {
+      const collection = connection.collection('products');
+
+      // Set default values for all existing documents that lack the new fields.
+      // Using $set with defaults — idempotent (won't overwrite existing values).
+      const result = await collection.updateMany(
+        {},
+        {
+          $set: {
+            brand: null,
+            sku: null,
+            unit: null,
+            weight: null,
+            tags: [],
+          },
+        },
+        { upsert: false },
+      );
+
+      console.log(
+        `[MIGRATION 0002] Updated ${result.modifiedCount} product(s) with new fields (brand, sku, unit, weight, tags).`,
+      );
+
+      // Create sparse unique index on sku
+      await collection.createIndex({ sku: 1 }, { unique: true, sparse: true });
+      await collection.createIndex({ brand: 1 });
+      await collection.createIndex({ tags: 1 });
+
+      console.log('[MIGRATION 0002] Indexes created: sku (sparse unique), brand, tags.');
+    },
+  },
 ];

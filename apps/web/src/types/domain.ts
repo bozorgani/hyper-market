@@ -15,10 +15,16 @@ export type Product = {
   description: string;
   price: number;
   discountPrice?: number | null;
+  discountPercentage?: number;
   stock: number;
   images: string[];
   categoryId: string;
   isActive: boolean;
+  brand?: string | null;
+  sku?: string | null;
+  unit?: string | null;
+  weight?: number | null;
+  tags?: string[];
 };
 
 export type ProductListResponse = {

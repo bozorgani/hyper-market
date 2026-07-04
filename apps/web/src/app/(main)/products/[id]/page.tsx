@@ -93,12 +93,42 @@ export default function ProductDetailPage() {
       <section className="rounded-3xl bg-white p-6 text-right shadow-sm">
         <div className="flex flex-wrap gap-2">
           <Badge className={item.stock > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}>
-            {item.stock > 0 ? `${formatNumber(item.stock)} عدد موجود` : "ناموجود"}
+            {item.stock > 0 ? `${formatNumber(item.stock)} ${item.unit ?? "عدد"} موجود` : "ناموجود"}
           </Badge>
           {discountPercent > 0 ? <Badge className="bg-rose-50 text-rose-700">{formatNumber(discountPercent)}٪ تخفیف</Badge> : null}
+          {item.brand ? <Badge className="bg-violet-50 text-violet-700">{item.brand}</Badge> : null}
+          {item.sku ? <Badge className="bg-slate-100 text-slate-500 font-mono">{item.sku}</Badge> : null}
         </div>
         <h1 className="mt-5 text-3xl font-black leading-tight text-slate-950">{item.name}</h1>
         <p className="mt-4 leading-8 text-slate-600">{item.description}</p>
+
+        {/* Attributes */}
+        {(item.brand || item.unit || item.weight || (item.tags && item.tags.length > 0)) ? (
+          <div className="mt-5 space-y-3 rounded-xl bg-slate-50 p-4">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">مشخصات</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {item.brand ? (
+                <div><span className="text-slate-500">برند:</span> <span className="font-semibold text-slate-800">{item.brand}</span></div>
+              ) : null}
+              {item.unit ? (
+                <div><span className="text-slate-500">واحد:</span> <span className="font-semibold text-slate-800">{item.unit}</span></div>
+              ) : null}
+              {item.weight ? (
+                <div><span className="text-slate-500">وزن:</span> <span className="font-semibold text-slate-800">{formatNumber(item.weight)} گرم</span></div>
+              ) : null}
+              {item.sku ? (
+                <div><span className="text-slate-500">کد انبار:</span> <span className="font-mono font-semibold text-slate-800">{item.sku}</span></div>
+              ) : null}
+            </div>
+            {item.tags && item.tags.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {item.tags.map((tag) => (
+                  <span key={tag} className="rounded-lg bg-white px-2 py-0.5 text-xs text-slate-600 ring-1 ring-slate-200">{tag}</span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         <div className="mt-6 flex flex-wrap items-end gap-3">
           <p className="text-3xl font-black text-rose-600">{formatPrice(price)}</p>
           {item.discountPrice ? <p className="text-slate-400 line-through">{formatPrice(item.price)}</p> : null}
