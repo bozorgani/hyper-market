@@ -120,7 +120,7 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
       markerRef.current = null;
       if (linkEl.parentNode) document.head.removeChild(linkEl);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps — map should only mount once
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- map should only mount once
   }, []);
 
 
