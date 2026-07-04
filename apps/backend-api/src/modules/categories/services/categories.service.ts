@@ -73,6 +73,27 @@ export class CategoriesService {
     return category;
   }
 
+  async getPublicCategoryById(id: string): Promise<Category> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid category id');
+    }
+
+    try {
+      const cached = await this.redisService.get<Category>(`category:public:${id}`);
+      if (cached) return cached;
+    } catch {
+      // fall through
+    }
+
+    const category = await this.categoriesRepository.findPublicById(id);
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    void this.redisService.set(`category:public:${id}`, category, CATEGORY_ITEM_CACHE_TTL).catch(() => undefined);
+    return category;
+  }
+
   async getCategoryByIdOrFail(id: string): Promise<Category> {
     if (!isValidObjectId(id)) {
       throw new BadRequestException('Invalid category id');
@@ -99,11 +120,15 @@ export class CategoriesService {
       // fall through
     }
 
-    const categories = await this.categoriesRepository.findAll();
+    const categories = await this.categoriesRepository.findAllPublic();
 
     void this.redisService.set(this.LIST_CACHE_KEY, categories, CATEGORY_LIST_CACHE_TTL).catch(() => undefined);
 
     return categories;
+  }
+
+  async listCategoriesForAdmin(): Promise<Category[]> {
+    return this.categoriesRepository.findAll();
   }
 
   async listCategoriesPaginated(
@@ -113,6 +138,15 @@ export class CategoriesService {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.min(Math.max(limit, 1), 100);
     return this.categoriesRepository.findAllPaginated(safePage, safeLimit);
+  }
+
+  async listCategoriesPaginatedForAdmin(
+    page: number,
+    limit: number,
+  ): Promise<CategoryListResult> {
+    const safePage = Math.max(page, 1);
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    return this.categoriesRepository.findAllPaginatedForAdmin(safePage, safeLimit);
   }
 
   async updateCategory(id: string, data: UpdateCategoryDto): Promise<Category> {
@@ -196,6 +230,7 @@ export class CategoriesService {
     try {
       if (id) {
         await this.redisService.delete(`category:${id}`);
+        await this.redisService.delete(`category:public:${id}`);
       }
       await this.redisService.delete(this.LIST_CACHE_KEY);
     } catch {

@@ -4,13 +4,7 @@ import { randomUUID } from 'crypto';
 import { mkdir, writeFile } from 'fs/promises';
 import { extname, join } from 'path';
 import { IProductImageStorage, SavedImage, UploadableFile } from './product-image-storage.interface';
-
-const ALLOWED_IMAGE_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-]);
+import { validateProductImageFile } from './product-image-validation';
 
 const EXTENSIONS_BY_MIME_TYPE: Record<string, string> = {
   'image/jpeg': '.jpg',
@@ -45,30 +39,22 @@ export class LocalProductImageStorage implements IProductImageStorage {
   }
 
   async saveProductImage(file: UploadableFile): Promise<SavedImage> {
-    if (!file?.buffer || !file.mimetype) {
-      throw new BadRequestException('Image file is required');
-    }
-
-    if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
-      throw new BadRequestException('Only jpg, png, webp and gif images are allowed');
-    }
-
-    if ((file.size ?? file.buffer.length) > this.maxFileSizeBytes) {
-      throw new BadRequestException('Image file is too large');
-    }
+    validateProductImageFile(file, this.maxFileSizeBytes);
+    const buffer = file.buffer as Buffer;
+    const mimeType = file.mimetype as string;
 
     await mkdir(this.uploadDir, { recursive: true });
 
-    const extension = this.getSafeExtension(file.originalname, file.mimetype);
+    const extension = this.getSafeExtension(file.originalname, mimeType);
     const fileName = `${Date.now()}-${randomUUID()}${extension}`;
     const filePath = join(this.uploadDir, fileName);
-    await writeFile(filePath, file.buffer);
+    await writeFile(filePath, buffer);
 
     return {
       url: this.getImageUrl(fileName),
       fileName,
-      size: file.size ?? file.buffer.length,
-      mimeType: file.mimetype,
+      size: file.size ?? buffer.length,
+      mimeType,
     };
   }
 

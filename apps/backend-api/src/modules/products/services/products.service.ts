@@ -120,6 +120,27 @@ export class ProductsService {
     return product;
   }
 
+  async getPublicProductById(id: string): Promise<Product> {
+    this.ensureValidObjectId(id, 'Invalid product id');
+
+    try {
+      const cached = await this.redisService.get<Product>(`product:public:${id}`);
+      if (cached) {
+        return cached;
+      }
+    } catch {
+      // Cache miss — fall through to DB
+    }
+
+    const product = await this.productsRepository.findPublicById(id);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    void this.redisService.set(`product:public:${id}`, product, PRODUCT_CACHE_TTL).catch(() => undefined);
+    return product;
+  }
+
   async getProductsByIds(ids: string[]): Promise<Product[]> {
     const uniqueIds = [...new Set(ids)];
     for (const id of uniqueIds) {
@@ -216,6 +237,7 @@ export class ProductsService {
   private async invalidateProductCache(id: string): Promise<void> {
     try {
       await this.redisService.delete(`product:${id}`);
+      await this.redisService.delete(`product:public:${id}`);
       await this.invalidateProductListCaches();
     } catch {
       // Cache invalidation failure must not break the write path

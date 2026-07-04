@@ -26,5 +26,9 @@
   },
   "devDependencies": {
     "husky": "^9.1.7"
+  },
+  "overrides": {
+    "multer": "2.2.0",
+    "postcss": "8.5.16"
   }
 }

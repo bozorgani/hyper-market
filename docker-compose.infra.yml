@@ -1,0 +1,64 @@
+name: hyper-market-infra
+
+# Infra-only compose for the common local-development workflow:
+# - Run MongoDB/Redis/Meilisearch in Docker
+# - Run backend and frontend directly on your machine so logs/debugging stay easy
+#
+# Usage:
+#   docker compose -f docker-compose.infra.yml up -d
+#   docker compose -f docker-compose.infra.yml logs -f mongo redis meilisearch
+#
+# Important: MongoDB replica set is initiated with host localhost:27017 so a
+# locally running backend can connect with:
+#   DATABASE_URL=mongodb://localhost:27017/hyper_market?replicaSet=rs0
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --eval 'try { rs.status().ok } catch (e) { rs.initiate({_id: \"rs0\", members: [{ _id: 0, host: \"localhost:27017\" }] }).ok }' | grep -q 1"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-hyper_market_meili_master_key_change_me}
+    ports:
+      - "7700:7700"
+    volumes:
+      - meili-data:/meili_data
+
+volumes:
+  mongo-data:
+  redis-data:
+  meili-data:

@@ -1,0 +1,183 @@
+name: hyper-market
+
+x-backend-env: &backend-env
+  APP_ENV: ${APP_ENV:-development}
+  NODE_ENV: production
+  PORT: 3001
+  DATABASE_URL: mongodb://mongo:27017/hyper_market?replicaSet=rs0
+  REDIS_URL: redis://redis:6379
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  MEILI_HOST: http://meilisearch:7700
+  MEILI_API_KEY: ${MEILI_MASTER_KEY:-hyper_market_meili_master_key_change_me}
+  JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_me_access_secret_32_chars_minimum_123456789}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_me_refresh_secret_32_chars_minimum_123456789}
+  JWT_ACCESS_EXPIRES: ${JWT_ACCESS_EXPIRES:-15m}
+  JWT_REFRESH_EXPIRES: ${JWT_REFRESH_EXPIRES:-30d}
+  JWT_ISSUER: ${JWT_ISSUER:-hyper-market}
+  JWT_AUDIENCE: ${JWT_AUDIENCE:-hyper-market-api}
+  PASSWORD_PEPPER: ${PASSWORD_PEPPER:-change_me_password_pepper_32_chars_minimum_123456789}
+  AUTH_COOKIE_SAME_SITE: ${AUTH_COOKIE_SAME_SITE:-lax}
+  AUTH_RETURN_TOKENS_IN_BODY: ${AUTH_RETURN_TOKENS_IN_BODY:-false}
+  AUTH_LOG_OTP_CODES: ${AUTH_LOG_OTP_CODES:-false}
+  CSRF_PROTECTION_ENABLED: ${CSRF_PROTECTION_ENABLED:-true}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+  PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://localhost:3001}
+  SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+  STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+  PRODUCT_IMAGE_UPLOAD_DIR: /app/uploads/product-images
+  PRODUCT_IMAGE_MAX_BYTES: ${PRODUCT_IMAGE_MAX_BYTES:-5242880}
+  ANALYTICS_MAX_METADATA_BYTES: ${ANALYTICS_MAX_METADATA_BYTES:-4096}
+  IDEMPOTENCY_KEY_TTL_SECONDS: ${IDEMPOTENCY_KEY_TTL_SECONDS:-86400}
+  MONGODB_TRANSACTION_FALLBACK_ENABLED: ${MONGODB_TRANSACTION_FALLBACK_ENABLED:-false}
+  OUTBOX_RELAY_ENABLED: ${OUTBOX_RELAY_ENABLED:-true}
+  SEARCH_INDEXING_WORKER_ENABLED: ${SEARCH_INDEXING_WORKER_ENABLED:-true}
+  OUTBOX_SWEEP_INTERVAL_MS: ${OUTBOX_SWEEP_INTERVAL_MS:-5000}
+  OUTBOX_PENDING_GRACE_MS: ${OUTBOX_PENDING_GRACE_MS:-15000}
+  OUTBOX_RELAY_MAX_ATTEMPTS: ${OUTBOX_RELAY_MAX_ATTEMPTS:-5}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_SECURE: ${SMTP_SECURE:-false}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  SMTP_FROM_NAME: ${SMTP_FROM_NAME:-هایپرمارکت}
+  SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS:-noreply@hypermarket.ir}
+  SMS_IR_API_KEY: ${SMS_IR_API_KEY:-}
+  SMS_IR_BASE_URL: ${SMS_IR_BASE_URL:-https://api.sms.ir/v1}
+  SMS_IR_VERIFY_TEMPLATE_ID: ${SMS_IR_VERIFY_TEMPLATE_ID:-123456}
+  SMS_IR_VERIFY_PARAMETER_NAME: ${SMS_IR_VERIFY_PARAMETER_NAME:-Code}
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --eval 'try { rs.status().ok } catch (e) { rs.initiate({_id: \"rs0\", members: [{ _id: 0, host: \"mongo:27017\" }] }).ok }' | grep -q 1"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-hyper_market_meili_master_key_change_me}
+    ports:
+      - "7700:7700"
+    volumes:
+      - meili-data:/meili_data
+
+  backend:
+    image: hyper-market-backend:local
+    build:
+      context: .
+      dockerfile: apps/backend-api/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      WORKERS_ENABLED: "false"
+      SKIP_MIGRATIONS: ${SKIP_MIGRATIONS:-false}
+    ports:
+      - "3001:3001"
+    volumes:
+      - backend-uploads:/app/uploads/product-images
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3001/health/live', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  worker:
+    image: hyper-market-backend:local
+    build:
+      context: .
+      dockerfile: apps/backend-api/Dockerfile
+    restart: unless-stopped
+    command: ["node", "apps/backend-api/dist/src/worker.js"]
+    environment:
+      <<: *backend-env
+      WORKERS_ENABLED: "true"
+      SKIP_MIGRATIONS: "true"
+    volumes:
+      - backend-uploads:/app/uploads/product-images
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+
+  web:
+    image: hyper-market-web:local
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3001/api/v1}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+volumes:
+  mongo-data:
+  redis-data:
+  meili-data:
+  backend-uploads:

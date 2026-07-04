@@ -11,7 +11,6 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -21,6 +20,7 @@ import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { ProductImageStorageService } from '../services/product-image-storage.service';
 import { ProductsService } from '../services/products.service';
+import { ProductImageUploadInterceptor } from '../storage/product-image-upload.interceptor';
 
 @Controller('products')
 export class ProductsController {
@@ -40,7 +40,7 @@ export class ProductsController {
   @Post('images/upload')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Permissions('products.update')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(ProductImageUploadInterceptor)
   uploadProductImage(
     @UploadedFile()
     file: {
@@ -69,9 +69,10 @@ export class ProductsController {
     return response.redirect(url);
   }
 
-  @Get()
-  @Public()
-  listProducts(
+  @Get('admin/list')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Permissions('products.read')
+  listProductsForAdmin(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('categoryId') categoryId?: string,
@@ -87,10 +88,34 @@ export class ProductsController {
     );
   }
 
+  @Get('admin/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Permissions('products.read')
+  getProductByIdForAdmin(@Param('id') id: string) {
+    return this.productsService.getProductById(id);
+  }
+
+  @Get()
+  @Public()
+  listProducts(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.productsService.listProducts(
+      this.toPositiveInteger(page, 1),
+      this.toPositiveInteger(limit, 20),
+      categoryId,
+      search?.trim() || undefined,
+      true,
+    );
+  }
+
   @Get(':id')
   @Public()
   getProductById(@Param('id') id: string) {
-    return this.productsService.getProductById(id);
+    return this.productsService.getPublicProductById(id);
   }
 
   @Put(':id')

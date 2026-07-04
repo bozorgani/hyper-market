@@ -116,4 +116,27 @@ export const migrations: Migration[] = [
       console.log('[MIGRATION 0003] Indexes created: parentId+sortOrder, isActive+deletedAt.');
     },
   },
+
+  // ── 0004: Add explicit read permissions used by protected admin read routes ─
+  {
+    id: '0004',
+    description: 'Add explicit products.read and categories.read permissions for admin role',
+    up: async (connection) => {
+      const collection = connection.collection('permissions');
+      const docs = [
+        { role: 'admin', name: 'products.read', resource: 'products', action: 'read' },
+        { role: 'admin', name: 'categories.read', resource: 'categories', action: 'read' },
+      ];
+
+      for (const doc of docs) {
+        await collection.updateOne(
+          { role: doc.role, name: doc.name },
+          { $setOnInsert: doc },
+          { upsert: true },
+        );
+      }
+
+      console.log('[MIGRATION 0004] Added admin read permissions for products and categories.');
+    },
+  },
 ];
