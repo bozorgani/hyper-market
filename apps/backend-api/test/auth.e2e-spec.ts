@@ -66,6 +66,7 @@ describe('Auth (e2e)', () => {
         .send({
           email: 'nonexistent@example.com',
           password: 'wrongpassword',
+          deviceId: 'e2e-test-device',
         })
         .expect(401);
     });

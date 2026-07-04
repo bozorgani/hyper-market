@@ -24,6 +24,7 @@ export class User {
   @Prop({
     type: String,
     unique: true,
+    sparse: true,
     trim: true,
     match: [/^09\d{9}$/, 'Invalid phone number format'],
   })
