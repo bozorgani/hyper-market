@@ -199,6 +199,7 @@ Detected controller endpoints:
 
 ```text
 GET    /admin/search/products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+POST   /admin/search/reindex    [Roles(UserRole.SUPER_ADMIN)]
 GET    /search/products    [Public()]
 GET    /search/suggest    [Public()]
 ```
