@@ -25,7 +25,7 @@ export class Payment {
   @Prop({ type: String, enum: PaymentStatus, default: PaymentStatus.PENDING, index: true })
   status!: PaymentStatus;
 
-  @Prop({ type: String, enum: PaymentMethod, default: PaymentMethod.MOCK })
+  @Prop({ type: String, enum: PaymentMethod, default: PaymentMethod.COD })
   method!: PaymentMethod;
 
   @Prop({ type: String, default: null, index: true })

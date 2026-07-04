@@ -63,7 +63,7 @@ export function PaymentDetailModal({
               <PaymentInfoRow label="شناسه سفارش" value={payment.data.orderId} mono />
               <PaymentInfoRow label="شناسه کاربر" value={payment.data.userId} mono />
               <PaymentInfoRow label="روش پرداخت" value={translatePaymentMethod(payment.data.method)} />
-              <PaymentInfoRow label="Transaction ID" value={payment.data.transactionId ?? "ثبت نشده"} mono />
+              <PaymentInfoRow label="کد پیگیری" value={payment.data.transactionId ?? "ثبت نشده"} mono />
             </div>
           </div>
         ) : null}

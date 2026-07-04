@@ -2,6 +2,8 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Job, RedisOptions, Worker } from 'bullmq';
 import { LoggerService } from '../../infrastructure/logger/logger.service';
+import { SmtpTransportService } from './smtp-transport.service';
+import { otpEmailHtml, passwordResetEmailHtml } from './email-templates';
 
 type MailJobData = {
   type: 'otp_email' | 'password_reset_email';
@@ -17,6 +19,7 @@ export class MailWorker implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly configService: ConfigService,
     private readonly loggerService: LoggerService,
+    private readonly smtpTransportService: SmtpTransportService,
   ) {}
 
   onModuleInit(): void {
@@ -55,17 +58,38 @@ export class MailWorker implements OnModuleInit, OnModuleDestroy {
   }
 
   private async handleOtpEmail(data: MailJobData): Promise<void> {
-    this.loggerService.info('OTP email job processed', {
-      email: data.email,
-      type: data.type,
-    });
+    const expiresMinutes = 10;
+
+    if (this.smtpTransportService.ready) {
+      await this.smtpTransportService.sendMail(
+        data.email,
+        'کد تأیید هایپرمارکت',
+        otpEmailHtml(data.code, expiresMinutes),
+      );
+    } else {
+      // Fallback: log to console when SMTP is not configured
+      this.loggerService.info('[MAIL] OTP email (SMTP not configured — logged to console)', {
+        email: data.email,
+        code: data.code,
+      });
+    }
   }
 
   private async handlePasswordResetEmail(data: MailJobData): Promise<void> {
-    this.loggerService.info('Password reset email job processed', {
-      email: data.email,
-      type: data.type,
-    });
+    const expiresMinutes = 10;
+
+    if (this.smtpTransportService.ready) {
+      await this.smtpTransportService.sendMail(
+        data.email,
+        'بازنشانی رمز عبور هایپرمارکت',
+        passwordResetEmailHtml(data.code, expiresMinutes),
+      );
+    } else {
+      this.loggerService.info('[MAIL] Password reset email (SMTP not configured — logged to console)', {
+        email: data.email,
+        code: data.code,
+      });
+    }
   }
 
   private createRedisConnectionOptions(): RedisOptions {

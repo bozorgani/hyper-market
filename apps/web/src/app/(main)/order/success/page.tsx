@@ -26,9 +26,9 @@ function OrderSuccessContent() {
     <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl items-center px-4 py-10">
       <Card className="w-full p-8 text-center">
         <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" />
-        <h1 className="mt-5 text-3xl font-black">پرداخت سفارش موفق بود</h1>
+        <h1 className="mt-5 text-3xl font-black">سفارش شما ثبت شد</h1>
         <p className="mt-3 leading-7 text-slate-500">
-          سفارش شما با موفقیت ثبت و پرداخت mock آن تأیید شد. آخرین وضعیت سفارش و پرداخت در همین صفحه بررسی می‌شود.
+          سفارش شما با موفقیت ثبت شد و پرداخت در محل تأیید گردید. مبلغ سفارش هنگام تحویل دریافت خواهد شد.
         </p>
 
         {shortOrderId ? (
@@ -101,8 +101,8 @@ function OrderSuccessContent() {
                 </Badge>
               </div>
               <p className="mt-3 text-sm leading-7 text-slate-500">روش: {translatePaymentMethod(payment.data?.method)}</p>
-              <p className="text-sm leading-7 text-slate-500">مبلغ پرداخت: {formatPrice(payment.data?.amount ?? order.data.totalPrice)}</p>
-              {payment.data?.transactionId ? <p className="truncate text-sm leading-7 text-slate-500">کد تراکنش: {payment.data.transactionId}</p> : null}
+              <p className="text-sm leading-7 text-slate-500">مبلغ: {formatPrice(payment.data?.amount ?? order.data.totalPrice)}</p>
+              {payment.data?.transactionId ? <p className="truncate text-sm leading-7 text-slate-500">کد پیگیری: {payment.data.transactionId}</p> : null}
             </div>
           </div>
         ) : null}
@@ -136,7 +136,7 @@ function OrderSuccessContent() {
             <PackageCheck className="mb-3 h-5 w-5 text-emerald-600" />
             <p className="font-black text-slate-900">وضعیت سفارش</p>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              می‌توانید روند ثبت و پرداخت سفارش را از صفحه سفارش‌ها دنبال کنید.
+              می‌توانید روند سفارش‌تان را از صفحه سفارش‌ها دنبال کنید.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">

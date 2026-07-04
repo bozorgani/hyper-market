@@ -108,6 +108,6 @@ export type Payment = {
   userId: string;
   amount: number;
   status: "pending" | "paid" | "failed" | "cancelled";
-  method: "mock" | "stripe" | "zarinpal";
+  method: "cod" | "stripe" | "zarinpal";
   transactionId?: string | null;
 };

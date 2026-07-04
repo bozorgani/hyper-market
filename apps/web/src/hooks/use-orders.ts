@@ -52,27 +52,23 @@ export function useCreateOrder() {
   });
 }
 
+/**
+ * Create a COD (cash on delivery / پرداخت در محل) payment.
+ * The backend auto-confirms the payment and transitions the order to PAID.
+ */
 export function useCreatePayment() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: string | CreatePaymentInput) => {
       const orderId = typeof input === "string" ? input : input.orderId;
       const idempotencyKey = typeof input === "string" ? createIdempotencyKey("payment-create") : input.idempotencyKey ?? createIdempotencyKey("payment-create");
 
-      return (await api.post<Payment>("/payments/create", { orderId, method: "mock" }, { headers: idempotencyHeaders(idempotencyKey) })).data;
+      return (await api.post<Payment>("/payments/create", { orderId, method: "cod" }, { headers: idempotencyHeaders(idempotencyKey) })).data;
     },
-  });
-}
-
-export function useSimulatePaymentSuccess() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: string | CreatePaymentInput) => {
-      const orderId = typeof input === "string" ? input : input.orderId;
-      const idempotencyKey = typeof input === "string" ? createIdempotencyKey("payment-success") : input.idempotencyKey ?? createIdempotencyKey("payment-success");
-
-      return (await api.post<Payment>("/payments/simulate-success", { orderId }, { headers: idempotencyHeaders(idempotencyKey) })).data;
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders", "my"] });
+      queryClient.invalidateQueries({ queryKey: ["payment"] });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["orders", "my"] }),
   });
 }
 

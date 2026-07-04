@@ -7,6 +7,7 @@ import { OrdersService } from '../src/modules/orders/services/orders.service';
 import { OrderStatus } from '../src/modules/orders/enums/order-status.enum';
 import { PaymentsService } from '../src/modules/payments/services/payments.service';
 import { PaymentStatus } from '../src/modules/payments/enums/payment-status.enum';
+import { PaymentMethod } from '../src/modules/payments/enums/payment-method.enum';
 
 function createProduct(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -220,26 +221,28 @@ test('OrdersService restores stock when order is cancelled', async () => {
   ]);
 });
 
-test('PaymentsService marks payment paid and updates order status inside transaction', async () => {
+test('PaymentsService COD auto-confirms payment and updates order status inside transaction', async () => {
   const userId = new Types.ObjectId().toHexString();
   const orderId = new Types.ObjectId().toHexString();
-  const payment = {
+  const calls: string[] = [];
+  const codPayment = {
     _id: new Types.ObjectId(),
     orderId: new Types.ObjectId(orderId),
     userId: new Types.ObjectId(userId),
     amount: 300,
-    status: PaymentStatus.PENDING,
+    status: PaymentStatus.PAID,
+    method: PaymentMethod.COD,
+    transactionId: 'cod_test-tx',
   };
-  const paidPayment = { ...payment, status: PaymentStatus.PAID, transactionId: 'tx_1' };
-  const calls: string[] = [];
 
   const paymentsRepository = {
-    findByOrderId: async () => payment,
-    markAsPaid: async (_id: string, transactionId: string, session: unknown) => {
-      assert.equal(transactionId, 'tx_1');
-      assert.equal(session, 'session');
-      calls.push('mark-paid');
-      return paidPayment;
+    findByOrderId: async () => null,
+    findPendingByOrderId: async () => null,
+    create: async (data: Record<string, unknown>) => {
+      assert.equal(data.status, PaymentStatus.PAID);
+      assert.equal(data.method, 'cod');
+      calls.push('create-payment');
+      return codPayment;
     },
   };
   const ordersService = {
@@ -272,8 +275,8 @@ test('PaymentsService marks payment paid and updates order status inside transac
     transactionService as never,
   );
 
-  const result = await service.simulatePaymentSuccess(userId, 'customer', orderId, 'tx_1');
+  const result = await service.createPaymentFromOrder(userId, 'customer', { orderId, method: PaymentMethod.COD });
 
-  assert.equal(result, paidPayment);
-  assert.deepEqual(calls, ['transaction-start', 'mark-paid', 'update-order', 'transaction-end']);
+  assert.equal(result, codPayment);
+  assert.deepEqual(calls, ['transaction-start', 'create-payment', 'update-order', 'transaction-end']);
 });

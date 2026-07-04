@@ -1,5 +1,5 @@
 export enum PaymentMethod {
-  MOCK = 'mock',
+  COD = 'cod',
   STRIPE = 'stripe',
   ZARINPAL = 'zarinpal',
 }

@@ -57,7 +57,7 @@ export default function AdminPaymentsPage() {
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_auto]">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="جستجو بر اساس شناسه سفارش یا تراکنش..." className="pr-10" />
+            <Input value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="جستجو بر اساس شناسه سفارش یا کد پیگیری..." className="pr-10" />
           </div>
           <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm">
             <option value="all">همه وضعیت‌ها</option>
@@ -95,7 +95,7 @@ export default function AdminPaymentsPage() {
                   <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">سفارش</th>
                   <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">مبلغ</th>
                   <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">وضعیت</th>
-                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">تراکنش</th>
+                  <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">کد پیگیری</th>
                   <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">عملیات</th>
                 </tr>
               </thead>

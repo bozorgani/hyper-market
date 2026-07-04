@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { createHash, randomInt } from 'crypto';
 import { Types } from 'mongoose';
@@ -21,6 +22,7 @@ type AuthContext = {
 
 @Injectable()
 export class OtpService {
+  private readonly logger = new Logger(OtpService.name);
   private readonly maxOtpAttempts = 5;
   private readonly lockoutMs = 15 * 60 * 1000;
   private readonly verificationOtpExpiresMs = 10 * 60 * 1000;
@@ -139,10 +141,42 @@ export class OtpService {
     await this.redisService.set(this.getOtpAttemptsKey(target, type), '0', ttl);
     await this.redisService.delete(this.getOtpLockKey(target, type));
 
-    // Skip SMS / Email sending for now
-    return;
+    // ── Deliver OTP via the appropriate channel ────────────────────────
+    await this.deliverOtp(target, code, type);
   }
 
+  /**
+   * Send the OTP code to the target through the appropriate channel:
+   *
+   * - Email targets → MailService (BullMQ queue → MailWorker → SMTP)
+   * - Phone targets → SmsIrService (direct API call, skipped when no API key)
+   *
+   * Delivery failures are caught and logged so they never block the
+   * OTP creation flow — the user can always request a new code.
+   */
+  private async deliverOtp(target: string, code: string, type: OtpType): Promise<void> {
+    if (this.isEmailTarget(target)) {
+      try {
+        const otpTypeLabel = type === OtpType.PASSWORD_RESET ? 'password_reset_email' : 'otp_email';
+        await this.mailService.sendOtpEmail(target, code);
+        this.logger.log(`OTP email queued for ${target} (type=${otpTypeLabel})`);
+      } catch (error) {
+        this.logger.warn(`Failed to queue OTP email for ${target}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      return;
+    }
+
+    // Phone target → SMS.ir (graceful skip when no API key / no credit)
+    try {
+      await this.smsIrService.sendOtpSms(target, code);
+      this.logger.log(`OTP SMS sent to ${target}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `OTP SMS delivery failed for ${target} (code still stored — user can retry): ${message}`,
+      );
+    }
+  }
 
   private logOtpCodeForDevelopment(target: string, code: string): void {
     if (!this.shouldLogOtpCode()) {

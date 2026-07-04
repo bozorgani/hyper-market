@@ -21,8 +21,8 @@ export function formatPersianDate(value?: string) {
 
 export function translateOrderStatus(status: string) {
   const map: Record<string, string> = {
-    pending: "در انتظار پرداخت",
-    paid: "پرداخت‌شده",
+    pending: "در انتظار تأیید",
+    paid: "تأییدشده",
     processing: "در حال پردازش",
     shipped: "ارسال‌شده",
     delivered: "تحویل‌شده",
@@ -34,7 +34,7 @@ export function translateOrderStatus(status: string) {
 export function translatePaymentStatus(status?: string) {
   const map: Record<string, string> = {
     pending: "در انتظار پرداخت",
-    paid: "پرداخت موفق",
+    paid: "پرداخت در محل — تأییدشده",
     failed: "ناموفق",
     cancelled: "لغوشده",
   };
@@ -43,7 +43,7 @@ export function translatePaymentStatus(status?: string) {
 
 export function translatePaymentMethod(method?: string) {
   const map: Record<string, string> = {
-    mock: "پرداخت آزمایشی",
+    cod: "پرداخت در محل",
     stripe: "Stripe",
     zarinpal: "زرین‌پال",
   };

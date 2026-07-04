@@ -28,6 +28,16 @@ export class PaymentsService {
     private readonly eventBusService?: EventBusService,
   ) {}
 
+  /**
+   * Create a payment record for an order.
+   *
+   * For COD (Cash on Delivery / پرداخت در محل) the payment is
+   * automatically confirmed and the order transitions to PAID in a single
+   * transaction — no external gateway is involved.
+   *
+   * For future online gateways (Stripe/Zarinpal) a PENDING payment is
+   * created and a separate callback/webhook endpoint will confirm it later.
+   */
   async createPaymentFromOrder(
     userId: string,
     role: string,
@@ -53,53 +63,50 @@ export class PaymentsService {
       return pendingPayment;
     }
 
+    const method = dto.method ?? PaymentMethod.COD;
+
+    // ── COD: auto-confirm payment + transition order to PAID ──────────
+    if (method === PaymentMethod.COD) {
+      return this.confirmCashOnDelivery(userId, role, order.totalPrice, dto.orderId);
+    }
+
+    // ── Online gateways (future): create PENDING and wait for callback ─
     return this.paymentsRepository.create({
       orderId: new Types.ObjectId(dto.orderId),
       userId: new Types.ObjectId(userId),
       amount: order.totalPrice,
       status: PaymentStatus.PENDING,
-      method: dto.method ?? PaymentMethod.MOCK,
+      method,
       transactionId: null,
     });
   }
 
-  async simulatePaymentSuccess(
+  /**
+   * COD auto-confirmation: payment is marked PAID immediately and the
+   * order transitions to PAID inside a single MongoDB transaction.
+   */
+  private async confirmCashOnDelivery(
     userId: string,
     role: string,
+    amount: number,
     orderId: string,
-    transactionId?: string,
   ): Promise<Payment> {
-    const payment = await this.verifyPayment(orderId, userId, role);
+    const transactionId = `cod_${randomUUID()}`;
 
-    if (payment.status === PaymentStatus.PAID) {
-      return payment;
-    }
-
-    if (payment.status !== PaymentStatus.PENDING) {
-      throw new BadRequestException('Only pending payments can be completed');
-    }
-
-    const finalTransactionId = transactionId ?? `mock_${randomUUID()}`;
     const paidPayment = await this.databaseTransactionService.executeInTransaction(
       async (session) => {
-        const completedPayment = await this.paymentsRepository.markAsPaid(
-          getEntityId(payment),
-          finalTransactionId,
-          session,
-        );
-
-        if (!completedPayment) {
-          const currentPayment = await this.verifyPayment(orderId, userId, role);
-          if (currentPayment.status === PaymentStatus.PAID) {
-            return currentPayment;
-          }
-
-          throw new BadRequestException('Payment could not be completed');
-        }
+        const payment = await this.paymentsRepository.create({
+          orderId: new Types.ObjectId(orderId),
+          userId: new Types.ObjectId(userId),
+          amount,
+          status: PaymentStatus.PAID,
+          method: PaymentMethod.COD,
+          transactionId,
+        });
 
         await this.updateOrderStatusAfterPayment(orderId, userId, role, session);
 
-        return completedPayment;
+        return payment;
       },
     );
 
@@ -110,7 +117,8 @@ export class PaymentsService {
         orderId,
         paymentId: getEntityId(paidPayment),
         amount: paidPayment.amount,
-        transactionId: paidPayment.transactionId ?? finalTransactionId,
+        transactionId: paidPayment.transactionId ?? transactionId,
+        method: PaymentMethod.COD,
       },
       timestamp: Date.now(),
     });
@@ -198,5 +206,4 @@ export class PaymentsService {
   private isAdminRole(role: string): boolean {
     return role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
   }
-
 }
