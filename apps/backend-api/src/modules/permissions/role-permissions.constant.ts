@@ -1,17 +1,19 @@
-import { UserRole } from '../users/enums/user-role.enum';
+import { UserRole, DEPRECATED_ROLES } from '../users/enums/user-role.enum';
 
 /**
  * RBAC Permission Map – Hyper Market (Single-Vendor Warehouse)
- * 
- * NOTE: VENDOR and DELIVERY roles are retained in the UserRole enum for
- * backward compatibility / future multi-vendor expansion, but are NOT
- * used in the current single-vendor deployment. Do not assign these roles
- * in production.
- * 
- * Permissions are statically defined here (performance + auditability).
- * The `permissions` collection in MongoDB is seeded from this constant
- * via `scripts/seed-permissions.js` for reporting / admin UI purposes,
- * but the PermissionsGuard reads from this constant, not the DB.
+ *
+ * This constant serves as the **seed** and **fallback** for permissions.
+ * On first startup, PermissionsService seeds the DB from this map.
+ * Afterwards, permissions are managed dynamically via the admin API
+ * (POST /permissions/grant, POST /permissions/revoke).
+ *
+ * The PermissionsGuard resolves permissions via:
+ *   Redis cache → MongoDB → this constant (in order of priority)
+ *
+ * VENDOR and DELIVERY roles are DEPRECATED (single-vendor mode).
+ * They have empty permission arrays and cannot be assigned to new users.
+ * See DEPRECATED_ROLES in user-role.enum.ts.
  */
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
@@ -30,9 +32,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'users.ban',
     'payments.read',
     'analytics.read',
+    'permissions.read',
+    'permissions.update',
   ],
-  // Deprecated – single-vendor mode only – do not assign in production
+  // Deprecated roles — empty permissions, cannot be assigned to new users
   [UserRole.VENDOR]: [],
   [UserRole.DELIVERY]: [],
   [UserRole.CUSTOMER]: [],
 };
+
+/**
+ * Helper to check if a role is deprecated at runtime.
+ */
+export const isDeprecatedRole = (role: string): boolean =>
+  (DEPRECATED_ROLES as readonly string[]).includes(role);

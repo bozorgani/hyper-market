@@ -6,10 +6,14 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { getConnectionToken } from '@nestjs/mongoose';
+import { Connection } from 'mongoose';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { setupSwagger } from './config/swagger/swagger.config';
 import { HttpExceptionFilter } from './core/filters/http-exception.filter';
+import { migrations } from './migrations';
+import { MigrationRunner } from './migrations/migration-runner';
 
 function parseCorsOrigins(origins: string): string[] {
   return origins
@@ -98,6 +102,24 @@ async function bootstrap() {
     }),
   );
   setupSwagger(app);
+
+  // ── Run pending database migrations ────────────────────────────────
+  if (process.env.SKIP_MIGRATIONS !== 'true') {
+    try {
+      const connection = app.get<Connection>(getConnectionToken() as any);
+      const runner = new MigrationRunner(connection);
+      await runner.run(migrations);
+    } catch (error) {
+      console.error(
+        '[MIGRATIONS] Migration runner failed — application will continue but data may be inconsistent.',
+        error instanceof Error ? error.message : String(error),
+      );
+      // In production, fail fast if migrations fail
+      if (isProduction()) {
+        process.exit(1);
+      }
+    }
+  }
 
   await app.listen(configService.get<number>('PORT', 3000));
 }

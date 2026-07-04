@@ -1,11 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventBusService } from '../../core/events/event-bus.service';
 import { EventType } from '../../core/events/enums/event-type.enum';
+import { MEILISEARCH_CLIENT } from './meilisearch-client.provider';
 import { ProductSearchDocument } from './search.indexer';
-
-const { Meilisearch } = require('meilisearch') as {
-  Meilisearch: new (options: { host: string; apiKey?: string }) => any;
-};
 
 export type ProductSearchOptions = {
   categoryId?: string;
@@ -23,11 +20,11 @@ export class SearchService {
   private readonly indexName = 'products';
   private readonly client: any;
 
-  constructor(private readonly eventBusService: EventBusService) {
-    this.client = new Meilisearch({
-      host: process.env.MEILI_HOST ?? 'http://localhost:7700',
-      apiKey: process.env.MEILI_API_KEY,
-    });
+  constructor(
+    private readonly eventBusService: EventBusService,
+    @Inject(MEILISEARCH_CLIENT) client: any,
+  ) {
+    this.client = client;
   }
 
   async searchProducts(query: string, options: ProductSearchOptions = {}) {

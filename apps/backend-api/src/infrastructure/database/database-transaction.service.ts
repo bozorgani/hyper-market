@@ -12,6 +12,20 @@ const UNSUPPORTED_TRANSACTION_FRAGMENTS = [
 
 const TRANSACTION_PROBE_COLLECTION = '__transaction_probe__';
 
+export type TransactionOptions<T> = {
+  /** Main operation to execute inside the transaction. */
+  execute: (session?: ClientSession) => Promise<T>;
+  /**
+   * Compensation function called when the main operation fails AFTER some
+   * writes were committed in a non-transactional (fallback) execution.
+   * Receives the partial result (if any) and should undo side effects.
+   *
+   * This is only called in the fallback (no-transaction) path when the
+   * callback throws after potentially persisting some writes.
+   */
+  compensate?: (error: unknown) => Promise<void>;
+};
+
 @Injectable()
 export class DatabaseTransactionService implements OnModuleInit {
   /**
@@ -19,10 +33,6 @@ export class DatabaseTransactionService implements OnModuleInit {
    *   null  => probe has not run yet
    *   false => deployment cannot run transactions (e.g. standalone mongod)
    *   true  => replica set / mongos confirmed
-   *
-   * When false, executeInTransaction skips the doomed start -> fail -> re-run
-   * cycle and runs the callback once without a session, so the lack of
-   * atomicity is surfaced loudly instead of silently masking race conditions.
    */
   private transactionsSupported: boolean | null = null;
 
@@ -39,8 +49,6 @@ export class DatabaseTransactionService implements OnModuleInit {
       const fallbackExplicitlyEnabled =
         process.env.MONGODB_TRANSACTION_FALLBACK_ENABLED === 'true';
 
-      // Fail fast in production: atomicity is mandatory and running without it
-      // hides production-only race conditions until they hit real traffic.
       if (isProduction && !fallbackExplicitlyEnabled) {
         throw new Error(
           '[transactions] FATAL: MongoDB transactions are not supported in this ' +
@@ -70,8 +78,6 @@ export class DatabaseTransactionService implements OnModuleInit {
 
   /**
    * Probes whether the connected deployment can actually run a transaction.
-   * Used at bootstrap to surface (loudly) environments where atomicity is
-   * silently dropped.
    */
   async probeTransactionSupport(): Promise<boolean> {
     let session: ClientSession | null = null;
@@ -90,7 +96,7 @@ export class DatabaseTransactionService implements OnModuleInit {
           await session.abortTransaction();
         }
       } catch {
-        // Ignore abort failures; the original probe error is what matters.
+        // Ignore abort failures
       }
       this.transactionsSupported = false;
       return false;
@@ -98,13 +104,12 @@ export class DatabaseTransactionService implements OnModuleInit {
       if (session) {
         await session.endSession().catch(() => undefined);
       }
-      // Best-effort cleanup of the probe document.
       try {
         await this.connection
           .collection(TRANSACTION_PROBE_COLLECTION)
           .deleteMany({});
       } catch {
-        // Ignore cleanup failures.
+        // Ignore cleanup failures
       }
     }
   }
@@ -113,47 +118,110 @@ export class DatabaseTransactionService implements OnModuleInit {
     return this.connection.startSession();
   }
 
+  /**
+   * Execute a callback inside a MongoDB transaction (when supported) or
+   * without a session (fallback). Identical to the original API.
+   */
   async executeInTransaction<T>(
     callback: (session?: ClientSession) => Promise<T>,
   ): Promise<T> {
-    // Fast path: we already know this deployment cannot run transactions.
-    // Run the callback once, without a session, to avoid the start -> fail ->
-    // re-run duplication that the fallback path would otherwise cause.
-    if (this.transactionsSupported === false) {
-      this.loggerService?.warn(
-        '[transactions] executing callback without a transaction (deployment does ' +
-          'not support transactions).',
-      );
-      return callback(undefined);
+    return this.executeWithCompensation({ execute: callback });
+  }
+
+  /**
+   * Execute an operation with optional compensation for the non-transactional
+   * fallback path.
+   *
+   * When transactions are supported, runs in a normal MongoDB transaction.
+   * When NOT supported (standalone mongod), runs without a session but:
+   *   1. Catches errors from the callback
+   *   2. Calls the `compensate` function (if provided) to undo partial writes
+   *   3. Re-throws the original error
+   *
+   * This prevents the "partially committed" data corruption scenario where
+   * e.g. an order is created but stock is not reduced because the callback
+   * failed halfway through.
+   */
+  async executeWithCompensation<T>(options: TransactionOptions<T>): Promise<T> {
+    const { execute, compensate } = options;
+
+    // ── Transaction path (normal) ──────────────────────────────────────
+    if (this.transactionsSupported !== false) {
+      const session = await this.startSession();
+      let ranToCompletion = false;
+
+      try {
+        session.startTransaction();
+        const result = await execute(session);
+        ranToCompletion = true;
+        await session.commitTransaction();
+        return result;
+      } catch (error) {
+        await this.abortTransactionSafely(session);
+
+        if (!ranToCompletion && this.shouldFallbackWithoutTransaction(error)) {
+          this.loggerService?.warn(
+            '[transactions] Transaction failed; falling back without transaction (single attempt)',
+            { error: error instanceof Error ? error.message : String(error) },
+          );
+          return this.executeFallback(execute, compensate, error);
+        }
+
+        throw error;
+      } finally {
+        await session.endSession();
+      }
     }
 
-    const session = await this.startSession();
-    let ranToCompletion = false;
+    // ── Fallback path (no transactions) ────────────────────────────────
+    this.loggerService?.warn(
+      '[transactions] Executing callback without a transaction (deployment does not support transactions).',
+    );
+    return this.executeFallback(execute, compensate);
+  }
 
+  /**
+   * Execute a callback without a transaction. If it fails and a compensation
+   * function is provided, attempt to undo partial writes.
+   */
+  private async executeFallback<T>(
+    execute: (session?: ClientSession) => Promise<T>,
+    compensate?: (error: unknown) => Promise<void>,
+    originalError?: unknown,
+  ): Promise<T> {
     try {
-      session.startTransaction();
-      const result = await callback(session);
-      ranToCompletion = true;
-      await session.commitTransaction();
-      return result;
+      return await execute(undefined);
     } catch (error) {
-      await this.abortTransactionSafely(session);
-
-      // Only re-run the callback (without a transaction) when it never reached
-      // completion — its writes were inside the now-aborted transaction, so
-      // re-running is safe. If it completed but the commit failed, re-running
-      // would duplicate side effects, so we surface the original error instead.
-      if (!ranToCompletion && this.shouldFallbackWithoutTransaction(error)) {
-        this.loggerService?.warn(
-          'MongoDB transaction failed; falling back without transaction (single attempt)',
-          { error: error instanceof Error ? error.message : String(error) },
+      if (compensate) {
+        try {
+          await compensate(error);
+          this.loggerService?.warn(
+            '[transactions] Fallback execution failed; compensation succeeded. Partial writes were rolled back.',
+            {
+              error: error instanceof Error ? error.message : String(error),
+            },
+          );
+        } catch (compensationError) {
+          this.loggerService?.error(
+            '[transactions] CRITICAL: Fallback execution failed AND compensation also failed. ' +
+              'Manual data reconciliation may be required.',
+            {
+              originalError: error instanceof Error ? error.message : String(error),
+              compensationError: compensationError instanceof Error ? compensationError.message : String(compensationError),
+            },
+          );
+        }
+      } else {
+        this.loggerService?.error(
+          '[transactions] Fallback execution failed (no compensation provided). ' +
+            'Partial writes may exist in the database.',
+          {
+            error: error instanceof Error ? error.message : String(error),
+          },
         );
-        return callback(undefined);
       }
 
-      throw error;
-    } finally {
-      await session.endSession();
+      throw originalError ?? error;
     }
   }
 
@@ -161,7 +229,7 @@ export class DatabaseTransactionService implements OnModuleInit {
     try {
       await session.abortTransaction();
     } catch {
-      // Ignore abort failures; the original transaction error is more important.
+      // Ignore abort failures
     }
   }
 

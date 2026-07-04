@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
@@ -13,7 +13,20 @@ export class UsersController {
 
   @Get()
   @Permissions('users.read')
-  listUsers() {
+  listUsers(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('role') role?: string,
+    @Query('accountStatus') accountStatus?: string,
+  ) {
+    if (page || limit) {
+      return this.usersService.listUsersPaginated(
+        this.toPositiveInteger(page, 1),
+        this.toPositiveInteger(limit, 20),
+        role,
+        accountStatus,
+      );
+    }
     return this.usersService.listUsers();
   }
 
@@ -33,5 +46,12 @@ export class UsersController {
   @Permissions('users.ban')
   unblockUser(@Param('id') id: string) {
     return this.usersService.unblockUser(id);
+  }
+
+  private toPositiveInteger(value: string | undefined, fallback: number): number {
+    if (!value) return fallback;
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1) return fallback;
+    return parsed;
   }
 }

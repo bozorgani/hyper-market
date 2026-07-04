@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, Patch, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Patch, Post, Query, Res } from '@nestjs/common';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Response } from 'express';
@@ -6,6 +6,7 @@ import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { IdempotencyService } from '../../../infrastructure/idempotency/idempotency.service';
 import { Permissions } from '../../permissions/decorators/permissions.decorator';
 import { UserRole } from '../../users/enums/user-role.enum';
+import { OrderStatus } from '../enums/order-status.enum';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
 import { OrdersService } from '../services/orders.service';
@@ -38,13 +39,36 @@ export class OrdersController {
 
   @Get('my')
   @Roles(UserRole.CUSTOMER)
-  getMyOrders(@CurrentUser() user: JwtPayload) {
+  getMyOrders(
+    @CurrentUser() user: JwtPayload,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (page || limit) {
+      return this.ordersService.getMyOrdersPaginated(
+        user.sub,
+        this.toPositiveInteger(page, 1),
+        this.toPositiveInteger(limit, 20),
+      );
+    }
     return this.ordersService.getMyOrders(user.sub);
   }
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  listAllOrders() {
+  listAllOrders(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+  ) {
+    if (page || limit) {
+      const parsedStatus = this.toOptionalOrderStatus(status);
+      return this.ordersService.listAllOrdersPaginated(
+        this.toPositiveInteger(page, 1),
+        this.toPositiveInteger(limit, 20),
+        parsedStatus,
+      );
+    }
     return this.ordersService.listAllOrders();
   }
 
@@ -58,5 +82,18 @@ export class OrdersController {
   @Permissions('orders.cancel')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
     return this.ordersService.updateStatus(id, dto.status);
+  }
+
+  private toPositiveInteger(value: string | undefined, fallback: number): number {
+    if (!value) return fallback;
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1) return fallback;
+    return parsed;
+  }
+
+  private toOptionalOrderStatus(value: string | undefined): OrderStatus | undefined {
+    if (!value) return undefined;
+    const validStatuses = Object.values(OrderStatus);
+    return validStatuses.includes(value as OrderStatus) ? (value as OrderStatus) : undefined;
   }
 }

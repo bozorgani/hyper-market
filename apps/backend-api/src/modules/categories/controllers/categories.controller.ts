@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Permissions } from '../../permissions/decorators/permissions.decorator';
@@ -13,7 +13,16 @@ export class CategoriesController {
 
   @Get()
   @Public()
-  listCategories() {
+  listCategories(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (page || limit) {
+      return this.categoriesService.listCategoriesPaginated(
+        this.toPositiveInteger(page, 1),
+        this.toPositiveInteger(limit, 20),
+      );
+    }
     return this.categoriesService.listCategories();
   }
 
@@ -42,5 +51,12 @@ export class CategoriesController {
   @Permissions('categories.delete')
   deleteCategory(@Param('id') id: string) {
     return this.categoriesService.deleteCategory(id);
+  }
+
+  private toPositiveInteger(value: string | undefined, fallback: number): number {
+    if (!value) return fallback;
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1) return fallback;
+    return parsed;
   }
 }

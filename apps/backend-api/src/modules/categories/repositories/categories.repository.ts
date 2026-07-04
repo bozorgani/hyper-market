@@ -4,6 +4,13 @@ import { isValidObjectId, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from '../../products/schemas/product.schema';
 import { Category, CategoryDocument } from '../schemas/category.schema';
 
+export type CategoryListResult = {
+  items: Category[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
 @Injectable()
 export class CategoriesRepository {
   constructor(
@@ -33,6 +40,25 @@ export class CategoriesRepository {
       .sort({ name: 1 })
       .lean()
       .exec();
+  }
+
+  async findAllPaginated(
+    page: number,
+    limit: number,
+  ): Promise<CategoryListResult> {
+    const skip = (page - 1) * limit;
+    const filter = { deletedAt: null };
+    const [items, total] = await Promise.all([
+      this.categoryModel
+        .find(filter)
+        .sort({ name: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.categoryModel.countDocuments(filter).exec(),
+    ]);
+    return { items, total, page, limit };
   }
 
   async updateById(id: string, data: Partial<Category>): Promise<Category | null> {

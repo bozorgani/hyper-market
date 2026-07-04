@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
@@ -21,6 +22,8 @@ import { Payment } from '../schemas/payment.schema';
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
     private readonly paymentsRepository: PaymentsRepository,
     private readonly ordersService: OrdersService,
@@ -93,8 +96,8 @@ export class PaymentsService {
   ): Promise<Payment> {
     const transactionId = `cod_${randomUUID()}`;
 
-    const paidPayment = await this.databaseTransactionService.executeInTransaction(
-      async (session) => {
+    const paidPayment = await this.databaseTransactionService.executeWithCompensation({
+      execute: async (session) => {
         const payment = await this.paymentsRepository.create({
           orderId: new Types.ObjectId(orderId),
           userId: new Types.ObjectId(userId),
@@ -108,7 +111,25 @@ export class PaymentsService {
 
         return payment;
       },
-    );
+      compensate: async () => {
+        // Best-effort: if order status update failed after payment was created,
+        // mark the payment as FAILED so the order can be re-paid later.
+        try {
+          const payment = await this.paymentsRepository.findByOrderId(orderId);
+          if (payment && payment.status === PaymentStatus.PAID) {
+            await this.paymentsRepository.markAsFailed(
+              getEntityId(payment),
+              transactionId,
+            );
+          }
+        } catch {
+          // Compensation is best-effort
+        }
+        this.logger.warn(
+          '[COMPENSATE] COD payment creation failed in non-transactional mode; attempted to mark payment as FAILED.',
+        );
+      },
+    });
 
     this.eventBusService?.emit({
       type: EventType.ORDER_PAID,
@@ -159,7 +180,6 @@ export class PaymentsService {
       return payments;
     }
 
-    // Customers may only see payments for their own orders.
     return payments.filter((payment) => getEntityId(payment.userId) === userId);
   }
 

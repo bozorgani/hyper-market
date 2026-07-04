@@ -1,10 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '../../infrastructure/logger/logger.service';
 import { getEntityId } from '../../shared/utils/entity-id.util';
-
-const { Meilisearch } = require('meilisearch') as {
-  Meilisearch: new (options: { host: string; apiKey?: string }) => any;
-};
+import { MEILISEARCH_CLIENT } from './meilisearch-client.provider';
 import { CategoriesService } from '../categories/services/categories.service';
 import { Product } from '../products/schemas/product.schema';
 import { SearchQueueService } from './search-queue.service';
@@ -37,11 +34,9 @@ export class SearchIndexer implements OnModuleInit {
     private readonly categoriesService: CategoriesService,
     private readonly searchQueueService: SearchQueueService,
     private readonly loggerService: LoggerService,
+    @Inject(MEILISEARCH_CLIENT) client: any,
   ) {
-    this.client = new Meilisearch({
-      host: process.env.MEILI_HOST ?? 'http://localhost:7700',
-      apiKey: process.env.MEILI_API_KEY,
-    });
+    this.client = client;
   }
 
   async onModuleInit(): Promise<void> {

@@ -1,4 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap');
+/* Vazirmatn font — bundled locally via @fontsource (no external CDN dependency) */
+@import "@fontsource/vazirmatn/100.css";
+@import "@fontsource/vazirmatn/200.css";
+@import "@fontsource/vazirmatn/300.css";
+@import "@fontsource/vazirmatn/400.css";
+@import "@fontsource/vazirmatn/500.css";
+@import "@fontsource/vazirmatn/600.css";
+@import "@fontsource/vazirmatn/700.css";
+@import "@fontsource/vazirmatn/800.css";
+@import "@fontsource/vazirmatn/900.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 

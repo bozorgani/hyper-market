@@ -9,17 +9,27 @@ import { Request } from 'express';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
-import { ROLE_PERMISSIONS } from '../role-permissions.constant';
+import { PermissionsService } from '../services/permissions.service';
 
 type AuthenticatedRequest = Request & {
   user?: JwtPayload;
 };
 
+/**
+ * RBAC guard that checks if the authenticated user's role has the
+ * required permissions.
+ *
+ * Permission resolution is dynamic (DB + Redis cache) with static
+ * constant fallback — see PermissionsService for details.
+ */
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly permissionsService: PermissionsService,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
       PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()],
@@ -36,7 +46,7 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('Missing user permissions');
     }
 
-    const rolePermissions = ROLE_PERMISSIONS[role] ?? [];
+    const rolePermissions = await this.permissionsService.getPermissionsForRole(role);
     const hasWildcard = rolePermissions.includes('*');
     const hasAllPermissions = requiredPermissions.every((permission) =>
       rolePermissions.includes(permission),

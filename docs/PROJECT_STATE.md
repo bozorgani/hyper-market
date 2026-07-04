@@ -67,7 +67,6 @@ mongoose
 nodemailer
 passport
 passport-jwt
-redis
 reflect-metadata
 rxjs
 swagger-ui-express
@@ -109,17 +108,17 @@ Module implementation matrix:
 
 | Module | Module file | Controllers | Services | Repositories | Schemas | DTOs |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| analytics | yes | 1 | 1 | 1 | 1 | 0 |
+| analytics | yes | 1 | 1 | 1 | 1 | 1 |
 | audit | yes | 0 | 0 | 1 | 1 | 0 |
-| auth | yes | 1 | 4 | 3 | 3 | 0 |
-| cart | yes | 1 | 1 | 1 | 1 | 0 |
-| categories | yes | 1 | 1 | 1 | 1 | 0 |
+| auth | yes | 1 | 4 | 3 | 3 | 10 |
+| cart | yes | 1 | 1 | 1 | 1 | 2 |
+| categories | yes | 1 | 1 | 1 | 1 | 2 |
 | mail | yes | 0 | 3 | 0 | 0 | 0 |
-| orders | yes | 1 | 1 | 1 | 1 | 0 |
+| orders | yes | 1 | 1 | 1 | 1 | 2 |
 | outbox | yes | 0 | 1 | 1 | 1 | 0 |
-| payments | yes | 1 | 1 | 1 | 1 | 0 |
-| permissions | yes | 0 | 0 | 1 | 1 | 0 |
-| products | yes | 1 | 2 | 1 | 1 | 0 |
+| payments | yes | 1 | 1 | 1 | 1 | 2 |
+| permissions | yes | 1 | 1 | 1 | 1 | 0 |
+| products | yes | 1 | 2 | 1 | 1 | 2 |
 | queue | yes | 0 | 1 | 0 | 0 | 0 |
 | search | yes | 1 | 2 | 0 | 0 | 0 |
 | users | yes | 1 | 1 | 1 | 1 | 0 |
@@ -255,6 +254,8 @@ PUT    /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissi
 
 ```text
 GET    /health
+GET    /health/live
+GET    /health/ready
 ```
 
 ### apps/backend-api/src/modules/orders/controllers/orders.controller.ts
@@ -273,6 +274,16 @@ GET    /orders/my    [Roles(UserRole.CUSTOMER)]
 GET    /payments/:orderId
 GET    /payments/batch
 POST   /payments/create
+```
+
+### apps/backend-api/src/modules/permissions/controllers/permissions.controller.ts
+
+```text
+GET    /permissions    [Roles(UserRole.SUPER_ADMIN), Permissions('permissions.read')]
+GET    /permissions/:role    [Permissions('permissions.read')]
+POST   /permissions/grant    [Permissions('permissions.update')]
+POST   /permissions/revoke    [Permissions('permissions.update')]
+POST   /permissions/seed    [Permissions('permissions.update')]
 ```
 
 ### apps/backend-api/src/modules/products/controllers/products.controller.ts
@@ -574,10 +585,11 @@ action
 
 ## 7. Missing / Broken Features
 
-- No missing or broken features detected by the sync script.
+- Payment module is mock/abstraction only; no real Zarinpal/Stripe gateway flow is implemented.
 
 ## 8. High Priority TODOs
 
+- Payment module is mock/abstraction only; no real Zarinpal/Stripe gateway flow is implemented
 - Add transaction usage to critical order/payment/cart flows if not already applied.
 - Add tests for auth, permissions, cart/order/payment, search, and analytics flows.
 
@@ -674,6 +686,7 @@ Rules from docs:
 
 ## 10. Risks / Technical Debt
 
+- Payment is not production-ready because real gateway integration is missing.
 - Meilisearch index can become stale because no bulk reindex command was detected.
 - Permission model is partly static in code even though permission schema exists.
 - No comprehensive automated test suite was detected by this script.

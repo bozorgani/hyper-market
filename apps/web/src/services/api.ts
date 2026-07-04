@@ -43,13 +43,40 @@ function localizeApiMessage(message: string, status?: number) {
   if (status && status >= 500) return "خطای سرور رخ داد. لطفاً کمی بعد دوباره تلاش کنید.";
 
   const normalized = message.toLowerCase();
+
+  // Auth-related
   if (normalized.includes("unauthorized") || normalized.includes("invalid credentials")) return "اطلاعات ورود معتبر نیست.";
   if (normalized.includes("forbidden") || normalized.includes("csrf")) return "شما مجوز انجام این عملیات را ندارید یا نشست شما منقضی شده است.";
+  if (normalized.includes("account is temporarily locked")) return "حساب شما موقتاً مسدود شده است. لطفاً بعداً تلاش کنید.";
+  if (normalized.includes("account verification is required")) return "حساب شما نیاز به تأیید دارد.";
+  if (normalized.includes("invalid refresh token")) return "نشست شما منقضی شده. لطفاً دوباره وارد شوید.";
+  if (normalized.includes("refresh token reuse detected")) return "فعالیت مشکوک شناسایی شد. لطفاً دوباره وارد شوید.";
+  if (normalized.includes("refresh token expired")) return "نشست شما منقضی شده. لطفاً دوباره وارد شوید.";
+  if (normalized.includes("invalid token version")) return "نشست شما نامعتبر است. لطفاً دوباره وارد شوید.";
+  if (normalized.includes("invalid otp") || normalized.includes("otp expired")) return "کد تأیید نامعتبر یا منقضی شده است.";
+  if (normalized.includes("otp is temporarily blocked")) return "تعداد تلاش‌های ناموفق زیاد بوده. لطفاً چند دقیقه صبر کنید.";
+
+  // Resource / CRUD
   if (normalized.includes("not found")) return "موردی یافت نشد.";
+  if (normalized.includes("already exists") || normalized.includes("email already") || normalized.includes("phone number already")) return "این اطلاعات قبلاً ثبت شده است.";
+  if (normalized.includes("insufficient stock")) return "موجودی محصول کافی نیست.";
+  if (normalized.includes("insufficient product stock")) return "موجودی محصول کافی نیست.";
+  if (normalized.includes("cart is empty")) return "سبد خرید شما خالی است.";
+  if (normalized.includes("is not active")) return "محصول در حال حاضر موجود نیست.";
+
+  // Delivery / Order
+  if (normalized.includes("invalid delivery window")) return "زمان تحویل معتبر نیست.";
+  if (normalized.includes("delivery date cannot be in the past")) return "زمان تحویل نمی‌تواند در گذشته باشد.";
+  if (normalized.includes("invalid order status transition")) return "تغییر وضعیت سفارش مجاز نیست.";
+
+  // Payments
   if (normalized.includes("insufficient")) return "موجودی کافی نیست.";
+
+  // General
   if (normalized.includes("already in progress") || normalized.includes("idempotency")) return "این عملیات در حال پردازش است. لطفاً چند لحظه صبر کنید.";
   if (normalized.includes("timeout")) return "زمان پاسخ‌گویی سرور به پایان رسید.";
   if (normalized.includes("network")) return "ارتباط با سرور برقرار نشد.";
+
   return message;
 }
 

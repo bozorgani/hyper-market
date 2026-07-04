@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
-import { UserRole } from '../enums/user-role.enum';
-import { UsersRepository, UserWithId } from '../repositories/users.repository';
+import { UserRole, DEPRECATED_ROLES } from '../enums/user-role.enum';
+import { UsersRepository, UserListResult, UserWithId } from '../repositories/users.repository';
 import { User } from '../schemas/user.schema';
 
 @Injectable()
@@ -9,6 +9,7 @@ export class UsersService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async createUser(data: Partial<User>): Promise<User> {
+    this.ensureRoleIsAssignable(data.role as UserRole | undefined);
     return this.usersRepository.create(data);
   }
 
@@ -33,6 +34,17 @@ export class UsersService {
     return this.usersRepository.findAll();
   }
 
+  async listUsersPaginated(
+    page: number,
+    limit: number,
+    role?: string,
+    accountStatus?: string,
+  ): Promise<UserListResult> {
+    const safePage = Math.max(page, 1);
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    return this.usersRepository.findAllPaginated(safePage, safeLimit, role, accountStatus);
+  }
+
   async getUserByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findByEmail(email);
   }
@@ -50,6 +62,9 @@ export class UsersService {
   }
 
   async updateUser(id: string, data: Partial<User>): Promise<User | null> {
+    if (data.role) {
+      this.ensureRoleIsAssignable(data.role as UserRole);
+    }
     return this.usersRepository.updateById(id, data);
   }
 
@@ -127,5 +142,19 @@ export class UsersService {
 
   async phoneExists(phone: string): Promise<boolean> {
     return this.usersRepository.existsByPhone(phone);
+  }
+
+  /**
+   * Prevent assignment of deprecated roles (VENDOR, DELIVERY) to users.
+   * These roles are retained in the enum for DB backward compatibility
+   * but must not be assigned to new or updated users.
+   */
+  private ensureRoleIsAssignable(role: UserRole | undefined): void {
+    if (role && DEPRECATED_ROLES.includes(role)) {
+      throw new BadRequestException(
+        `Role "${role}" is deprecated and cannot be assigned. ` +
+        'Allowed roles: super_admin, admin, customer',
+      );
+    }
   }
 }

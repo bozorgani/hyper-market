@@ -5,15 +5,24 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { isValidObjectId } from 'mongoose';
+import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
-import { CategoriesRepository } from '../repositories/categories.repository';
+import { CategoriesRepository, CategoryListResult } from '../repositories/categories.repository';
 import { Category } from '../schemas/category.schema';
+
+const CATEGORY_LIST_CACHE_TTL = 300; // 5 minutes — categories change rarely
+const CATEGORY_ITEM_CACHE_TTL = 300;
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly categoriesRepository: CategoriesRepository) {}
+  private readonly LIST_CACHE_KEY = 'categories:list';
+
+  constructor(
+    private readonly categoriesRepository: CategoriesRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   async createCategory(data: CreateCategoryDto): Promise<Category> {
     const slug = this.normalizeSlug(data.slug);
@@ -23,15 +32,34 @@ export class CategoriesService {
       throw new ConflictException('Category slug already exists');
     }
 
-    return this.categoriesRepository.create({
+    const category = await this.categoriesRepository.create({
       name: data.name,
       slug,
     });
+
+    await this.invalidateCategoryCaches();
+
+    return category;
   }
 
   async getCategoryById(id: string): Promise<Category | null> {
     if (!isValidObjectId(id)) return null;
-    return this.categoriesRepository.findById(id);
+
+    // Try cache
+    try {
+      const cached = await this.redisService.get<Category>(`category:${id}`);
+      if (cached) return cached;
+    } catch {
+      // fall through
+    }
+
+    const category = await this.categoriesRepository.findById(id);
+
+    if (category) {
+      void this.redisService.set(`category:${id}`, category, CATEGORY_ITEM_CACHE_TTL).catch(() => undefined);
+    }
+
+    return category;
   }
 
   async getCategoryByIdOrFail(id: string): Promise<Category> {
@@ -39,7 +67,7 @@ export class CategoriesService {
       throw new BadRequestException('Invalid category id');
     }
 
-    const category = await this.categoriesRepository.findById(id);
+    const category = await this.getCategoryById(id);
     if (!category) {
       throw new NotFoundException('Category not found');
     }
@@ -52,7 +80,28 @@ export class CategoriesService {
   }
 
   async listCategories(): Promise<Category[]> {
-    return this.categoriesRepository.findAll();
+    // Try cache
+    try {
+      const cached = await this.redisService.get<Category[]>(this.LIST_CACHE_KEY);
+      if (cached) return cached;
+    } catch {
+      // fall through
+    }
+
+    const categories = await this.categoriesRepository.findAll();
+
+    void this.redisService.set(this.LIST_CACHE_KEY, categories, CATEGORY_LIST_CACHE_TTL).catch(() => undefined);
+
+    return categories;
+  }
+
+  async listCategoriesPaginated(
+    page: number,
+    limit: number,
+  ): Promise<CategoryListResult> {
+    const safePage = Math.max(page, 1);
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    return this.categoriesRepository.findAllPaginated(safePage, safeLimit);
   }
 
   async updateCategory(id: string, data: UpdateCategoryDto): Promise<Category> {
@@ -78,6 +127,8 @@ export class CategoriesService {
       throw new NotFoundException('Category not found');
     }
 
+    await this.invalidateCategoryCaches(id);
+
     return category;
   }
 
@@ -94,7 +145,20 @@ export class CategoriesService {
       throw new NotFoundException('Category not found');
     }
 
+    await this.invalidateCategoryCaches(id);
+
     return category;
+  }
+
+  private async invalidateCategoryCaches(id?: string): Promise<void> {
+    try {
+      if (id) {
+        await this.redisService.delete(`category:${id}`);
+      }
+      await this.redisService.delete(this.LIST_CACHE_KEY);
+    } catch {
+      // Cache invalidation must not break the write path
+    }
   }
 
   private normalizeSlug(slug: string): string {

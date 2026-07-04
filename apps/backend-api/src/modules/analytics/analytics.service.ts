@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { RedisService } from '../../infrastructure/cache/redis.service';
 import { AnalyticsRepository } from './analytics.repository';
 import { AnalyticsEvent, AnalyticsEventType } from './schemas/event.schema';
 
@@ -11,9 +12,15 @@ type TrackEventInput = {
   dedupeKey?: string | null;
 };
 
+const DASHBOARD_CACHE_TTL = 5 * 60; // 5 minutes in seconds
+const DASHBOARD_CACHE_KEY = 'analytics:dashboard';
+
 @Injectable()
 export class AnalyticsService {
-  constructor(private readonly analyticsRepository: AnalyticsRepository) {}
+  constructor(
+    private readonly analyticsRepository: AnalyticsRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   trackEvent(input: TrackEventInput): void {
     void this.analyticsRepository
@@ -27,6 +34,9 @@ export class AnalyticsService {
         timestamp: new Date(),
       })
       .catch(() => undefined);
+
+    // Invalidate dashboard cache so next request picks up fresh data
+    void this.redisService.delete(DASHBOARD_CACHE_KEY).catch(() => undefined);
   }
 
   trackPageView(input: Omit<TrackEventInput, 'type'>): void {
@@ -58,6 +68,25 @@ export class AnalyticsService {
   }
 
   async getDashboard() {
+    // ── Try Redis cache first ──────────────────────────────────────────
+    try {
+      const cached = await this.redisService.get<{
+        eventCounts: unknown;
+        activeUsers: number;
+        revenue: unknown;
+        products: unknown;
+        search: unknown;
+        funnel: unknown;
+      }>(DASHBOARD_CACHE_KEY);
+
+      if (cached) {
+        return cached;
+      }
+    } catch {
+      // Cache read failed — fall through to compute
+    }
+
+    // ── Compute from database ──────────────────────────────────────────
     const [eventCounts, activeUsers, revenue, products, search, funnel] = await Promise.all([
       this.getEventCounts(),
       this.analyticsRepository.countDistinctUsers(),
@@ -67,7 +96,7 @@ export class AnalyticsService {
       this.getFunnelMetrics(),
     ]);
 
-    return {
+    const result = {
       eventCounts,
       activeUsers,
       revenue,
@@ -75,6 +104,15 @@ export class AnalyticsService {
       search,
       funnel,
     };
+
+    // ── Store in cache ─────────────────────────────────────────────────
+    try {
+      await this.redisService.set(DASHBOARD_CACHE_KEY, result, DASHBOARD_CACHE_TTL);
+    } catch {
+      // Cache write failed — don't turn a successful read into a 500
+    }
+
+    return result;
   }
 
   async getRevenueMetrics() {

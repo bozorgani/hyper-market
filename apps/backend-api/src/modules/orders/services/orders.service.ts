@@ -2,7 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { ClientSession, isValidObjectId, Types } from 'mongoose';
 import { EventBusService } from '../../../core/events/event-bus.service';
@@ -14,7 +14,7 @@ import { ProductsService } from '../../products/services/products.service';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { OrderStatus } from '../enums/order-status.enum';
-import { OrdersRepository } from '../repositories/orders.repository';
+import { OrderListResult, OrdersRepository } from '../repositories/orders.repository';
 import { Order, OrderItem } from '../schemas/order.schema';
 
 const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
@@ -26,8 +26,17 @@ const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   [OrderStatus.CANCELLED]: [],
 };
 
+/**
+ * Time window (ms) within which a second order creation from the same user
+ * with the same items is considered a duplicate. Prevents double-order when
+ * the client retries or the IdempotencyService cache misses.
+ */
+const RECENT_ORDER_DEDUP_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     private readonly ordersRepository: OrdersRepository,
     private readonly productsService: ProductsService,
@@ -38,35 +47,40 @@ export class OrdersService {
 
   async createOrder(userId: string, dto: CreateOrderDto): Promise<Order> {
     this.validateDeliveryWindow(dto);
-    const reducedProductIds: string[] = [];
 
-    const order = await this.databaseTransactionService.executeInTransaction(
-      async (session) => {
-        // ۱. دریافت سبد خرید داخل تراکنش
+    const existingOrder = await this.findRecentDuplicateOrder(userId);
+    if (existingOrder) {
+      this.logger.warn(
+        `Duplicate order creation prevented for user ${userId}. Returning existing order ${getEntityId(existingOrder)}.`,
+      );
+      return existingOrder;
+    }
+
+    const reducedItems: Array<{ productId: string; quantity: number }> = [];
+
+    const order = await this.databaseTransactionService.executeWithCompensation({
+      execute: async (session) => {
         const cart = await this.cartService.getCartByUserId(userId, session);
 
         if (!cart.items || cart.items.length === 0) {
-          throw new BadRequestException('سبد خرید خالی است');
+          throw new BadRequestException('Cart is empty');
         }
 
         const orderItems: OrderItem[] = [];
         let totalPrice = 0;
 
-        // ۲. بررسی مجدد موجودی + قیمت + وضعیت محصول داخل تراکنش (جلوگیری از Race Condition)
         for (const item of cart.items) {
           const productId = getEntityId(item.productId);
-          reducedProductIds.push(productId);
 
-          // دریافت محصول با سشن (برای consistency)
           const product = await this.productsService.getProductById(productId, session);
 
           if (!product.isActive) {
-            throw new BadRequestException(`محصول ${product.name} فعال نیست`);
+            throw new BadRequestException(`Product "${product.name}" is not active`);
           }
 
           if (product.stock < item.quantity) {
             throw new BadRequestException(
-              `موجودی محصول ${product.name} کافی نیست`,
+              `Insufficient stock for product "${product.name}"`,
             );
           }
 
@@ -80,16 +94,16 @@ export class OrdersService {
 
           totalPrice += priceAtPurchase * item.quantity;
 
-          // کاهش موجودی داخل تراکنش
           await this.productsService.reduceStock(
             productId,
             item.quantity,
             session,
             false,
           );
+
+          reducedItems.push({ productId, quantity: item.quantity });
         }
 
-        // ۳. ایجاد سفارش با قیمت لحظه‌ای (Price Snapshot)
         const createdOrder = await this.ordersRepository.create(
           {
             userId: new Types.ObjectId(userId),
@@ -114,14 +128,27 @@ export class OrdersService {
           session,
         );
 
-        // ۴. پاک کردن سبد خرید
         await this.cartService.clearCart(userId, session);
 
         return createdOrder;
       },
-    );
+      compensate: async () => {
+        // Best-effort rollback of partial writes in non-transactional mode:
+        // restore stock for products that were already reduced.
+        for (const { productId, quantity } of reducedItems) {
+          try {
+            await this.productsService.restoreStock(productId, quantity, undefined, false);
+          } catch {
+            // Compensation is best-effort — log but don't throw
+          }
+        }
+        this.logger.warn('[COMPENSATE] Order creation failed in non-transactional mode; stock restoration attempted for affected products.');
+      },
+    });
 
-    // همگام‌سازی جستجو بعد از تراکنش (خارج از تراکنش)
+    const reducedProductIds = reducedItems.map((item) => item.productId);
+
+    // Post-transaction search sync
     await Promise.all(
       reducedProductIds.map((productId) =>
         this.productsService.syncProductToSearch(productId),
@@ -146,6 +173,16 @@ export class OrdersService {
     return this.ordersRepository.findByUserId(userId);
   }
 
+  async getMyOrdersPaginated(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<OrderListResult> {
+    const safePage = Math.max(page, 1);
+    const safeLimit = Math.min(Math.max(limit, 1), 50);
+    return this.ordersRepository.findByUserIdPaginated(userId, safePage, safeLimit);
+  }
+
   async getOrderById(
     orderId: string,
     userId: string,
@@ -155,7 +192,7 @@ export class OrdersService {
 
     const order = await this.ordersRepository.findById(orderId);
     if (!order) {
-      throw new NotFoundException('Order not found');
+      throw new BadRequestException('Order not found');
     }
 
     if (!this.isAdminRole(role) && getEntityId(order.userId) !== userId) {
@@ -169,6 +206,16 @@ export class OrdersService {
     return this.ordersRepository.findAll();
   }
 
+  async listAllOrdersPaginated(
+    page: number,
+    limit: number,
+    status?: OrderStatus,
+  ): Promise<OrderListResult> {
+    const safePage = Math.max(page, 1);
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    return this.ordersRepository.findAllPaginated(safePage, safeLimit, status);
+  }
+
   async updateStatus(
     orderId: string,
     status: OrderStatus,
@@ -176,12 +223,9 @@ export class OrdersService {
   ): Promise<Order> {
     this.ensureValidObjectId(orderId, 'Invalid order id');
 
-    // User-facing legality check against the current status. The *actual* write
-    // is performed as a conditional, atomic transition (inside the transaction
-    // for cancellation) to avoid TOCTOU between this read and the mutation.
     const current = await this.ordersRepository.findById(orderId);
     if (!current) {
-      throw new NotFoundException('Order not found');
+      throw new BadRequestException('Order not found');
     }
 
     const allowedStatuses = ORDER_STATUS_TRANSITIONS[current.status];
@@ -199,7 +243,7 @@ export class OrdersService {
       session,
     );
     if (!updatedOrder) {
-      throw new NotFoundException('Order not found');
+      throw new BadRequestException('Order not found');
     }
 
     return updatedOrder;
@@ -218,10 +262,6 @@ export class OrdersService {
     const restoredProductIds: string[] = [];
 
     const run = async (activeSession?: ClientSession): Promise<Order> => {
-      // Conditional, atomic transition: only succeeds if the order is currently
-      // in a cancellable state. This makes cancellation idempotent — concurrent
-      // or retried cancel requests find the order already CANCELLED and the
-      // filter matches nothing, so inventory is restored exactly once.
       const transitioned = await this.ordersRepository.transitionStatus(
         orderId,
         cancellableStatuses,
@@ -231,11 +271,9 @@ export class OrdersService {
       );
 
       if (!transitioned) {
-        // Already cancelled (or not cancellable): re-read and return without
-        // touching inventory. Same logical result for the caller.
         const existing = await this.ordersRepository.findById(orderId);
         if (!existing) {
-          throw new NotFoundException('Order not found');
+          throw new BadRequestException('Order not found');
         }
         return existing;
       }
@@ -260,7 +298,6 @@ export class OrdersService {
           run(activeSession),
         );
 
-    // Search sync happens after the transaction (reads latest committed stock).
     if (restoredProductIds.length > 0) {
       await Promise.all(
         restoredProductIds.map((productId) =>
@@ -272,10 +309,33 @@ export class OrdersService {
     return updatedOrder;
   }
 
+  private async findRecentDuplicateOrder(userId: string): Promise<Order | null> {
+    const since = new Date(Date.now() - RECENT_ORDER_DEDUP_WINDOW_MS);
+    const recentPending = await this.ordersRepository.findRecentPendingByUserId(
+      userId,
+      since,
+    );
+
+    if (!recentPending) {
+      return null;
+    }
+
+    try {
+      const cart = await this.cartService.getCartByUserId(userId);
+      if (cart.items && cart.items.length > 0) {
+        return null;
+      }
+    } catch {
+      return null;
+    }
+
+    return recentPending;
+  }
+
   private validateDeliveryWindow(dto: CreateOrderDto): void {
     const deliveryDate = new Date(dto.deliveryWindow.date);
     if (Number.isNaN(deliveryDate.getTime())) {
-      throw new BadRequestException('زمان تحویل معتبر نیست');
+      throw new BadRequestException('Invalid delivery window date');
     }
 
     const today = new Date();
@@ -284,7 +344,7 @@ export class OrdersService {
     selectedDate.setHours(0, 0, 0, 0);
 
     if (selectedDate < today) {
-      throw new BadRequestException('زمان تحویل نمی‌تواند در گذشته باشد');
+      throw new BadRequestException('Delivery date cannot be in the past');
     }
   }
 
@@ -297,5 +357,4 @@ export class OrdersService {
   private isAdminRole(role: string): boolean {
     return role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
   }
-
 }

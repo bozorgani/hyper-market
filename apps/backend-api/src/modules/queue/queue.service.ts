@@ -1,6 +1,7 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JobsOptions, Queue, RedisOptions } from 'bullmq';
+import { createBullMQRedisOptions } from '../../config/redis/redis-connection.config';
 
 @Injectable()
 export class QueueService implements OnModuleDestroy {
@@ -8,7 +9,7 @@ export class QueueService implements OnModuleDestroy {
   private readonly queues = new Map<string, Queue>();
 
   constructor(private readonly configService: ConfigService) {
-    this.connection = this.createRedisConnectionOptions();
+    this.connection = createBullMQRedisOptions(configService);
   }
 
   async createJob<TData extends object>(
@@ -49,32 +50,6 @@ export class QueueService implements OnModuleDestroy {
 
     this.queues.set(queueName, queue);
     return queue;
-  }
-
-  private createRedisConnectionOptions(): RedisOptions {
-    const redisUrl = this.configService.get<string>('REDIS_URL');
-
-    if (redisUrl) {
-      const parsedUrl = new URL(redisUrl);
-      return {
-        host: parsedUrl.hostname,
-        port: parsedUrl.port ? parseInt(parsedUrl.port, 10) : 6379,
-        username: parsedUrl.username || undefined,
-        password: parsedUrl.password || undefined,
-        db: parsedUrl.pathname ? parseInt(parsedUrl.pathname.replace('/', ''), 10) || 0 : 0,
-        maxRetriesPerRequest: null,
-        retryStrategy: (times) => Math.min(times * 100, 3000),
-      };
-    }
-
-    return {
-      host: this.configService.get<string>('REDIS_HOST'),
-      port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
-      password: this.configService.get<string>('REDIS_PASSWORD'),
-      db: process.env.REDIS_DB ? parseInt(process.env.REDIS_DB, 10) : undefined,
-      maxRetriesPerRequest: null,
-      retryStrategy: (times) => Math.min(times * 100, 3000),
-    };
   }
 
   async onModuleDestroy(): Promise<void> {

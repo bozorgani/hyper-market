@@ -8,7 +8,7 @@ import { Mail, Phone, KeyRound, ArrowLeft, Loader2, ShieldCheck, RefreshCw } fro
 import { AuthShell } from "@/components/auth/auth-shell";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
-import { firstValidationError, normalizeDigits, normalizeOtpCode, normalizePhoneNumber, verifyOtpSchema } from "@/lib/validation/auth";
+import { firstValidationError, normalizePhoneNumber, normalizeOtpCode, verifyOtpSchema } from "@/lib/validation/auth";
 import { api } from "@/services/api";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,13 @@ function VerifyOtpContent() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+
+  function updateDigit(idx: number, val: string) {
+    const digit = val.replace(/\D/g, "");
+    const chars = code.padEnd(6, " ").split("");
+    chars[idx] = digit[digit.length - 1] ?? "";
+    setCode(chars.join("").replace(/\s/g, ""));
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,7 +127,7 @@ function VerifyOtpContent() {
             )}
             <input
               value={target}
-              onChange={(e) => setTarget(normalizeDigits(e.target.value))}
+              onChange={(e) => setTarget(e.target.value)}
               onBlur={() => {
                 if (isPhone) setTarget(normalizePhoneNumber(target));
               }}
@@ -162,7 +169,7 @@ function VerifyOtpContent() {
           </div>
         </div>
 
-        {/* OTP Code Input */}
+        {/* OTP Code Input — 6 separate digit boxes */}
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <label className="text-xs font-semibold text-slate-600">کد تأیید ۶ رقمی</label>
@@ -177,7 +184,7 @@ function VerifyOtpContent() {
             </button>
           </div>
           <div className="flex gap-2.5" dir="ltr">
-            {code.split("").map((_, idx) => (
+            {Array.from({ length: 6 }).map((_, idx) => (
               <div key={idx} className="relative flex-1">
                 <input
                   type="text"
@@ -185,10 +192,8 @@ function VerifyOtpContent() {
                   maxLength={1}
                   value={code[idx] ?? ""}
                   onChange={(e) => {
+                    updateDigit(idx, e.target.value);
                     const val = e.target.value.replace(/\D/g, "");
-                    const newCode = code.split("");
-                    newCode[idx] = val[val.length - 1] ?? "";
-                    setCode(newCode.join(""));
                     if (val && idx < 5) {
                       const next = e.target.nextElementSibling as HTMLInputElement;
                       next?.focus();

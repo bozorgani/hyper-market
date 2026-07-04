@@ -4,6 +4,13 @@ import { ClientSession, isValidObjectId, Model } from 'mongoose';
 import { OrderStatus } from '../enums/order-status.enum';
 import { Order, OrderDocument } from '../schemas/order.schema';
 
+export type OrderListResult = {
+  items: Order[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
 @Injectable()
 export class OrdersRepository {
   constructor(
@@ -20,9 +27,49 @@ export class OrdersRepository {
     return this.orderModel.find({ userId }).sort({ createdAt: -1 }).lean().exec();
   }
 
+  async findByUserIdPaginated(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<OrderListResult> {
+    const skip = (page - 1) * limit;
+    const filter = { userId };
+    const [items, total] = await Promise.all([
+      this.orderModel
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.orderModel.countDocuments(filter).exec(),
+    ]);
+    return { items, total, page, limit };
+  }
+
   async findById(id: string): Promise<Order | null> {
     if (!isValidObjectId(id)) return null;
     return this.orderModel.findById(id).lean().exec();
+  }
+
+  /**
+   * Find the most recent PENDING order for a user created after `since`.
+   * Used by the order dedup guard to detect and return a duplicate checkout
+   * instead of creating a second order + double-reducing stock.
+   */
+  async findRecentPendingByUserId(
+    userId: string,
+    since: Date,
+  ): Promise<Order | null> {
+    return this.orderModel
+      .findOne({
+        userId,
+        status: OrderStatus.PENDING,
+        createdAt: { $gte: since },
+      })
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
   }
 
   async updateStatus(
@@ -61,5 +108,28 @@ export class OrdersRepository {
 
   async findAll(): Promise<Order[]> {
     return this.orderModel.find().sort({ createdAt: -1 }).lean().exec();
+  }
+
+  async findAllPaginated(
+    page: number,
+    limit: number,
+    status?: OrderStatus,
+  ): Promise<OrderListResult> {
+    const skip = (page - 1) * limit;
+    const filter: Record<string, unknown> = {};
+    if (status) {
+      filter.status = status;
+    }
+    const [items, total] = await Promise.all([
+      this.orderModel
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.orderModel.countDocuments(filter).exec(),
+    ]);
+    return { items, total, page, limit };
   }
 }

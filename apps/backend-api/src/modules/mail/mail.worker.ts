@@ -1,9 +1,10 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Job, RedisOptions, Worker } from 'bullmq';
+import { Job, Worker } from 'bullmq';
 import { LoggerService } from '../../infrastructure/logger/logger.service';
 import { SmtpTransportService } from './smtp-transport.service';
 import { otpEmailHtml, passwordResetEmailHtml } from './email-templates';
+import { createBullMQRedisOptions } from '../../config/redis/redis-connection.config';
 
 type MailJobData = {
   type: 'otp_email' | 'password_reset_email';
@@ -23,11 +24,15 @@ export class MailWorker implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
+    if (process.env.WORKERS_ENABLED === 'false') {
+      this.loggerService.info('[MAIL] Worker disabled (WORKERS_ENABLED=false) — jobs will be processed by a dedicated worker process.');
+      return;
+    }
     this.worker = new Worker<MailJobData>(
       this.queueName,
       async (job) => this.processJob(job),
       {
-        connection: this.createRedisConnectionOptions(),
+        connection: createBullMQRedisOptions(this.configService),
       },
     );
 
@@ -90,31 +95,5 @@ export class MailWorker implements OnModuleInit, OnModuleDestroy {
         code: data.code,
       });
     }
-  }
-
-  private createRedisConnectionOptions(): RedisOptions {
-    const redisUrl = this.configService.get<string>('REDIS_URL');
-
-    if (redisUrl) {
-      const parsedUrl = new URL(redisUrl);
-      return {
-        host: parsedUrl.hostname,
-        port: parsedUrl.port ? parseInt(parsedUrl.port, 10) : 6379,
-        username: parsedUrl.username || undefined,
-        password: parsedUrl.password || undefined,
-        db: parsedUrl.pathname ? parseInt(parsedUrl.pathname.replace('/', ''), 10) || 0 : 0,
-        maxRetriesPerRequest: null,
-        retryStrategy: (times) => Math.min(times * 100, 3000),
-      };
-    }
-
-    return {
-      host: this.configService.get<string>('REDIS_HOST'),
-      port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
-      password: this.configService.get<string>('REDIS_PASSWORD'),
-      db: process.env.REDIS_DB ? parseInt(process.env.REDIS_DB, 10) : undefined,
-      maxRetriesPerRequest: null,
-      retryStrategy: (times) => Math.min(times * 100, 3000),
-    };
   }
 }

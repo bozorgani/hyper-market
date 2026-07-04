@@ -5,6 +5,10 @@ import { SearchModule } from '../search/search.module';
 import { ProductsController } from './controllers/products.controller';
 import { ProductsRepository } from './repositories/products.repository';
 import { ProductImageStorageService } from './services/product-image-storage.service';
+import { PRODUCT_IMAGE_STORAGE, IProductImageStorage } from './storage/product-image-storage.interface';
+import { createProductImageStorage } from './storage/storage.provider';
+import { LoggerService } from '../../infrastructure/logger/logger.service';
+import { ConfigService } from '@nestjs/config';
 import { Order, OrderSchema } from '../orders/schemas/order.schema';
 import { Product, ProductSchema } from './schemas/product.schema';
 import { ProductsService } from './services/products.service';
@@ -19,7 +23,18 @@ import { ProductsService } from './services/products.service';
     ]),
   ],
   controllers: [ProductsController],
-  providers: [ProductsRepository, ProductsService, ProductImageStorageService],
-  exports: [ProductsRepository, ProductsService, ProductImageStorageService],
+  providers: [
+    ProductsRepository,
+    ProductsService,
+    // ── Legacy provider (kept for backward compatibility — delegates to IProductImageStorage) ──
+    ProductImageStorageService,
+    // ── Pluggable image storage driver ──────────────────────────────────────────────────────
+    {
+      provide: PRODUCT_IMAGE_STORAGE,
+      useFactory: createProductImageStorage,
+      inject: [ConfigService, LoggerService],
+    },
+  ],
+  exports: [ProductsRepository, ProductsService, ProductImageStorageService, PRODUCT_IMAGE_STORAGE],
 })
 export class ProductsModule {}

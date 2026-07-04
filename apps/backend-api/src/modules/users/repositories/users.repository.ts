@@ -7,6 +7,13 @@ import { User, UserDocument } from '../schemas/user.schema';
 
 export type UserWithId = User & { _id: Types.ObjectId };
 
+export type UserListResult = {
+  items: User[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
 @Injectable()
 export class UsersRepository implements BaseRepository<User> {
   constructor(
@@ -29,6 +36,29 @@ export class UsersRepository implements BaseRepository<User> {
       .sort({ createdAt: -1 })
       .lean()
       .exec();
+  }
+
+  async findAllPaginated(
+    page: number,
+    limit: number,
+    role?: string,
+    accountStatus?: string,
+  ): Promise<UserListResult> {
+    const skip = (page - 1) * limit;
+    const filter: Record<string, unknown> = { deletedAt: null };
+    if (role) filter.role = role;
+    if (accountStatus) filter.accountStatus = accountStatus;
+    const [items, total] = await Promise.all([
+      this.userModel
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.userModel.countDocuments(filter).exec(),
+    ]);
+    return { items, total, page, limit };
   }
 
   async findByEmail(email: string): Promise<User | null> {

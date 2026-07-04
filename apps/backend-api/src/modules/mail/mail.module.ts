@@ -9,6 +9,6 @@ import { SmtpTransportService } from './smtp-transport.service';
 @Module({
   imports: [QueueModule],
   providers: [MailService, MailWorker, SmsIrService, SmtpTransportService, LoggerService],
-  exports: [MailService, SmsIrService],
+  exports: [MailService, SmsIrService, SmtpTransportService],
 })
 export class MailModule {}

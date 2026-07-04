@@ -1,12 +1,10 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Job, RedisOptions, Worker } from 'bullmq';
+import { Job, Worker } from 'bullmq';
 import { LoggerService } from '../../infrastructure/logger/logger.service';
+import { MEILISEARCH_CLIENT } from './meilisearch-client.provider';
 import { SEARCH_INDEXING_QUEUE, SearchIndexingJobData } from './search-queue.service';
-
-const { Meilisearch } = require('meilisearch') as {
-  Meilisearch: new (options: { host: string; apiKey?: string }) => any;
-};
+import { createBullMQRedisOptions } from '../../config/redis/redis-connection.config';
 
 @Injectable()
 export class SearchWorker implements OnModuleInit, OnModuleDestroy {
@@ -17,14 +15,16 @@ export class SearchWorker implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly configService: ConfigService,
     private readonly loggerService: LoggerService,
+    @Inject(MEILISEARCH_CLIENT) client: any,
   ) {
-    this.client = new Meilisearch({
-      host: process.env.MEILI_HOST ?? 'http://localhost:7700',
-      apiKey: process.env.MEILI_API_KEY,
-    });
+    this.client = client;
   }
 
   onModuleInit(): void {
+    if (process.env.WORKERS_ENABLED === 'false') {
+      this.loggerService.info('[SEARCH] Worker disabled (WORKERS_ENABLED=false) — jobs will be processed by a dedicated worker process.');
+      return;
+    }
     if (process.env.SEARCH_INDEXING_WORKER_ENABLED === 'false') {
       this.loggerService.warn('Search indexing worker is disabled');
       return;
@@ -34,7 +34,7 @@ export class SearchWorker implements OnModuleInit, OnModuleDestroy {
       SEARCH_INDEXING_QUEUE,
       async (job) => this.processJob(job),
       {
-        connection: this.createRedisConnectionOptions(),
+        connection: createBullMQRedisOptions(this.configService),
       },
     );
 
@@ -65,31 +65,5 @@ export class SearchWorker implements OnModuleInit, OnModuleDestroy {
       default:
         throw new Error('Unsupported search indexing job action');
     }
-  }
-
-  private createRedisConnectionOptions(): RedisOptions {
-    const redisUrl = this.configService.get<string>('REDIS_URL');
-
-    if (redisUrl) {
-      const parsedUrl = new URL(redisUrl);
-      return {
-        host: parsedUrl.hostname,
-        port: parsedUrl.port ? parseInt(parsedUrl.port, 10) : 6379,
-        username: parsedUrl.username || undefined,
-        password: parsedUrl.password || undefined,
-        db: parsedUrl.pathname ? parseInt(parsedUrl.pathname.replace('/', ''), 10) || 0 : 0,
-        maxRetriesPerRequest: null,
-        retryStrategy: (times) => Math.min(times * 100, 3000),
-      };
-    }
-
-    return {
-      host: this.configService.get<string>('REDIS_HOST'),
-      port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
-      password: this.configService.get<string>('REDIS_PASSWORD'),
-      db: process.env.REDIS_DB ? parseInt(process.env.REDIS_DB, 10) : undefined,
-      maxRetriesPerRequest: null,
-      retryStrategy: (times) => Math.min(times * 100, 3000),
-    };
   }
 }

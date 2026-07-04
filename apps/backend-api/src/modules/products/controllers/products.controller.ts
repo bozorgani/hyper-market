@@ -59,7 +59,14 @@ export class ProductsController {
     @Param('fileName') fileName: string,
     @Res() response: Response,
   ) {
-    return response.sendFile(this.productImageStorageService.getImagePath(fileName));
+    if (this.productImageStorageService.supportsLocalFileServing) {
+      // Local storage: serve file from disk
+      return response.sendFile(this.productImageStorageService.getImagePath(fileName));
+    }
+
+    // Remote storage (S3, etc.): redirect to the public URL
+    const url = this.productImageStorageService.getImageUrl(fileName);
+    return response.redirect(url);
   }
 
   @Get()
