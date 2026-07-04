@@ -30,6 +30,7 @@ const menuItems = [
   { href: "/admin/orders", label: "سفارش‌ها", icon: ReceiptText },
   { href: "/admin/payments", label: "پرداخت‌ها", icon: CreditCard },
   { href: "/admin/users", label: "کاربران", icon: Users },
+  { href: "/admin/roles", label: "نقش‌ها و دسترسی‌ها", icon: Shield },
 ];
 
 function isAdminRole(role?: string) {

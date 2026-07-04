@@ -224,3 +224,67 @@ export function useUnblockUser() {
     },
   });
 }
+
+// ── Permissions / Roles ─────────────────────────────────────────────────
+
+export type PermissionMap = Record<string, string[]>;
+
+export type GrantPermissionInput = {
+  role: string;
+  permissionName: string;
+  resource: string;
+  action: string;
+};
+
+export type RevokePermissionInput = {
+  role: string;
+  permissionName: string;
+};
+
+export function usePermissionsMap() {
+  return useQuery({
+    queryKey: ["admin", "permissions"],
+    queryFn: async () => (await api.get<PermissionMap>("/permissions")).data,
+    staleTime: 30_000,
+  });
+}
+
+export function useRolePermissions(role: string) {
+  return useQuery({
+    queryKey: ["admin", "permissions", role],
+    queryFn: async () => (await api.get<{ role: string; permissions: string[] }>(`/permissions/${role}`)).data,
+    enabled: Boolean(role),
+  });
+}
+
+export function useGrantPermission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: GrantPermissionInput) =>
+      (await api.post("/permissions/grant", input)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "permissions"] });
+    },
+  });
+}
+
+export function useRevokePermission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: RevokePermissionInput) =>
+      (await api.post("/permissions/revoke", input)).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "permissions"] });
+    },
+  });
+}
+
+export function useSeedPermissions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => (await api.post("/permissions/seed")).data,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "permissions"] });
+    },
+  });
+}
