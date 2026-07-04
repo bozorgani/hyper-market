@@ -4,13 +4,7 @@ import { randomUUID } from 'crypto';
 import { extname } from 'path';
 import { IProductImageStorage, SavedImage, UploadableFile } from './product-image-storage.interface';
 import { LoggerService } from '../../../infrastructure/logger/logger.service';
-
-const ALLOWED_IMAGE_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-]);
+import { validateProductImageFile } from './product-image-validation';
 
 /**
  * S3-compatible object storage driver.
@@ -92,19 +86,11 @@ export class S3ProductImageStorage implements IProductImageStorage, OnModuleInit
       throw new BadRequestException('S3 storage is not configured');
     }
 
-    if (!file?.buffer || !file.mimetype) {
-      throw new BadRequestException('Image file is required');
-    }
+    validateProductImageFile(file, this.maxFileSizeBytes);
+    const buffer = file.buffer as Buffer;
+    const mimeType = file.mimetype as string;
 
-    if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
-      throw new BadRequestException('Only jpg, png, webp and gif images are allowed');
-    }
-
-    if ((file.size ?? file.buffer.length) > this.maxFileSizeBytes) {
-      throw new BadRequestException('Image file is too large');
-    }
-
-    const extension = this.getSafeExtension(file.originalname, file.mimetype);
+    const extension = this.getSafeExtension(file.originalname, mimeType);
     const fileName = `products/${Date.now()}-${randomUUID()}${extension}`;
 
     // @ts-expect-error — dynamic import resolved in onModuleInit
@@ -113,16 +99,16 @@ export class S3ProductImageStorage implements IProductImageStorage, OnModuleInit
       new PutObjectCommand({
         Bucket: this.bucket,
         Key: fileName,
-        Body: file.buffer,
-        ContentType: file.mimetype,
+        Body: buffer,
+        ContentType: mimeType,
       }),
     );
 
     return {
       url: this.getImageUrl(fileName),
       fileName,
-      size: file.size ?? file.buffer.length,
-      mimeType: file.mimetype!,
+      size: file.size ?? buffer.length,
+      mimeType,
     };
   }
 

@@ -42,6 +42,14 @@ export class ProductsRepository {
       .exec();
   }
 
+  async findPublicById(id: string): Promise<Product | null> {
+    if (!isValidObjectId(id)) return null;
+    return this.productModel
+      .findOne({ _id: id, deletedAt: null, isActive: true })
+      .lean()
+      .exec();
+  }
+
 
   async findByIds(ids: string[]): Promise<Product[]> {
     const objectIds = ids

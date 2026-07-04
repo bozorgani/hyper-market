@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { Order, OrderSchema } from '../orders/schemas/order.schema';
 import { Product, ProductSchema } from './schemas/product.schema';
 import { ProductsService } from './services/products.service';
+import { ProductImageUploadInterceptor } from './storage/product-image-upload.interceptor';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ProductsService } from './services/products.service';
     ProductsService,
     // ── Legacy provider (kept for backward compatibility — delegates to IProductImageStorage) ──
     ProductImageStorageService,
+    ProductImageUploadInterceptor,
     // ── Pluggable image storage driver ──────────────────────────────────────────────────────
     {
       provide: PRODUCT_IMAGE_STORAGE,

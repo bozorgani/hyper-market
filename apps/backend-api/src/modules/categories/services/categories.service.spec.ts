@@ -27,7 +27,10 @@ describe('CategoriesService', () => {
     findById: jest.Mock;
     findBySlug: jest.Mock;
     findAll: jest.Mock;
+    findAllPublic: jest.Mock;
     findAllPaginated: jest.Mock;
+    findAllPaginatedForAdmin: jest.Mock;
+    findPublicById: jest.Mock;
     create: jest.Mock;
     updateById: jest.Mock;
     softDelete: jest.Mock;
@@ -43,9 +46,17 @@ describe('CategoriesService', () => {
   beforeEach(async () => {
     repository = {
       findById: jest.fn().mockResolvedValue(mockCategory),
+      findPublicById: jest.fn().mockResolvedValue(mockCategory),
       findBySlug: jest.fn().mockResolvedValue(null),
       findAll: jest.fn().mockResolvedValue([mockCategory]),
+      findAllPublic: jest.fn().mockResolvedValue([mockCategory]),
       findAllPaginated: jest.fn().mockResolvedValue({
+        items: [mockCategory],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+      findAllPaginatedForAdmin: jest.fn().mockResolvedValue({
         items: [mockCategory],
         total: 1,
         page: 1,
@@ -201,7 +212,7 @@ describe('CategoriesService', () => {
     it('should return categories from repository when not cached', async () => {
       const result = await service.listCategories();
       expect(result).toEqual([mockCategory]);
-      expect(repository.findAll).toHaveBeenCalled();
+      expect(repository.findAllPublic).toHaveBeenCalled();
     });
 
     it('should return categories from Redis cache if available', async () => {
@@ -210,7 +221,7 @@ describe('CategoriesService', () => {
 
       const result = await service.listCategories();
       expect(result).toEqual(cached);
-      expect(repository.findAll).not.toHaveBeenCalled();
+      expect(repository.findAllPublic).not.toHaveBeenCalled();
     });
   });
 

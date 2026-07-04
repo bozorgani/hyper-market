@@ -30,6 +30,14 @@ export class CategoriesRepository {
     return this.categoryModel.findOne({ _id: id, deletedAt: null }).lean().exec();
   }
 
+  async findPublicById(id: string): Promise<Category | null> {
+    if (!isValidObjectId(id)) return null;
+    return this.categoryModel
+      .findOne({ _id: id, deletedAt: null, isActive: true })
+      .lean()
+      .exec();
+  }
+
   async findBySlug(slug: string): Promise<Category | null> {
     return this.categoryModel.findOne({ slug, deletedAt: null }).lean().exec();
   }
@@ -42,7 +50,34 @@ export class CategoriesRepository {
       .exec();
   }
 
+  async findAllPublic(): Promise<Category[]> {
+    return this.categoryModel
+      .find({ deletedAt: null, isActive: true })
+      .sort({ name: 1 })
+      .lean()
+      .exec();
+  }
+
   async findAllPaginated(
+    page: number,
+    limit: number,
+  ): Promise<CategoryListResult> {
+    const skip = (page - 1) * limit;
+    const filter = { deletedAt: null, isActive: true };
+    const [items, total] = await Promise.all([
+      this.categoryModel
+        .find(filter)
+        .sort({ name: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.categoryModel.countDocuments(filter).exec(),
+    ]);
+    return { items, total, page, limit };
+  }
+
+  async findAllPaginatedForAdmin(
     page: number,
     limit: number,
   ): Promise<CategoryListResult> {

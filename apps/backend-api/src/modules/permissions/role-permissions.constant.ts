@@ -19,9 +19,11 @@ import { UserRole, DEPRECATED_ROLES } from '../users/enums/user-role.enum';
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   [UserRole.SUPER_ADMIN]: ['*'],
   [UserRole.ADMIN]: [
+    'products.read',
     'products.create',
     'products.update',
     'products.delete',
+    'categories.read',
     'categories.create',
     'categories.update',
     'categories.delete',

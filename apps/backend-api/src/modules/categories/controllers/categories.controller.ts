@@ -11,6 +11,29 @@ import { CategoriesService } from '../services/categories.service';
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
+  @Get('admin/list')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Permissions('categories.read')
+  listCategoriesForAdmin(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (page || limit) {
+      return this.categoriesService.listCategoriesPaginatedForAdmin(
+        this.toPositiveInteger(page, 1),
+        this.toPositiveInteger(limit, 20),
+      );
+    }
+    return this.categoriesService.listCategoriesForAdmin();
+  }
+
+  @Get('admin/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Permissions('categories.read')
+  getCategoryByIdForAdmin(@Param('id') id: string) {
+    return this.categoriesService.getCategoryByIdOrFail(id);
+  }
+
   @Get()
   @Public()
   listCategories(
@@ -29,7 +52,7 @@ export class CategoriesController {
   @Get(':id')
   @Public()
   getCategoryById(@Param('id') id: string) {
-    return this.categoriesService.getCategoryByIdOrFail(id);
+    return this.categoriesService.getPublicCategoryById(id);
   }
 
   @Post()

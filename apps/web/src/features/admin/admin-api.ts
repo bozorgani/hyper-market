@@ -29,14 +29,14 @@ export function useAdminProducts(page = 1, isActive?: boolean, limit = 100) {
   return useQuery({
     queryKey: ["admin", "products", page, isActive, limit],
     queryFn: async () =>
-      (await api.get<ProductListResponse>("/products", { params: { page, limit, isActive } })).data,
+      (await api.get<ProductListResponse>("/products/admin/list", { params: { page, limit, isActive } })).data,
   });
 }
 
 export function useAdminProduct(id: string) {
   return useQuery({
     queryKey: ["admin", "product", id],
-    queryFn: async () => (await api.get<Product>(`/products/${id}`)).data,
+    queryFn: async () => (await api.get<Product>(`/products/admin/${id}`)).data,
     enabled: Boolean(id),
   });
 }
@@ -93,7 +93,7 @@ export type CategoryFormInput = {
 export function useAdminCategories() {
   return useQuery({
     queryKey: ["admin", "categories"],
-    queryFn: async () => (await api.get<Category[]>("/categories")).data,
+    queryFn: async () => (await api.get<Category[]>("/categories/admin/list")).data,
   });
 }
 

@@ -249,6 +249,8 @@ POST   /categories    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions(
 DELETE /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.delete')]
 GET    /categories/:id    [Public()]
 PUT    /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.update')]
+GET    /categories/admin/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.read')]
+GET    /categories/admin/list    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.read')]
 ```
 
 ### apps/backend-api/src/infrastructure/health/health.controller.ts
@@ -295,6 +297,8 @@ POST   /products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('p
 DELETE /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.delete')]
 GET    /products/:id    [Public()]
 PUT    /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
+GET    /products/admin/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.read')]
+GET    /products/admin/list    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.read')]
 GET    /products/images/:fileName    [Public()]
 POST   /products/images/upload    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
 ```

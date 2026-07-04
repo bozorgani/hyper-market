@@ -10,6 +10,9 @@ jest.mock('fs/promises', () => ({
   writeFile: jest.fn().mockResolvedValue(undefined),
 }));
 
+const validJpegBuffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]);
+const validPngBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00]);
+
 describe('LocalProductImageStorage', () => {
   let storage: LocalProductImageStorage;
   let configService: ConfigService;
@@ -38,7 +41,7 @@ describe('LocalProductImageStorage', () => {
         originalname: 'photo.jpg',
         mimetype: 'image/jpeg',
         size: 1024,
-        buffer: Buffer.from('fake-image-data'),
+        buffer: validJpegBuffer,
       };
 
       const result = await storage.saveProductImage(file);
@@ -56,6 +59,28 @@ describe('LocalProductImageStorage', () => {
         mimetype: 'application/pdf',
         size: 100,
         buffer: Buffer.from('data'),
+      };
+
+      await expect(storage.saveProductImage(file)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject invalid image magic bytes even when MIME type is allowed', async () => {
+      const file = {
+        originalname: 'fake.jpg',
+        mimetype: 'image/jpeg',
+        size: 100,
+        buffer: Buffer.from('not-a-real-image'),
+      };
+
+      await expect(storage.saveProductImage(file)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject when declared MIME type does not match file content', async () => {
+      const file = {
+        originalname: 'photo.jpg',
+        mimetype: 'image/jpeg',
+        size: validPngBuffer.length,
+        buffer: validPngBuffer,
       };
 
       await expect(storage.saveProductImage(file)).rejects.toThrow(BadRequestException);
