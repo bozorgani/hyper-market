@@ -84,6 +84,7 @@ test('OrdersService creates order inside transaction and clears cart', async () 
   const calls: string[] = [];
 
   const ordersRepository = {
+    findRecentPendingByUserId: async () => null,
     create: async (_data: unknown, session: unknown) => {
       assert.equal(session, 'session');
       calls.push('create-order');
@@ -118,9 +119,9 @@ test('OrdersService creates order inside transaction and clears cart', async () 
     },
   };
   const transactionService = {
-    executeInTransaction: async (callback: (session: unknown) => Promise<unknown>) => {
+    executeWithCompensation: async (options: { execute: (session: unknown) => Promise<unknown> }) => {
       calls.push('transaction-start');
-      const result = await callback('session');
+      const result = await options.execute('session');
       calls.push('transaction-end');
       return result;
     },
@@ -167,13 +168,19 @@ test('OrdersService restores stock when order is cancelled', async () => {
     userId: new Types.ObjectId(),
     items: [{ productId, quantity: 2, priceAtPurchase: 100 }],
     totalPrice: 200,
-    status: OrderStatus.PENDING,
+    status: OrderStatus.PAID,
   };
   const cancelledOrder = { ...order, status: OrderStatus.CANCELLED };
   const calls: string[] = [];
 
   const ordersRepository = {
     findById: async () => order,
+    transitionStatus: async (_orderId: string, _from: OrderStatus[], to: OrderStatus, _update: unknown, session: unknown) => {
+      assert.equal(to, OrderStatus.CANCELLED);
+      assert.equal(session, 'session');
+      calls.push('cancel-order');
+      return cancelledOrder;
+    },
     updateStatus: async (_orderId: string, status: OrderStatus, session: unknown) => {
       assert.equal(status, OrderStatus.CANCELLED);
       assert.equal(session, 'session');
@@ -200,6 +207,12 @@ test('OrdersService restores stock when order is cancelled', async () => {
       calls.push('transaction-end');
       return result;
     },
+    executeWithCompensation: async (options: { execute: (session: unknown) => Promise<unknown> }) => {
+      calls.push('transaction-start');
+      const result = await options.execute('session');
+      calls.push('transaction-end');
+      return result;
+    },
   };
 
   const service = new OrdersService(
@@ -214,8 +227,8 @@ test('OrdersService restores stock when order is cancelled', async () => {
   assert.equal(result, cancelledOrder);
   assert.deepEqual(calls, [
     'transaction-start',
-    'restore-stock',
     'cancel-order',
+    'restore-stock',
     'transaction-end',
     'sync-search',
   ]);
@@ -261,9 +274,9 @@ test('PaymentsService COD auto-confirms payment and updates order status inside 
     },
   };
   const transactionService = {
-    executeInTransaction: async (callback: (session: unknown) => Promise<unknown>) => {
+    executeWithCompensation: async (options: { execute: (session: unknown) => Promise<unknown> }) => {
       calls.push('transaction-start');
-      const result = await callback('session');
+      const result = await options.execute('session');
       calls.push('transaction-end');
       return result;
     },

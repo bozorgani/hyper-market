@@ -1,28 +1,34 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
-import { cn, formatNumber, formatPrice, translateRole } from "@/lib/utils";
+import { cn, formatNumber, formatPrice, formatPersianDate } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
+import { useMyOrders } from "@/hooks/use-orders";
 import {
   User, Settings, Heart, MapPin, Bell, Shield,
   ChevronLeft, LogOut, Star, Package, Clock,
   CheckCircle2, Truck, Camera, Gift,
 } from "lucide-react";
+import type { OrderStatus } from "@/types/domain";
 
-const mockOrders = [
-  { id: "۱", status: "delivered" as const, date: "۲ تیر ۱۴۰۵", total: 285000, items: 5 },
-  { id: "۲", status: "in_progress" as const, date: "۳ تیر ۱۴۰۵", total: 145000, items: 3 },
-];
-
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string; bg: string; Icon: typeof CheckCircle2 }> = {
   delivered: { label: "تحویل شده", color: "text-emerald-600", bg: "bg-emerald-50", Icon: CheckCircle2 },
-  in_progress: { label: "در حال ارسال", color: "text-blue-600", bg: "bg-blue-50", Icon: Truck },
+  shipped: { label: "ارسال شده", color: "text-blue-600", bg: "bg-blue-50", Icon: Truck },
+  processing: { label: "در حال پردازش", color: "text-violet-600", bg: "bg-violet-50", Icon: Package },
+  paid: { label: "پرداخت‌شده", color: "text-sky-600", bg: "bg-sky-50", Icon: CheckCircle2 },
+  pending: { label: "در انتظار", color: "text-amber-600", bg: "bg-amber-50", Icon: Clock },
   cancelled: { label: "لغو شده", color: "text-red-600", bg: "bg-red-50", Icon: Clock },
 };
+
+function getStatusConfig(status: OrderStatus) {
+  return statusConfig[status] ?? statusConfig.pending;
+}
 
 const menuItems = [
   { icon: Package, label: "سفارش‌های من", href: "/orders", color: "text-blue-600", bg: "bg-blue-50" },
@@ -38,6 +44,11 @@ export default function ProfilePage() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const { showToast } = useToast();
+  const ordersQuery = useMyOrders();
+  const recentOrders = useMemo(
+    () => (ordersQuery.data ?? []).slice(0, 3),
+    [ordersQuery.data],
+  );
 
   function handleLogout() {
     void logout();
@@ -78,17 +89,11 @@ export default function ProfilePage() {
 
               <div className="flex-1 pb-1">
                 <h1 className="text-white font-black text-lg leading-tight">
-                  {user?.email ? user.email.split("@")[0] : "کاربر"} {user?.phoneNumber || ""}
+                  {user?.phoneNumber || (user?.email ? user.email.split("@")[0] : "کاربر")}
                 </h1>
                 <p className="text-white/70 text-xs mt-0.5">
                   {user?.email || user?.phoneNumber || "حساب کاربری"}
                 </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
-                    <Star className="w-3 h-3 fill-yellow-300 text-yellow-300" />
-                    {translateRole(user?.role)}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -98,7 +103,9 @@ export default function ProfilePage() {
         <div className="bg-white rounded-2xl shadow-card p-4 grid grid-cols-3 gap-4 mb-6 -mt-2">
           <div className="flex flex-col items-center gap-1">
             <Package className="w-5 h-5 text-blue-600" />
-            <span className="font-black text-base text-slate-900">{formatNumber(mockOrders.length)}</span>
+            <span className="font-black text-base text-slate-900">
+              {ordersQuery.isLoading ? "—" : formatNumber(ordersQuery.data?.length ?? 0)}
+            </span>
             <span className="text-[10px] text-slate-400">سفارش</span>
           </div>
           <div className="flex flex-col items-center gap-1">
@@ -123,49 +130,58 @@ export default function ProfilePage() {
             </Link>
           </div>
 
-          <div className="space-y-2.5">
-            {mockOrders.map((order) => {
-              const config = statusConfig[order.status];
-              const StatusIcon = config.Icon;
-              return (
-                <Link key={order.id} href="/orders">
-                  <Card className="p-3.5 flex items-center gap-3 hover:shadow-card-hover transition-shadow cursor-pointer">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", config.bg)}>
-                      <StatusIcon className={cn("w-5 h-5", config.color)} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-bold text-slate-800">
-                          {formatNumber(order.items)} قلم کالا
-                        </p>
-                        <span className="font-bold text-sm text-slate-800">
-                          {formatPrice(order.total)}
-                        </span>
+          {ordersQuery.isLoading ? (
+            <div className="space-y-2.5">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <Card key={i} className="p-3.5 flex items-center gap-3">
+                  <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+                  <div className="flex-1"><Skeleton className="h-4 w-32" /><Skeleton className="mt-2 h-3 w-48" /></div>
+                </Card>
+              ))}
+            </div>
+          ) : recentOrders.length === 0 ? (
+            <p className="text-sm text-slate-400 py-4 text-center">هنوز سفارشی ثبت نشده است.</p>
+          ) : (
+            <div className="space-y-2.5">
+              {recentOrders.map((order) => {
+                const config = getStatusConfig(order.status);
+                const StatusIcon = config.Icon;
+                return (
+                  <Link key={order._id} href={`/order/success?orderId=${order._id}`}>
+                    <Card className="p-3.5 flex items-center gap-3 hover:shadow-card-hover transition-shadow cursor-pointer">
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", config.bg)}>
+                        <StatusIcon className={cn("w-5 h-5", config.color)} />
                       </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-[11px] text-slate-400">{order.date}</span>
-                        <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md", config.bg, config.color)}>
-                          {config.label}
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-bold text-slate-800">
+                            {formatNumber(order.items.length)} قلم کالا
+                          </p>
+                          <span className="font-bold text-sm text-slate-800">
+                            {formatPrice(order.totalPrice)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-[11px] text-slate-400">{formatPersianDate(order.createdAt)}</span>
+                          <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-md", config.bg, config.color)}>
+                            {config.label}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Account Info */}
         <Card className="p-6 mb-4">
           <h2 className="text-lg font-black mb-4">اطلاعات حساب</h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            <InfoRow label="نقش کاربر" value={translateRole(user?.role)} />
             <InfoRow label="شماره موبایل" value={user?.phoneNumber} />
             <InfoRow label="ایمیل" value={user?.email} />
-            <InfoRow label="شناسه کاربر" value={user?.id} mono />
-            <InfoRow label="Session ID" value={user?.sessionId} mono />
-            <InfoRow label="Device ID" value={user?.deviceId} mono />
           </div>
         </Card>
 

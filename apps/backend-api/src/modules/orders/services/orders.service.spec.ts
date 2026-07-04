@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { ProductsService } from '../../products/services/products.service';
@@ -162,11 +162,11 @@ describe('OrdersService — cancellation idempotency (#4)', () => {
     expect(result.status).toBe(OrderStatus.PROCESSING);
   });
 
-  it('throws NotFound when the order does not exist', async () => {
+  it('throws BadRequest when the order does not exist', async () => {
     ordersRepository.findById.mockResolvedValue(null);
 
     await expect(
       service.updateStatus(OTHER_ORDER_ID, OrderStatus.CANCELLED),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toThrow(BadRequestException);
   });
 });

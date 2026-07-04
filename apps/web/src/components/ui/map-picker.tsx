@@ -66,7 +66,9 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
     document.head.appendChild(linkEl);
 
     // Initialize map (L already imported at top)
-    const map = L.map(mapRef.current!, {
+    const container = mapRef.current;
+    if (!container) return;
+    const map = L.map(container, {
       center: [startLat, startLng],
       zoom: 14,
       zoomControl: false,
@@ -99,15 +101,27 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
     mapInstanceRef.current = map;
     markerRef.current = marker;
 
-    setTimeout(() => map.invalidateSize(), 200);
+    // Use a flag so the delayed invalidateSize won't run after unmount
+    let cancelled = false;
+    setTimeout(() => {
+      if (!cancelled && mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.invalidateSize();
+        } catch {
+          // Map may have been removed by the time this fires — safe to ignore
+        }
+      }
+    }, 200);
 
     return () => {
+      cancelled = true;
       mapInstanceRef.current?.remove();
       mapInstanceRef.current = null;
       markerRef.current = null;
       if (linkEl.parentNode) document.head.removeChild(linkEl);
     };
-  }, [reverseGeocode, startLat, startLng]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps — map should only mount once
+  }, []);
 
 
   const handleLocateMe = () => {

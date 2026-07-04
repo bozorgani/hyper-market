@@ -88,6 +88,35 @@ function isDeliveryAddressValid(address: DeliveryAddress) {
   );
 }
 
+function getFieldErrors(address: DeliveryAddress, window: DeliveryWindow) {
+  const errors: Record<string, string> = {};
+  if (address.recipientName.trim().length > 0 && address.recipientName.trim().length < 2) {
+    errors.recipientName = "نام تحویل‌گیرنده حداقل ۲ کاراکتر باشد.";
+  }
+  if (address.phoneNumber.trim().length > 0 && !/^09\d{9}$/.test(address.phoneNumber.trim())) {
+    errors.phoneNumber = "شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد.";
+  }
+  if (address.province.trim().length > 0 && address.province.trim().length < 2) {
+    errors.province = "استان را انتخاب کنید.";
+  }
+  if (address.city.trim().length > 0 && address.city.trim().length < 2) {
+    errors.city = "شهر را انتخاب کنید.";
+  }
+  if (address.addressLine.trim().length > 0 && address.addressLine.trim().length < 10) {
+    errors.addressLine = "آدرس باید حداقل ۱۰ کاراکتر باشد.";
+  }
+  if (address.postalCode?.trim() && !/^\d{10}$/.test(address.postalCode.trim())) {
+    errors.postalCode = "کد پستی باید دقیقاً ۱۰ رقم باشد.";
+  }
+  if (!window.date) {
+    errors.deliveryDate = "تاریخ تحویل را انتخاب کنید.";
+  }
+  if (!window.timeSlot) {
+    errors.deliveryTime = "بازه زمانی را انتخاب کنید.";
+  }
+  return errors;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const cart = useCart();
@@ -130,6 +159,7 @@ export default function CheckoutPage() {
   const isSubmitting = mutationPending || isLocalSubmitting;
   const activeStepIndex = stepIndex(currentStep);
   const deliveryFormValid = isDeliveryAddressValid(deliveryAddress) && Boolean(deliveryWindow.date && deliveryWindow.timeSlot);
+  const fieldErrors = useMemo(() => getFieldErrors(deliveryAddress, deliveryWindow), [deliveryAddress, deliveryWindow]);
   const cartErrorMessage = useMemo(() => {
     if (!cart.error) return "";
     return cart.error instanceof Error ? cart.error.message : "دریافت اطلاعات سبد خرید ناموفق بود.";
@@ -286,47 +316,70 @@ export default function CheckoutPage() {
                 </button>
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <Input value={deliveryAddress.recipientName} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, recipientName: e.target.value })} placeholder="نام تحویل‌گیرنده" disabled={isSubmitting} />
-                  <Input value={deliveryAddress.phoneNumber} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phoneNumber: e.target.value.replace(/\D/g, "").slice(0, 11) })} placeholder="شماره موبایل مثل 09123456789" inputMode="numeric" maxLength={11} disabled={isSubmitting} />
-                  <select
-                    value={deliveryAddress.province}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, province: e.target.value, city: "" })}
-                    disabled={isSubmitting}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
-                  >
-                    <option value="">انتخاب استان</option>
-                    {IRAN_PROVINCES.map((item) => (
-                      <option key={item.province} value={item.province}>{item.province}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={deliveryAddress.city}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
-                    disabled={isSubmitting || !deliveryAddress.province}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
-                  >
-                    <option value="">انتخاب شهر</option>
-                    {IRAN_PROVINCES.find((item) => item.province === deliveryAddress.province)?.cities.map((city) => (
-                      <option key={city} value={city}>{city}</option>
-                    ))}
-                  </select>
-                  <Input className="md:col-span-2" value={deliveryAddress.addressLine} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, addressLine: e.target.value })} placeholder="آدرس کامل" disabled={isSubmitting} />
+                  <div>
+                    <Input value={deliveryAddress.recipientName} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, recipientName: e.target.value })} placeholder="نام تحویل‌گیرنده" disabled={isSubmitting} />
+                    {fieldErrors.recipientName && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.recipientName}</p>}
+                  </div>
+                  <div>
+                    <Input value={deliveryAddress.phoneNumber} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phoneNumber: e.target.value.replace(/\D/g, "").slice(0, 11) })} placeholder="شماره موبایل مثل 09123456789" inputMode="numeric" maxLength={11} disabled={isSubmitting} />
+                    {fieldErrors.phoneNumber && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.phoneNumber}</p>}
+                  </div>
+                  <div>
+                    <select
+                      value={deliveryAddress.province}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, province: e.target.value, city: "" })}
+                      disabled={isSubmitting}
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
+                    >
+                      <option value="">انتخاب استان</option>
+                      {IRAN_PROVINCES.map((item) => (
+                        <option key={item.province} value={item.province}>{item.province}</option>
+                      ))}
+                    </select>
+                    {fieldErrors.province && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.province}</p>}
+                  </div>
+                  <div>
+                    <select
+                      value={deliveryAddress.city}
+                      onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
+                      disabled={isSubmitting || !deliveryAddress.province}
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
+                    >
+                      <option value="">انتخاب شهر</option>
+                      {IRAN_PROVINCES.find((item) => item.province === deliveryAddress.province)?.cities.map((city) => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                    {fieldErrors.city && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.city}</p>}
+                  </div>
+                  <div className="md:col-span-2">
+                    <Input value={deliveryAddress.addressLine} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, addressLine: e.target.value })} placeholder="آدرس کامل" disabled={isSubmitting} />
+                    {fieldErrors.addressLine && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.addressLine}</p>}
+                  </div>
                   <Input value={deliveryAddress.plate ?? ""} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, plate: e.target.value })} placeholder="پلاک" disabled={isSubmitting} />
                   <Input value={deliveryAddress.unit ?? ""} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, unit: e.target.value })} placeholder="واحد" disabled={isSubmitting} />
-                  <Input value={deliveryAddress.postalCode ?? ""} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, postalCode: e.target.value.replace(/\D/g, "").slice(0, 10) })} placeholder="کد پستی ۱۰ رقمی، اختیاری" inputMode="numeric" maxLength={10} disabled={isSubmitting} />
-                  <JalaliDatePicker
-                    value={deliveryWindow.date}
-                    min={todayDateInputValue()}
-                    onChange={(iso) => setDeliveryWindow({ ...deliveryWindow, date: iso })}
-                    disabled={isSubmitting}
-                  />
-                  <select value={deliveryWindow.timeSlot} onChange={(e) => setDeliveryWindow({ ...deliveryWindow, timeSlot: e.target.value })} disabled={isSubmitting} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100">
-                    {deliveryTimeSlots.map((slot) => (
-                      <option key={slot.value} value={slot.value}>{slot.emoji} {slot.label}</option>
-                    ))}
-                  </select>
+                  <div>
+                    <Input value={deliveryAddress.postalCode ?? ""} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, postalCode: e.target.value.replace(/\D/g, "").slice(0, 10) })} placeholder="کد پستی ۱۰ رقمی، اختیاری" inputMode="numeric" maxLength={10} disabled={isSubmitting} />
+                    {fieldErrors.postalCode && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.postalCode}</p>}
+                  </div>
+                  <div>
+                    <JalaliDatePicker
+                      value={deliveryWindow.date}
+                      min={todayDateInputValue()}
+                      onChange={(iso) => setDeliveryWindow({ ...deliveryWindow, date: iso })}
+                      disabled={isSubmitting}
+                    />
+                    {fieldErrors.deliveryDate && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.deliveryDate}</p>}
+                  </div>
+                  <div>
+                    <select value={deliveryWindow.timeSlot} onChange={(e) => setDeliveryWindow({ ...deliveryWindow, timeSlot: e.target.value })} disabled={isSubmitting} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100">
+                      {deliveryTimeSlots.map((slot) => (
+                        <option key={slot.value} value={slot.value}>{slot.emoji} {slot.label}</option>
+                      ))}
+                    </select>
+                    {fieldErrors.deliveryTime && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.deliveryTime}</p>}
+                  </div>
                 </div>
-                {!deliveryFormValid ? <p className="mt-3 text-xs leading-6 text-amber-600">شماره موبایل باید با 09 شروع شود؛ آدرس حداقل ۱۰ کاراکتر و کد پستی در صورت ورود باید ۱۰ رقم باشد.</p> : null}
               </Card>
 
               <Card className="p-6">
