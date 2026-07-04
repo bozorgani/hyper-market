@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { isValidObjectId } from 'mongoose';
+import { isValidObjectId, Types } from 'mongoose';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { CreateCategoryDto } from '../dto/create-category.dto';
@@ -32,9 +32,20 @@ export class CategoriesService {
       throw new ConflictException('Category slug already exists');
     }
 
+    // Validate parentId if provided
+    if (data.parentId) {
+      await this.ensureParentCategoryExists(data.parentId);
+    }
+
     const category = await this.categoriesRepository.create({
       name: data.name,
       slug,
+      description: data.description ?? null,
+      icon: data.icon ?? null,
+      image: data.image ?? null,
+      parentId: data.parentId ? new Types.ObjectId(data.parentId) : null,
+      sortOrder: data.sortOrder ?? 0,
+      isActive: data.isActive ?? true,
     });
 
     await this.invalidateCategoryCaches();
@@ -107,8 +118,10 @@ export class CategoriesService {
   async updateCategory(id: string, data: UpdateCategoryDto): Promise<Category> {
     await this.getCategoryByIdOrFail(id);
 
+    // Build update data without parentId (handled separately due to type conversion)
+    const { parentId: rawParentId, ...restData } = data;
     const updateData: Partial<Category> = {
-      ...data,
+      ...restData,
       slug: data.slug ? this.normalizeSlug(data.slug) : undefined,
     };
 
@@ -119,6 +132,20 @@ export class CategoriesService {
 
       if (existingCategory && getEntityId(existingCategory) !== id) {
         throw new ConflictException('Category slug already exists');
+      }
+    }
+
+    // Validate and convert parentId if provided
+    if (rawParentId !== undefined) {
+      if (rawParentId !== null) {
+        await this.ensureParentCategoryExists(rawParentId);
+        // Prevent circular reference: a category cannot be its own parent
+        if (rawParentId === id) {
+          throw new BadRequestException('Category cannot be its own parent');
+        }
+        updateData.parentId = new Types.ObjectId(rawParentId);
+      } else {
+        updateData.parentId = null;
       }
     }
 
@@ -140,6 +167,11 @@ export class CategoriesService {
       throw new ConflictException('Category has active products and cannot be deleted');
     }
 
+    const hasChildCategories = await this.categoriesRepository.hasChildCategories(id);
+    if (hasChildCategories) {
+      throw new ConflictException('Category has child categories and cannot be deleted');
+    }
+
     const category = await this.categoriesRepository.softDelete(id);
     if (!category) {
       throw new NotFoundException('Category not found');
@@ -148,6 +180,16 @@ export class CategoriesService {
     await this.invalidateCategoryCaches(id);
 
     return category;
+  }
+
+  private async ensureParentCategoryExists(parentId: string): Promise<void> {
+    if (!isValidObjectId(parentId)) {
+      throw new BadRequestException('Invalid parent category id');
+    }
+    const parent = await this.categoriesRepository.findById(parentId);
+    if (!parent) {
+      throw new BadRequestException('Parent category not found');
+    }
   }
 
   private async invalidateCategoryCaches(id?: string): Promise<void> {

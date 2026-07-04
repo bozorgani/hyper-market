@@ -12,6 +12,12 @@ const mockCategory: Category = {
   _id: CATEGORY_ID,
   name: 'موبایل',
   slug: 'mobile',
+  description: 'گوشی موبایل و تبلت',
+  icon: '📱',
+  image: null,
+  parentId: null,
+  sortOrder: 0,
+  isActive: true,
   deletedAt: null,
 } as Category;
 
@@ -26,6 +32,7 @@ describe('CategoriesService', () => {
     updateById: jest.Mock;
     softDelete: jest.Mock;
     hasActiveProducts: jest.Mock;
+    hasChildCategories: jest.Mock;
   };
   let redisService: {
     get: jest.Mock;
@@ -48,6 +55,7 @@ describe('CategoriesService', () => {
       updateById: jest.fn().mockResolvedValue(mockCategory),
       softDelete: jest.fn().mockResolvedValue(mockCategory),
       hasActiveProducts: jest.fn().mockResolvedValue(false),
+      hasChildCategories: jest.fn().mockResolvedValue(false),
     };
 
     redisService = {
@@ -79,7 +87,7 @@ describe('CategoriesService', () => {
 
       expect(result).toBe(mockCategory);
       expect(repository.findBySlug).toHaveBeenCalledWith('laptop');
-      expect(repository.create).toHaveBeenCalledWith({ name: 'لپ‌تاپ', slug: 'laptop' });
+      expect(repository.create).toHaveBeenCalledWith({ name: 'لپ‌تاپ', slug: 'laptop', description: null, icon: null, image: null, parentId: null, sortOrder: 0, isActive: true });
     });
 
     it('should throw ConflictException when slug already exists', async () => {
@@ -88,6 +96,53 @@ describe('CategoriesService', () => {
       await expect(
         service.createCategory({ name: 'تکراری', slug: 'mobile' }),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('should create a sub-category with valid parentId', async () => {
+      const parentCategory = { ...mockCategory, _id: '507f1f77bcf86cd799439099' } as Category;
+      repository.findById.mockResolvedValue(parentCategory);
+
+      const result = await service.createCategory({
+        name: 'سامسونگ',
+        slug: 'samsung',
+        parentId: '507f1f77bcf86cd799439099',
+      });
+
+      expect(result).toBe(mockCategory);
+      expect(repository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          parentId: expect.any(Object),
+        }),
+      );
+    });
+
+    it('should throw BadRequestException when parentId does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.createCategory({ name: 'زیر', slug: 'sub', parentId: '507f1f77bcf86cd799439099' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should create with enriched fields (icon, description, sortOrder, isActive)', async () => {
+      const result = await service.createCategory({
+        name: 'لپ‌تاپ',
+        slug: 'laptop',
+        description: 'لپ‌تاپ و نوت‌بوک',
+        icon: '💻',
+        sortOrder: 5,
+        isActive: false,
+      });
+
+      expect(result).toBe(mockCategory);
+      expect(repository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: 'لپ‌تاپ و نوت‌بوک',
+          icon: '💻',
+          sortOrder: 5,
+          isActive: false,
+        }),
+      );
     });
   });
 
@@ -194,6 +249,19 @@ describe('CategoriesService', () => {
       const result = await service.updateCategory(CATEGORY_ID, { slug: 'mobile' });
       expect(result).toBe(mockCategory);
     });
+
+    it('should throw BadRequestException when setting category as its own parent', async () => {
+      await expect(
+        service.updateCategory(CATEGORY_ID, { parentId: CATEGORY_ID }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should allow setting parentId to null (making it a root category)', async () => {
+      repository.updateById.mockResolvedValue(mockCategory);
+
+      const result = await service.updateCategory(CATEGORY_ID, { parentId: null });
+      expect(result).toBe(mockCategory);
+    });
   });
 
   // ── deleteCategory ────────────────────────────────────────────────
@@ -207,6 +275,15 @@ describe('CategoriesService', () => {
 
     it('should throw ConflictException when category has active products', async () => {
       repository.hasActiveProducts.mockResolvedValue(true);
+
+      await expect(service.deleteCategory(CATEGORY_ID)).rejects.toThrow(
+        ConflictException,
+      );
+      expect(repository.softDelete).not.toHaveBeenCalled();
+    });
+
+    it('should throw ConflictException when category has child categories', async () => {
+      repository.hasChildCategories.mockResolvedValue(true);
 
       await expect(service.deleteCategory(CATEGORY_ID)).rejects.toThrow(
         ConflictException,

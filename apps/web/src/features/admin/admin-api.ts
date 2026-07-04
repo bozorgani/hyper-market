@@ -82,6 +82,12 @@ export function useDeleteProduct() {
 export type CategoryFormInput = {
   name: string;
   slug: string;
+  description?: string;
+  icon?: string;
+  image?: string;
+  parentId?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
 };
 
 export function useAdminCategories() {

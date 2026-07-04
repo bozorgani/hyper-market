@@ -1,4 +1,14 @@
-import { IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsMongoId,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class UpdateCategoryDto {
   @IsOptional()
@@ -13,4 +23,38 @@ export class UpdateCategoryDto {
   @MaxLength(120)
   @Matches(/^[a-z0-9-]+$/)
   slug?: string;
+
+  /** Short description */
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  /** Emoji or icon identifier */
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  icon?: string;
+
+  /** Cover image URL */
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  image?: string;
+
+  /** Parent category ID (set to null to make root) */
+  @IsOptional()
+  @IsMongoId()
+  parentId?: string | null;
+
+  /** Display sort order */
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  sortOrder?: number;
+
+  /** Whether the category is visible to customers */
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

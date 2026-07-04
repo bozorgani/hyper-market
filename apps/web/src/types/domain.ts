@@ -38,6 +38,12 @@ export type Category = {
   _id: string;
   name: string;
   slug: string;
+  description?: string | null;
+  icon?: string | null;
+  image?: string | null;
+  parentId?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
 };
 
 export type CartItem = {

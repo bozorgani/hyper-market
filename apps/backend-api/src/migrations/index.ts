@@ -81,4 +81,39 @@ export const migrations: Migration[] = [
       console.log('[MIGRATION 0002] Indexes created: sku (sparse unique), brand, tags.');
     },
   },
+
+  // ── 0003: Enrich Category schema ────────────────────────────────────
+  {
+    id: '0003',
+    description: 'Add description, icon, image, parentId, sortOrder, isActive to categories',
+    up: async (connection) => {
+      const collection = connection.collection('categories');
+
+      // Set default values for all existing documents that lack the new fields.
+      const result = await collection.updateMany(
+        {},
+        {
+          $set: {
+            description: null,
+            icon: null,
+            image: null,
+            parentId: null,
+            sortOrder: 0,
+            isActive: true,
+          },
+        },
+        { upsert: false },
+      );
+
+      console.log(
+        `[MIGRATION 0003] Updated ${result.modifiedCount} categor(ies) with new fields (description, icon, image, parentId, sortOrder, isActive).`,
+      );
+
+      // Create indexes for the new fields
+      await collection.createIndex({ parentId: 1, sortOrder: 1 });
+      await collection.createIndex({ isActive: 1, deletedAt: 1 });
+
+      console.log('[MIGRATION 0003] Indexes created: parentId+sortOrder, isActive+deletedAt.');
+    },
+  },
 ];

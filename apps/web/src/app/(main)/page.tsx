@@ -9,7 +9,7 @@ import { useProducts, useCategories } from "@/hooks/use-products";
 import { useAuthStore } from "@/store/auth-store";
 
 const categoryIcons: Record<string, string> = {
-  default: "🛒",
+  default: "📦",
 };
 
 const features = [
@@ -101,7 +101,7 @@ export default function HomePage() {
                     href={`/products?category=${cat._id}`}
                     className="flex flex-col items-center gap-2 rounded-2xl border border-slate-100 bg-white px-5 py-4 transition hover:border-emerald-200 hover:shadow-md min-w-[80px]"
                   >
-                    <span className="text-2xl">{categoryIcons[cat.slug] ?? "📦"}</span>
+                    <span className="text-2xl">{cat.icon || (categoryIcons[cat.slug] ?? categoryIcons.default)}</span>
                     <span className="text-[11px] font-semibold text-slate-700 whitespace-nowrap text-center">{cat.name}</span>
                   </Link>
                 </motion.div>

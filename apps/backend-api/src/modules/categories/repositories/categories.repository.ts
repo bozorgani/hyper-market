@@ -90,4 +90,16 @@ export class CategoriesRepository {
 
     return count > 0;
   }
+
+  async hasChildCategories(categoryId: string): Promise<boolean> {
+    if (!isValidObjectId(categoryId)) return false;
+    const count = await this.categoryModel
+      .countDocuments({
+        parentId: new Types.ObjectId(categoryId),
+        deletedAt: null,
+      })
+      .exec();
+
+    return count > 0;
+  }
 }
