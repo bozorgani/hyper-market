@@ -23,6 +23,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ProductsModule } from './modules/products/products.module';
 import { SearchModule } from './modules/search/search.module';
+import { ShippingModule } from './modules/shipping/shipping.module';
 import { UsersModule } from './modules/users/users.module';
 
 // Rate limiting uses Redis-backed storage so limits are shared across all
@@ -80,6 +81,7 @@ const isProduction =
     UsersModule,
     ProductsModule,
     SearchModule,
+    ShippingModule,
     CategoriesModule,
     CartModule,
     CouponsModule,

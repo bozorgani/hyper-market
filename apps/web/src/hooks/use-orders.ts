@@ -8,6 +8,7 @@ type CreateOrderInput = {
   deliveryAddress: DeliveryAddress;
   deliveryWindow: DeliveryWindow;
   couponCode?: string;
+  shippingMethod?: "standard" | "express";
 };
 
 type CreatePaymentInput = {
@@ -46,6 +47,7 @@ export function useCreateOrder() {
             deliveryAddress: input.deliveryAddress,
             deliveryWindow: input.deliveryWindow,
             ...(input.couponCode ? { couponCode: input.couponCode } : {}),
+            ...(input.shippingMethod ? { shippingMethod: input.shippingMethod } : {}),
           },
           { headers: idempotencyHeaders(input.idempotencyKey ?? createIdempotencyKey("order")) },
         )

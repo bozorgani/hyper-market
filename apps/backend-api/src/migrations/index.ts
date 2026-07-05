@@ -230,4 +230,32 @@ export const migrations: Migration[] = [
       );
     },
   },
+
+  // ── 0007: Backfill shipping fields for legacy orders ─────────────────────
+  {
+    id: '0007',
+    description: 'Backfill shipping method and delivery fee on legacy orders',
+    up: async (connection) => {
+      const collection = connection.collection('orders');
+      const methodResult = await collection.updateMany(
+        { shippingMethod: { $exists: false } },
+        { $set: { shippingMethod: 'standard' } },
+        { upsert: false },
+      );
+      const feeResult = await collection.updateMany(
+        { deliveryFee: { $exists: false } },
+        { $set: { deliveryFee: 0 } },
+        { upsert: false },
+      );
+      const freeShippingResult = await collection.updateMany(
+        { freeShippingApplied: { $exists: false } },
+        { $set: { freeShippingApplied: false } },
+        { upsert: false },
+      );
+
+      console.log(
+        `[MIGRATION 0007] Backfilled shipping fields (method=${methodResult.modifiedCount}, fee=${feeResult.modifiedCount}, free=${freeShippingResult.modifiedCount}).`,
+      );
+    },
+  },
 ];

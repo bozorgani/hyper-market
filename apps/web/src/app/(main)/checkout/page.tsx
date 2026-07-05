@@ -24,6 +24,7 @@ import type { DeliveryAddress, DeliveryWindow } from "@/types/domain";
 import { useCart } from "@/hooks/use-cart";
 import { useValidateCoupon, type CouponValidationResult } from "@/hooks/use-coupons";
 import { useCreateOrder, useCreatePayment } from "@/hooks/use-orders";
+import { useShippingQuote, type ShippingMethod } from "@/hooks/use-shipping";
 
 const MapPicker = lazy(() =>
   import("@/components/ui/map-picker").then((m) => ({ default: m.MapPicker }))
@@ -134,6 +135,7 @@ export default function CheckoutPage() {
     date: todayDateInputValue(),
     timeSlot: deliveryTimeSlots[0].value,
   });
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("standard");
   const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
 
   const [showMap, setShowMap] = useState(false);
@@ -146,11 +148,20 @@ export default function CheckoutPage() {
   const detailedItems = cart.data?.items ?? [];
   const totalPrice = cart.data?.totalPrice ?? 0;
   const discountAmount = appliedDiscount?.discountAmount ?? 0;
-  const finalPrice = appliedDiscount?.total ?? totalPrice;
+  const merchandiseTotal = appliedDiscount?.total ?? totalPrice;
   const mutationPending = createOrder.isPending || createPayment.isPending;
   const isSubmitting = mutationPending || isLocalSubmitting;
   const activeStepIndex = stepIndex(currentStep);
   const deliveryFormValid = isDeliveryAddressValid(deliveryAddress) && Boolean(deliveryWindow.date && deliveryWindow.timeSlot);
+  const shippingQuote = useShippingQuote({
+    address: deliveryAddress,
+    deliveryWindow,
+    method: shippingMethod,
+    couponCode: appliedDiscount?.code,
+    enabled: deliveryFormValid && detailedItems.length > 0,
+  });
+  const deliveryFee = shippingQuote.data?.deliveryFee ?? 0;
+  const finalPrice = merchandiseTotal + deliveryFee;
   const fieldErrors = useMemo(() => getFieldErrors(deliveryAddress, deliveryWindow), [deliveryAddress, deliveryWindow]);
   const cartErrorMessage = useMemo(() => {
     if (!cart.error) return "";
@@ -202,7 +213,7 @@ export default function CheckoutPage() {
     setError("");
 
     try {
-      trackAnalyticsEvent({ type: "CHECKOUT_START", metadata: { totalPrice: finalPrice, attemptId: keys.attemptId } });
+      trackAnalyticsEvent({ type: "CHECKOUT_START", metadata: { totalPrice: finalPrice, deliveryFee, shippingMethod, attemptId: keys.attemptId } });
 
       setCurrentStep("creating_order");
       const order = await createOrder.mutateAsync({
@@ -222,6 +233,7 @@ export default function CheckoutPage() {
           timeSlot: deliveryWindow.timeSlot,
         },
         couponCode: appliedDiscount?.code,
+        shippingMethod,
       });
 
       setCurrentStep("confirming_payment");
@@ -376,6 +388,37 @@ export default function CheckoutPage() {
                     {fieldErrors.deliveryTime && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.deliveryTime}</p>}
                   </div>
                 </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() => setShippingMethod("standard")}
+                    className={cn(
+                      "rounded-2xl border p-4 text-right transition focus-visible:ring-4 focus-visible:ring-rose-100 disabled:opacity-60",
+                      shippingMethod === "standard" ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-white hover:bg-slate-50",
+                    )}
+                  >
+                    <p className="font-bold text-slate-900">ارسال استاندارد</p>
+                    <p className="mt-1 text-xs text-slate-500">مناسب سفارش‌های عادی</p>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() => setShippingMethod("express")}
+                    className={cn(
+                      "rounded-2xl border p-4 text-right transition focus-visible:ring-4 focus-visible:ring-rose-100 disabled:opacity-60",
+                      shippingMethod === "express" ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-white hover:bg-slate-50",
+                    )}
+                  >
+                    <p className="font-bold text-slate-900">ارسال سریع</p>
+                    <p className="mt-1 text-xs text-slate-500">تحویل سریع‌تر با هزینه بیشتر</p>
+                  </button>
+                </div>
+                {shippingQuote.isError ? (
+                  <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
+                    {shippingQuote.error instanceof Error ? shippingQuote.error.message : "امکان محاسبه ارسال وجود ندارد."}
+                  </p>
+                ) : null}
               </Card>
 
               <Card className="p-6">
@@ -421,6 +464,15 @@ export default function CheckoutPage() {
                   {formatNumber(appliedDiscount?.percent ?? 0)}٪ تخفیف = {formatPrice(discountAmount)} تومان
                 </p>
               )}
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <span className="text-slate-500">هزینه ارسال</span>
+                <span className="font-bold text-slate-800">
+                  {shippingQuote.isLoading ? "در حال محاسبه..." : deliveryFee === 0 ? "رایگان" : formatPrice(deliveryFee)}
+                </span>
+              </div>
+              {shippingQuote.data?.freeShippingApplied ? (
+                <p className="mt-2 text-xs text-emerald-600">ارسال رایگان برای این سفارش اعمال شد.</p>
+              ) : null}
 
               <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
                 <div className="flex items-center gap-2">
@@ -476,7 +528,7 @@ export default function CheckoutPage() {
                 </div>
               ) : null}
               <div className="mt-6 flex flex-col gap-3">
-                <Button type="button" className="w-full" onClick={() => setConfirmOpen(true)} disabled={isSubmitting || !deliveryFormValid}>
+                <Button type="button" className="w-full" onClick={() => setConfirmOpen(true)} disabled={isSubmitting || !deliveryFormValid || shippingQuote.isLoading || shippingQuote.isError}>
                   {isSubmitting ? "در حال ثبت سفارش..." : error && attemptKeys ? "تلاش مجدد ثبت سفارش" : "ثبت سفارش — پرداخت در محل"}
                 </Button>
                 {error && attemptKeys ? (

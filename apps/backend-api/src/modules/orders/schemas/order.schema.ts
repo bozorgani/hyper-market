@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 import { Product } from '../../products/schemas/product.schema';
 import { User } from '../../users/schemas/user.schema';
+import { ShippingMethod } from '../../shipping/enums/shipping-method.enum';
 import { OrderStatus } from '../enums/order-status.enum';
 
 export type OrderDocument = HydratedDocument<Order>;
@@ -81,6 +82,15 @@ export class Order {
 
   @Prop({ type: String, default: null, trim: true })
   couponCode?: string | null;
+
+  @Prop({ type: String, enum: ShippingMethod, default: ShippingMethod.STANDARD })
+  shippingMethod!: ShippingMethod;
+
+  @Prop({ type: Number, default: 0, min: 0 })
+  deliveryFee!: number;
+
+  @Prop({ type: Boolean, default: false })
+  freeShippingApplied!: boolean;
 
   @Prop({ type: Number, required: true, min: 0 })
   totalPrice!: number;

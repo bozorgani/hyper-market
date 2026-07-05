@@ -119,6 +119,9 @@ export type Order = {
   subtotalPrice?: number;
   discountAmount?: number;
   couponCode?: string | null;
+  shippingMethod?: "standard" | "express";
+  deliveryFee?: number;
+  freeShippingApplied?: boolean;
   totalPrice: number;
   status: OrderStatus;
   deliveryAddress?: DeliveryAddress;
