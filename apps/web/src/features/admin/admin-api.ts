@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updateOrderStatusAction } from "@/app/actions/checkout";
 import { api } from "@/services/api";
-import type { Category, Order, PaginatedResponse, Payment, Product, ProductListResponse, User } from "@/types/domain";
+import type { Category, Coupon, Order, PaginatedResponse, Payment, Product, ProductListResponse, User } from "@/types/domain";
 
 export type ProductFormInput = {
   name: string;
@@ -315,5 +315,60 @@ export function useSeedPermissions() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "permissions"] });
     },
+  });
+}
+
+
+// ── Coupons ────────────────────────────────────────────────────────────────
+
+export type CouponFormInput = {
+  code: string;
+  percent: number;
+  active?: boolean;
+  minSubtotal?: number;
+  maxDiscountAmount?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  usageLimit?: number | null;
+  perUserLimit?: number | null;
+};
+
+export function useAdminCoupons(page = 1, active?: boolean, limit = 20) {
+  return useQuery({
+    queryKey: ["admin", "coupons", page, active, limit],
+    queryFn: async () =>
+      (await api.get<PaginatedResponse<Coupon>>("/admin/coupons", { params: { page, limit, active } })).data,
+  });
+}
+
+export function useCreateCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CouponFormInput) => (await api.post<Coupon>("/admin/coupons", input)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "coupons"] }),
+  });
+}
+
+export function useUpdateCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: string; input: CouponFormInput }) =>
+      (await api.put<Coupon>(`/admin/coupons/${id}`, input)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "coupons"] }),
+  });
+}
+
+export function useDeleteCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => (await api.delete<Coupon>(`/admin/coupons/${id}`)).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "coupons"] }),
+  });
+}
+
+export function useCouponAnalytics() {
+  return useQuery({
+    queryKey: ["admin", "coupons", "analytics"],
+    queryFn: async () => (await api.get("/admin/coupons/analytics")).data,
   });
 }

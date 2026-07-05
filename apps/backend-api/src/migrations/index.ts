@@ -284,4 +284,32 @@ export const migrations: Migration[] = [
       console.log('[MIGRATION 0009] Extended audit-log indexes created.');
     },
   },
+
+  // ── 0010: Coupon management collections and admin permissions ─────────────
+  {
+    id: '0010',
+    description: 'Create coupon indexes and seed coupon admin permissions',
+    up: async (connection) => {
+      const coupons = connection.collection('coupons');
+      const usages = connection.collection('coupon_usages');
+      const permissions = connection.collection('permissions');
+
+      await coupons.createIndex({ code: 1 }, { unique: true });
+      await coupons.createIndex({ code: 1, deletedAt: 1 });
+      await coupons.createIndex({ active: 1, startsAt: 1, endsAt: 1, deletedAt: 1 });
+      await usages.createIndex({ couponId: 1, userId: 1, createdAt: -1 });
+      await usages.createIndex({ orderId: 1 }, { unique: true });
+
+      for (const permission of ['coupons.read', 'coupons.create', 'coupons.update', 'coupons.delete']) {
+        const [resource, action] = permission.split('.');
+        await permissions.updateOne(
+          { role: 'admin', name: permission },
+          { $setOnInsert: { role: 'admin', name: permission, resource, action } },
+          { upsert: true },
+        );
+      }
+
+      console.log('[MIGRATION 0010] Coupon indexes and admin permissions created.');
+    },
+  },
 ];

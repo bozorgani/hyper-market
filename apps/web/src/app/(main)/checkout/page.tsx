@@ -23,7 +23,7 @@ import { IRAN_PROVINCES } from "@/data/iran-locations";
 import type { DeliveryAddress, DeliveryWindow } from "@/types/domain";
 import { useMyAddresses } from "@/hooks/use-addresses";
 import { useCart } from "@/hooks/use-cart";
-import { useValidateCoupon, type CouponValidationResult } from "@/hooks/use-coupons";
+import { useAvailableCoupons, useValidateCoupon, type CouponValidationResult } from "@/hooks/use-coupons";
 import { useCreateOrder, useCreatePayment } from "@/hooks/use-orders";
 import { useShippingQuote, type ShippingMethod } from "@/hooks/use-shipping";
 
@@ -118,6 +118,7 @@ export default function CheckoutPage() {
   const createOrder = useCreateOrder();
   const createPayment = useCreatePayment();
   const validateCoupon = useValidateCoupon();
+  const availableCoupons = useAvailableCoupons();
   const { showToast } = useToast();
   const [error, setError] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -478,6 +479,20 @@ export default function CheckoutPage() {
                   </Button>
                 </div>
                 {discountError ? <p className="mt-2 text-sm text-red-600">{discountError}</p> : null}
+                {!appliedDiscount && (availableCoupons.data ?? []).length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {(availableCoupons.data ?? []).slice(0, 3).map((coupon) => (
+                      <button
+                        key={coupon.code}
+                        type="button"
+                        onClick={() => setDiscountInput(coupon.code)}
+                        className="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700 transition hover:bg-violet-100"
+                      >
+                        {coupon.code} — {formatNumber(coupon.percent)}٪
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
                 {appliedDiscount ? (
                   <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
                     <Gift className="h-4 w-4" />

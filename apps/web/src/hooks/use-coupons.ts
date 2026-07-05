@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { validateCouponAction } from "@/app/actions/checkout";
 
 export type CouponValidationResult = {
@@ -12,5 +12,14 @@ export type CouponValidationResult = {
 export function useValidateCoupon() {
   return useMutation({
     mutationFn: validateCouponAction,
+  });
+}
+
+
+export function useAvailableCoupons() {
+  return useQuery({
+    queryKey: ["coupons", "available"],
+    queryFn: async () => (await import("@/services/api")).api.get<CouponValidationResult[]>("/coupons/available").then((res) => res.data),
+    retry: false,
   });
 }

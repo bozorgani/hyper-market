@@ -20,7 +20,7 @@ export class ShippingController {
   @Post('quote')
   async getQuote(@CurrentUser() user: JwtPayload, @Body() dto: ShippingQuoteDto) {
     const cart = await this.cartService.getCartSummary(user.sub);
-    const coupon = this.couponsService.validateCoupon(dto.couponCode, cart.totalPrice);
+    const coupon = await this.couponsService.validateCoupon(dto.couponCode, cart.totalPrice, user.sub);
     const subtotal = coupon?.total ?? cart.totalPrice;
 
     return this.shippingService.getQuote({
