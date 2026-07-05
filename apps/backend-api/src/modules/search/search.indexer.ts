@@ -148,9 +148,8 @@ export class SearchIndexer implements OnModuleInit {
   private async ensureProductIndex(): Promise<void> {
     const index = this.client.index(this.indexName);
 
-    // Update settings — this also ensures the primaryKey is set correctly
+    // Update index settings. The primary key is provided when documents are added.
     await index.updateSettings({
-      primaryKey: 'id',
       searchableAttributes: ['title', 'description', 'categoryName', 'brand', 'sku', 'tags'],
       displayedAttributes: [
         'id', 'title', 'description', 'price', 'discountPrice', 'effectivePrice',

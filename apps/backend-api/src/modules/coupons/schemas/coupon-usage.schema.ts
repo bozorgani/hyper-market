@@ -17,7 +17,7 @@ export class CouponUsage {
   @Prop({ type: SchemaTypes.ObjectId, ref: User.name, required: true, index: true })
   userId!: Types.ObjectId;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: Order.name, required: true, index: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: Order.name, required: true })
   orderId!: Types.ObjectId;
 
   @Prop({ type: Number, required: true, min: 0 })
@@ -26,4 +26,4 @@ export class CouponUsage {
 
 export const CouponUsageSchema = SchemaFactory.createForClass(CouponUsage);
 CouponUsageSchema.index({ couponId: 1, userId: 1, createdAt: -1 });
-CouponUsageSchema.index({ orderId: 1 }, { unique: true });
+CouponUsageSchema.index({ orderId: 1 }, { unique: true, name: 'coupon_usage_order_unique' });

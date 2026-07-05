@@ -294,11 +294,26 @@ export const migrations: Migration[] = [
       const usages = connection.collection('coupon_usages');
       const permissions = connection.collection('permissions');
 
-      await coupons.createIndex({ code: 1 }, { unique: true });
-      await coupons.createIndex({ code: 1, deletedAt: 1 });
-      await coupons.createIndex({ active: 1, startsAt: 1, endsAt: 1, deletedAt: 1 });
-      await usages.createIndex({ couponId: 1, userId: 1, createdAt: -1 });
-      await usages.createIndex({ orderId: 1 }, { unique: true });
+      await coupons.createIndex({ code: 1 }, { unique: true, name: 'coupon_code_unique' });
+      await coupons.createIndex({ code: 1, deletedAt: 1 }, { name: 'coupon_code_deletedAt' });
+      await coupons.createIndex(
+        { active: 1, startsAt: 1, endsAt: 1, deletedAt: 1 },
+        { name: 'coupon_active_window_deletedAt' },
+      );
+      await usages.createIndex(
+        { couponId: 1, userId: 1, createdAt: -1 },
+        { name: 'coupon_usage_coupon_user_createdAt' },
+      );
+
+      const usageIndexes = await usages.indexes();
+      const existingOrderIdIndex = usageIndexes.find((index) => index.name === 'orderId_1');
+      if (existingOrderIdIndex && !existingOrderIdIndex.unique) {
+        await usages.dropIndex('orderId_1');
+      }
+      await usages.createIndex(
+        { orderId: 1 },
+        { unique: true, name: 'coupon_usage_order_unique' },
+      );
 
       for (const permission of ['coupons.read', 'coupons.create', 'coupons.update', 'coupons.delete']) {
         const [resource, action] = permission.split('.');
