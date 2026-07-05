@@ -1,5 +1,8 @@
-import { Body, Controller, Get, Headers, Param, Post, Query, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Get, Headers, Param, Post, Query, Req, Res } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { AuditService } from '../../audit/audit.service';
+import { AuditAction } from '../../audit/enums/audit-action.enum';
+import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { IdempotencyService } from '../../../infrastructure/idempotency/idempotency.service';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
@@ -11,6 +14,7 @@ export class PaymentsController {
   constructor(
     private readonly paymentsService: PaymentsService,
     private readonly idempotencyService: IdempotencyService,
+    private readonly auditService: AuditService,
   ) {}
 
   @Post('create')
@@ -19,6 +23,7 @@ export class PaymentsController {
     @Body() dto: CreatePaymentDto,
     @Headers('idempotency-key') idempotencyKey: string | undefined,
     @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
   ) {
     const result = await this.idempotencyService.execute(
       `payments:create:${user.sub}`,
@@ -28,6 +33,14 @@ export class PaymentsController {
     );
 
     response.setHeader('Idempotency-Status', result.status);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.PAYMENT_CREATED,
+      resource: 'payment',
+      resourceId: getEntityId(result.data),
+      metadata: { orderId: dto.orderId, amount: result.data.amount, status: result.data.status, method: result.data.method },
+      request,
+    });
     return result.data;
   }
 

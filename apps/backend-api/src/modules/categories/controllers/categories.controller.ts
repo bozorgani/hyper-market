@@ -1,4 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req } from '@nestjs/common';
+import { Request } from 'express';
+import { AuditService } from '../../audit/audit.service';
+import { AuditAction } from '../../audit/enums/audit-action.enum';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Permissions } from '../../permissions/decorators/permissions.decorator';
@@ -6,10 +11,14 @@ import { UserRole } from '../../users/enums/user-role.enum';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { CategoriesService } from '../services/categories.service';
+import { getEntityId } from '../../../shared/utils/entity-id.util';
 
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Get()
   @Public()
@@ -43,7 +52,10 @@ export class CategoriesController {
 @Controller('admin/categories')
 @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
 export class AdminCategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Get()
   @Permissions('categories.read')
@@ -68,20 +80,60 @@ export class AdminCategoriesController {
 
   @Post()
   @Permissions('categories.create')
-  createCategory(@Body() dto: CreateCategoryDto) {
-    return this.categoriesService.createCategory(dto);
+  async createCategory(
+    @Body() dto: CreateCategoryDto,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
+    const category = await this.categoriesService.createCategory(dto);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.CATEGORY_CREATED,
+      resource: 'category',
+      resourceId: getEntityId(category),
+      metadata: { name: category.name, slug: category.slug },
+      request,
+    });
+    return category;
   }
 
   @Put(':id')
   @Permissions('categories.update')
-  updateCategory(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
-    return this.categoriesService.updateCategory(id, dto);
+  async updateCategory(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
+    const category = await this.categoriesService.updateCategory(id, dto);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.CATEGORY_UPDATED,
+      resource: 'category',
+      resourceId: id,
+      metadata: { changedFields: Object.keys(dto) },
+      request,
+    });
+    return category;
   }
 
   @Delete(':id')
   @Permissions('categories.delete')
-  deleteCategory(@Param('id') id: string) {
-    return this.categoriesService.deleteCategory(id);
+  async deleteCategory(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
+    const category = await this.categoriesService.deleteCategory(id);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.CATEGORY_DELETED,
+      resource: 'category',
+      resourceId: id,
+      metadata: { name: category.name, slug: category.slug },
+      request,
+    });
+    return category;
   }
 
   private toPositiveInteger(value: string | undefined, fallback: number): number {

@@ -5,7 +5,13 @@ import {
   Get,
   Param,
   Post,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
+import { AuditService } from '../../audit/audit.service';
+import { AuditAction } from '../../audit/enums/audit-action.enum';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { Permissions } from '../decorators/permissions.decorator';
@@ -15,7 +21,10 @@ import { PermissionsService } from '../services/permissions.service';
 @Controller('permissions')
 @Roles(UserRole.SUPER_ADMIN)
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) {}
+  constructor(
+    private readonly permissionsService: PermissionsService,
+    private readonly auditService: AuditService,
+  ) {}
 
   /**
    * GET /permissions — full role→permissions map
@@ -45,13 +54,25 @@ export class PermissionsController {
    */
   @Post('grant')
   @Permissions('permissions.update')
-  async grantPermission(@Body() dto: GrantPermissionDto) {
+  async grantPermission(
+    @Body() dto: GrantPermissionDto,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
     await this.permissionsService.grantPermission(
       dto.role,
       dto.permissionName,
       dto.resource,
       dto.action,
     );
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.PERMISSION_GRANTED,
+      resource: 'permission',
+      resourceId: `${dto.role}:${dto.permissionName}`,
+      metadata: { ...dto },
+      request,
+    });
     return { success: true, message: `Permission "${dto.permissionName}" granted to role "${dto.role}"` };
   }
 
@@ -60,11 +81,23 @@ export class PermissionsController {
    */
   @Post('revoke')
   @Permissions('permissions.update')
-  async revokePermission(@Body() dto: RevokePermissionDto) {
+  async revokePermission(
+    @Body() dto: RevokePermissionDto,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
     const revoked = await this.permissionsService.revokePermission(dto.role, dto.permissionName);
     if (!revoked) {
       return { success: false, message: `Permission "${dto.permissionName}" not found for role "${dto.role}"` };
     }
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.PERMISSION_REVOKED,
+      resource: 'permission',
+      resourceId: `${dto.role}:${dto.permissionName}`,
+      metadata: { ...dto },
+      request,
+    });
     return { success: true, message: `Permission "${dto.permissionName}" revoked from role "${dto.role}"` };
   }
 
@@ -73,8 +106,18 @@ export class PermissionsController {
    */
   @Post('seed')
   @Permissions('permissions.update')
-  async seedFromConstant() {
+  async seedFromConstant(
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
     await this.permissionsService.seedFromConstant();
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.PERMISSIONS_SEEDED,
+      resource: 'permission',
+      metadata: { source: 'ROLE_PERMISSIONS' },
+      request,
+    });
     return { success: true, message: 'Permissions seeded from static constant' };
   }
 }

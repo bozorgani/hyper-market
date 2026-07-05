@@ -17,6 +17,7 @@ import { CsrfProtectionMiddleware } from './infrastructure/security/csrf-protect
 import { RedisThrottlerStorage } from './infrastructure/security/redis-throttler-storage';
 import { SecurityModule } from './infrastructure/security/security.module';
 import { AddressesModule } from './modules/addresses/addresses.module';
+import { AuditModule } from './modules/audit/audit.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CartModule } from './modules/cart/cart.module';
@@ -81,6 +82,7 @@ const isProduction =
     HealthModule,
     SecurityModule,
     AddressesModule,
+    AuditModule,
     AnalyticsModule,
     AuthModule,
     UsersModule,

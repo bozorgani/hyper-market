@@ -271,4 +271,17 @@ export const migrations: Migration[] = [
       console.log('[MIGRATION 0008] Address book indexes created.');
     },
   },
+
+  // ── 0009: Add extended audit-log indexes ─────────────────────────────────
+  {
+    id: '0009',
+    description: 'Add resource and correlation indexes to audit logs',
+    up: async (connection) => {
+      const collection = connection.collection('audit_logs');
+      await collection.createIndex({ resource: 1, resourceId: 1, createdAt: -1 });
+      await collection.createIndex({ requestId: 1 });
+      await collection.createIndex({ traceId: 1 });
+      console.log('[MIGRATION 0009] Extended audit-log indexes created.');
+    },
+  },
 ];
