@@ -91,12 +91,13 @@ export function useProductSearch(params: {
   sort?: string;
   page?: number;
   limit?: number;
-}) {
+}, initialData?: SearchResponse) {
   return useQuery({
     queryKey: ["search", "products", params],
     queryFn: async () =>
       normalizeSearchResponse((await api.get<RawSearchResponse>("/search/products", { params })).data),
     placeholderData: keepPreviousData,
+    initialData,
   });
 }
 

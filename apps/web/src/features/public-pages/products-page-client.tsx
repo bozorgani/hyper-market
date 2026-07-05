@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCategories, useProducts } from "@/hooks/use-products";
 import { useDebounce } from "@/hooks/use-debounce";
 import { formatNumber } from "@/lib/utils";
+import type { Category, ProductListResponse } from "@/types/domain";
 
 function ProductCardSkeleton() {
   return (
@@ -33,16 +34,20 @@ function ProductCardSkeleton() {
 export function ProductsPageClient({
   initialCategoryId,
   initialSearch,
+  initialProducts,
+  initialCategories,
 }: {
   initialCategoryId?: string;
   initialSearch?: string;
+  initialProducts?: ProductListResponse;
+  initialCategories?: Category[];
 }) {
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState(initialSearch ?? "");
   const [categoryId, setCategoryId] = useState<string | undefined>(initialCategoryId);
   const debouncedSearch = useDebounce(searchInput, 300);
-  const products = useProducts(page, categoryId, debouncedSearch || undefined);
-  const categories = useCategories();
+  const products = useProducts(page, categoryId, debouncedSearch || undefined, page === 1 && categoryId === initialCategoryId && (debouncedSearch || undefined) === (initialSearch || undefined) ? initialProducts : undefined);
+  const categories = useCategories(initialCategories);
 
   const items = products.data?.items ?? [];
   const hasProducts = items.length > 0;

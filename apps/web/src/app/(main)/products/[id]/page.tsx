@@ -50,5 +50,10 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     notFound();
   }
 
-  return <ProductDetailPageClient productId={id} />;
+  const product = await fetchProductForMetadata(id);
+  if (!product) {
+    notFound();
+  }
+
+  return <ProductDetailPageClient productId={id} initialProduct={product} />;
 }

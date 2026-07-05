@@ -27,6 +27,7 @@ export default defineConfig({
       NEXT_PUBLIC_API_BASE_URL: '/api/v1',
       NEXT_PUBLIC_SITE_URL: baseURL,
       NEXT_TELEMETRY_DISABLED: '1',
+      PLAYWRIGHT_MOCK_ACTIONS: '1',
     },
   },
   projects: [
