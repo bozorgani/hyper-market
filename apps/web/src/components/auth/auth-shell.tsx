@@ -34,7 +34,7 @@ export function AuthShell({
   const featureList = features ?? defaultFeatures;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-dvh bg-slate-50">
       {/* Left Branding Panel - Desktop Only */}
       <div className="relative hidden w-[480px] shrink-0 overflow-hidden bg-slate-950 lg:flex lg:flex-col lg:justify-between">
         {/* Background Pattern */}
@@ -108,7 +108,7 @@ export function AuthShell({
       {/* Right Form Panel */}
       <div className="flex flex-1 flex-col">
         {/* Mobile Header */}
-        <div className="lg:hidden border-b border-slate-100 bg-white px-5 py-4">
+        <div className="border-b border-slate-100 bg-white px-4 py-3 sm:px-5 sm:py-4 lg:hidden">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/20">
               <ShoppingCart className="h-5 w-5 text-white" />
@@ -121,12 +121,12 @@ export function AuthShell({
         </div>
 
         {/* Form Content */}
-        <div className="flex flex-1 items-center justify-center px-5 py-8 sm:px-8">
+        <div className="flex flex-1 items-start justify-center px-3 py-5 sm:items-center sm:px-6 sm:py-8 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
-            className="w-full max-w-md"
+            className="w-full max-w-[440px]"
           >
             {/* Desktop: show eyebrow badge */}
             <div className="hidden lg:block mb-6">
@@ -137,13 +137,13 @@ export function AuthShell({
             </div>
 
             {/* Form Card */}
-            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
+            <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-7 lg:p-8">
               {children}
               {footer ? <div className="mt-6 border-t border-slate-100 pt-5">{footer}</div> : null}
             </div>
 
             {/* Desktop Trust Badges */}
-            <div className="mt-8 hidden items-center justify-center gap-6 text-xs text-slate-400 lg:flex">
+            <div className="mt-6 hidden flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-400 lg:flex">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                 <span>اتصال امن SSL</span>
