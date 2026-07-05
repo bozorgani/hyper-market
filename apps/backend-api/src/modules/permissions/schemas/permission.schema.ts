@@ -28,7 +28,6 @@ export class Permission {
 }
 
 export const PermissionSchema = SchemaFactory.createForClass(Permission);
-PermissionSchema.index({ name: 1 });
 PermissionSchema.index({ resource: 1, action: 1 });
 // Ensure a role cannot have the same permission assigned twice.
 // Permission definitions are intentionally assignment-oriented, so the same
