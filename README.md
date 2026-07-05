@@ -434,6 +434,7 @@ ERROR_TRACKING_WEBHOOK_URL=
 - OTP HMAC hashing
 - Upload validation با magic bytes
 - CSP report-only در frontend
+- Secret scanning و Docker/Kubernetes-style file secrets
 - Security headers سخت‌گیرانه
 - Audit logs
 - Request/Trace correlation
@@ -469,6 +470,7 @@ docs/docker.md
 docs/local-dev-with-docker-infra.md
 docs/e2e.md
 docs/csp.md
+docs/secrets.md
 docs/PROJECT_STATE.md
 ```
 

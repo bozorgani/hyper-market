@@ -1,3 +1,5 @@
+import { loadFileSecrets } from './file-secrets';
+
 /**
  * Environment variable validation.
  *
@@ -43,6 +45,8 @@ const ENUM_VALIDATIONS: Record<string, string[]> = {
 };
 
 export const envValidation = (config: Record<string, unknown>): Record<string, unknown> => {
+  loadFileSecrets(config);
+
   const isProduction = config.APP_ENV === 'production';
 
   // 1. Required keys (all environments)

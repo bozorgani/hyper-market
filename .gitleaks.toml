@@ -1,0 +1,16 @@
+title = "Hyper Market secret scanning"
+
+[allowlist]
+description = "Allow test-only and placeholder secrets committed intentionally for CI/local examples."
+regexes = [
+  '''test-access-secret-e2e-min-32chars!!''',
+  '''test-refresh-secret-e2e-min-32chars!''',
+  '''test-password-pepper-e2e-min-32chars!''',
+  '''test-otp-hash-secret-e2e-min-32chars!''',
+  '''change_me_[a-z_]*_32_chars_minimum_123456789''',
+  '''change_[a-z_]*_in_production''',
+  '''hyper_market_meili_master_key_change_me''',
+]
+paths = [
+  '''package-lock.json''',
+]
