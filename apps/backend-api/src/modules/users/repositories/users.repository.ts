@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { PaginatedResult } from '../../../shared/interfaces/pagination.interface';
+import { paginatedResult } from '../../../shared/utils/pagination.util';
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model, Types } from 'mongoose';
 import { BaseRepository } from '../../../shared/interfaces/base-repository.interface';
@@ -7,12 +9,7 @@ import { User, UserDocument } from '../schemas/user.schema';
 
 export type UserWithId = User & { _id: Types.ObjectId };
 
-export type UserListResult = {
-  items: User[];
-  total: number;
-  page: number;
-  limit: number;
-};
+export type UserListResult = PaginatedResult<User>;
 
 @Injectable()
 export class UsersRepository implements BaseRepository<User> {
@@ -58,7 +55,7 @@ export class UsersRepository implements BaseRepository<User> {
         .exec(),
       this.userModel.countDocuments(filter).exec(),
     ]);
-    return { items, total, page, limit };
+    return paginatedResult(items, total, page, limit);
   }
 
   async findByEmail(email: string): Promise<User | null> {

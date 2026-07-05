@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "@/services/api";
+import type { PaginationMeta } from "@/types/domain";
 
 // Canonical client-side shape used everywhere search results are rendered.
 // Field names deliberately mirror `Product` (name / images) instead of the raw
@@ -15,6 +16,22 @@ export type SearchProduct = {
   categoryName?: string;
   images?: string[];
   createdAt?: string;
+};
+
+type SearchFacets = {
+  categories: Record<string, number>;
+  brands: Record<string, number>;
+  tags: Record<string, number>;
+  status?: Record<string, number>;
+};
+
+export type SearchResponse = {
+  items: SearchProduct[];
+  total: number;
+  page: number;
+  limit: number;
+  meta?: PaginationMeta;
+  facets: SearchFacets;
 };
 
 // Raw payload from the search API (Meilisearch documents). Fields differ from
@@ -33,6 +50,15 @@ type RawSearchHit = {
   createdAt?: string;
 };
 
+type RawSearchResponse = {
+  items: RawSearchHit[];
+  total: number;
+  page: number;
+  limit: number;
+  meta?: PaginationMeta;
+  facets: SearchFacets;
+};
+
 function normalizeSearchHit(hit: RawSearchHit): SearchProduct {
   return {
     id: hit.id,
@@ -48,6 +74,14 @@ function normalizeSearchHit(hit: RawSearchHit): SearchProduct {
   };
 }
 
+function normalizeSearchResponse(response: RawSearchResponse): SearchResponse {
+  return {
+    ...response,
+    items: response.items.map(normalizeSearchHit),
+    facets: response.facets ?? { categories: {}, brands: {}, tags: {} },
+  };
+}
+
 export function useProductSearch(params: {
   q: string;
   categoryId?: string;
@@ -55,11 +89,13 @@ export function useProductSearch(params: {
   maxPrice?: string;
   minStock?: string;
   sort?: string;
+  page?: number;
+  limit?: number;
 }) {
   return useQuery({
     queryKey: ["search", "products", params],
     queryFn: async () =>
-      (await api.get<RawSearchHit[]>("/search/products", { params })).data.map(normalizeSearchHit),
+      normalizeSearchResponse((await api.get<RawSearchResponse>("/search/products", { params })).data),
     placeholderData: keepPreviousData,
   });
 }
@@ -80,11 +116,13 @@ export function useAdminProductSearch(params: {
   maxPrice?: string;
   minStock?: string;
   sort?: string;
+  page?: number;
+  limit?: number;
 }) {
   return useQuery({
     queryKey: ["admin", "search", "products", params],
     queryFn: async () =>
-      (await api.get<RawSearchHit[]>("/admin/search/products", { params })).data.map(normalizeSearchHit),
+      normalizeSearchResponse((await api.get<RawSearchResponse>("/admin/search/products", { params })).data),
     enabled:
       params.q.trim().length > 0 ||
       Boolean(params.categoryId || params.minPrice || params.maxPrice || params.minStock || params.sort),

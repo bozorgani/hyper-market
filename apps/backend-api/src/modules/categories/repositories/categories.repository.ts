@@ -1,15 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { PaginatedResult } from '../../../shared/interfaces/pagination.interface';
+import { paginatedResult } from '../../../shared/utils/pagination.util';
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model, Types } from 'mongoose';
 import { Product, ProductDocument } from '../../products/schemas/product.schema';
 import { Category, CategoryDocument } from '../schemas/category.schema';
 
-export type CategoryListResult = {
-  items: Category[];
-  total: number;
-  page: number;
-  limit: number;
-};
+export type CategoryListResult = PaginatedResult<Category>;
 
 @Injectable()
 export class CategoriesRepository {
@@ -74,7 +71,7 @@ export class CategoriesRepository {
         .exec(),
       this.categoryModel.countDocuments(filter).exec(),
     ]);
-    return { items, total, page, limit };
+    return paginatedResult(items, total, page, limit);
   }
 
   async findAllPaginatedForAdmin(
@@ -93,7 +90,7 @@ export class CategoriesRepository {
         .exec(),
       this.categoryModel.countDocuments(filter).exec(),
     ]);
-    return { items, total, page, limit };
+    return paginatedResult(items, total, page, limit);
   }
 
   async updateById(id: string, data: Partial<Category>): Promise<Category | null> {

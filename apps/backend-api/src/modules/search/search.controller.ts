@@ -11,6 +11,12 @@ function toNumber(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function toPositiveInteger(value: string | undefined): number | undefined {
+  if (value === undefined || value === '') return undefined;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
 @Controller('search')
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
@@ -25,6 +31,8 @@ export class SearchController {
     @Query('minStock') minStock?: string,
     @Query('maxStock') maxStock?: string,
     @Query('sort') sort?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     return this.searchService.searchProducts(query, {
       categoryId,
@@ -33,6 +41,8 @@ export class SearchController {
       minStock: toNumber(minStock),
       maxStock: toNumber(maxStock),
       sort,
+      page: toPositiveInteger(page),
+      limit: toPositiveInteger(limit),
     });
   }
 
@@ -60,6 +70,8 @@ export class AdminSearchController {
     @Query('minStock') minStock?: string,
     @Query('maxStock') maxStock?: string,
     @Query('sort') sort?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     return this.searchService.searchAdminProducts(query, {
       categoryId,
@@ -68,6 +80,8 @@ export class AdminSearchController {
       minStock: toNumber(minStock),
       maxStock: toNumber(maxStock),
       sort,
+      page: toPositiveInteger(page),
+      limit: toPositiveInteger(limit),
     });
   }
 
