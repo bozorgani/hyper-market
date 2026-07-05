@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CategoriesModule } from '../categories/categories.module';
 import { SearchModule } from '../search/search.module';
-import { ProductsController } from './controllers/products.controller';
+import { AdminProductsController, ProductsController } from './controllers/products.controller';
 import { ProductsRepository } from './repositories/products.repository';
 import { ProductImageStorageService } from './services/product-image-storage.service';
 import { PRODUCT_IMAGE_STORAGE, IProductImageStorage } from './storage/product-image-storage.interface';
@@ -23,7 +23,7 @@ import { ProductImageUploadInterceptor } from './storage/product-image-upload.in
       { name: Order.name, schema: OrderSchema },
     ]),
   ],
-  controllers: [ProductsController],
+  controllers: [ProductsController, AdminProductsController],
   providers: [
     ProductsRepository,
     ProductsService,

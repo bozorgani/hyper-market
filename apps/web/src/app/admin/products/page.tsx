@@ -29,7 +29,7 @@ export default function AdminProductsPage() {
   const { showToast } = useToast();
   const isSearchMode = Boolean(query.trim() || minStock || maxPrice);
   const products = useAdminProducts(page, statusFilter === "all" ? undefined : statusFilter === "active", 10);
-  const search = useAdminProductSearch({ q: query, minStock: minStock || undefined, maxPrice: maxPrice || undefined });
+  const search = useAdminProductSearch({ q: query, minStock: minStock || undefined, maxPrice: maxPrice || undefined, page, limit: PAGE_SIZE });
   const deleteProduct = useDeleteProduct();
   const sourceError = isSearchMode ? search.error : products.error;
   const sourceErrorMessage = sourceError instanceof Error ? sourceError.message : "دریافت اطلاعات محصولات ناموفق بود.";
@@ -37,16 +37,16 @@ export default function AdminProductsPage() {
 
   const rows = useMemo(() => {
     if (isSearchMode) {
-      return (search.data ?? []).map((item) => ({ id: item.id, name: item.name, price: item.price, stock: item.stock, isActive: undefined as boolean | undefined }));
+      return (search.data?.items ?? []).map((item) => ({ id: item.id, name: item.name, price: item.price, stock: item.stock, isActive: undefined as boolean | undefined }));
     }
     return (products.data?.items ?? []).map((item) => ({
       id: item._id, name: item.name, price: item.discountPrice ?? item.price, stock: item.stock, isActive: item.isActive,
     }));
-  }, [isSearchMode, products.data?.items, search.data]);
+  }, [isSearchMode, products.data?.items, search.data?.items]);
 
-  const totalItems = isSearchMode ? rows.length : (products.data?.total ?? 0);
-  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-  const paginatedRows = useMemo(() => (isSearchMode ? rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) : rows), [isSearchMode, rows, page]);
+  const totalItems = isSearchMode ? (search.data?.total ?? 0) : (products.data?.total ?? 0);
+  const totalPages = isSearchMode ? (search.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE))) : (products.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE)));
+  const paginatedRows = rows;
 
   function resetFilters() { setQuery(""); setMinStock(""); setMaxPrice(""); setStatusFilter("all"); setPage(1); }
 

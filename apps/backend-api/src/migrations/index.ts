@@ -53,24 +53,38 @@ export const migrations: Migration[] = [
     up: async (connection) => {
       const collection = connection.collection('products');
 
-      // Set default values for all existing documents that lack the new fields.
-      // Using $set with defaults — idempotent (won't overwrite existing values).
-      const result = await collection.updateMany(
-        {},
-        {
-          $set: {
-            brand: null,
-            sku: null,
-            unit: null,
-            weight: null,
-            tags: [],
-          },
-        },
-        { upsert: false },
+      // Set defaults only for missing fields. Never overwrite existing values.
+      // Note: sku is intentionally not backfilled with null so the sparse unique
+      // index remains sparse for legacy documents that do not have an SKU yet.
+      const updates = await Promise.all([
+        collection.updateMany(
+          { brand: { $exists: false } },
+          { $set: { brand: null } },
+          { upsert: false },
+        ),
+        collection.updateMany(
+          { unit: { $exists: false } },
+          { $set: { unit: null } },
+          { upsert: false },
+        ),
+        collection.updateMany(
+          { weight: { $exists: false } },
+          { $set: { weight: null } },
+          { upsert: false },
+        ),
+        collection.updateMany(
+          { tags: { $exists: false } },
+          { $set: { tags: [] } },
+          { upsert: false },
+        ),
+      ]);
+      const modifiedCount = updates.reduce(
+        (sum, result) => sum + result.modifiedCount,
+        0,
       );
 
       console.log(
-        `[MIGRATION 0002] Updated ${result.modifiedCount} product(s) with new fields (brand, sku, unit, weight, tags).`,
+        `[MIGRATION 0002] Backfilled ${modifiedCount} missing product field(s) without overwriting existing values.`,
       );
 
       // Create sparse unique index on sku
@@ -89,24 +103,46 @@ export const migrations: Migration[] = [
     up: async (connection) => {
       const collection = connection.collection('categories');
 
-      // Set default values for all existing documents that lack the new fields.
-      const result = await collection.updateMany(
-        {},
-        {
-          $set: {
-            description: null,
-            icon: null,
-            image: null,
-            parentId: null,
-            sortOrder: 0,
-            isActive: true,
-          },
-        },
-        { upsert: false },
+      // Set defaults only for missing fields. Never overwrite existing values.
+      const updates = await Promise.all([
+        collection.updateMany(
+          { description: { $exists: false } },
+          { $set: { description: null } },
+          { upsert: false },
+        ),
+        collection.updateMany(
+          { icon: { $exists: false } },
+          { $set: { icon: null } },
+          { upsert: false },
+        ),
+        collection.updateMany(
+          { image: { $exists: false } },
+          { $set: { image: null } },
+          { upsert: false },
+        ),
+        collection.updateMany(
+          { parentId: { $exists: false } },
+          { $set: { parentId: null } },
+          { upsert: false },
+        ),
+        collection.updateMany(
+          { sortOrder: { $exists: false } },
+          { $set: { sortOrder: 0 } },
+          { upsert: false },
+        ),
+        collection.updateMany(
+          { isActive: { $exists: false } },
+          { $set: { isActive: true } },
+          { upsert: false },
+        ),
+      ]);
+      const modifiedCount = updates.reduce(
+        (sum, result) => sum + result.modifiedCount,
+        0,
       );
 
       console.log(
-        `[MIGRATION 0003] Updated ${result.modifiedCount} categor(ies) with new fields (description, icon, image, parentId, sortOrder, isActive).`,
+        `[MIGRATION 0003] Backfilled ${modifiedCount} missing category field(s) without overwriting existing values.`,
       );
 
       // Create indexes for the new fields

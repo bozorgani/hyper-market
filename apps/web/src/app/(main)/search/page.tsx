@@ -57,11 +57,13 @@ function SearchContent() {
     maxPrice: debouncedMaxPrice || undefined,
     minStock: availableOnly ? "1" : undefined,
     sort,
+    page: 1,
+    limit: 24,
   });
 
   useEffect(() => {
     if (query && search.data) {
-      trackSearch(query, search.data.length);
+      trackSearch(query, search.data.total);
     }
   }, [query, search.data, trackSearch]);
 
@@ -74,7 +76,7 @@ function SearchContent() {
   }
 
   const searchErrorMessage = search.error instanceof Error ? search.error.message : "امکان جستجو وجود ندارد.";
-  const hasResults = (search.data?.length ?? 0) > 0;
+  const hasResults = (search.data?.items.length ?? 0) > 0;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 text-right">
@@ -85,7 +87,7 @@ function SearchContent() {
           badge={
             !search.isLoading && !search.isError ? (
               <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
-                {formatNumber(search.data?.length ?? 0)} نتیجه
+                {formatNumber(search.data?.total ?? 0)} نتیجه
               </div>
             ) : undefined
           }
@@ -165,7 +167,7 @@ function SearchContent() {
 
       {!search.isLoading && !search.isError && hasResults ? (
         <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {(search.data ?? []).map((product) => (
+          {(search.data?.items ?? []).map((product) => (
             <Card key={product.id} className="overflow-hidden text-right">
               <Link href={`/products/${product.id}`} className="block aspect-square bg-slate-100">
                 <div className="flex h-full items-center justify-center text-4xl">🛍️</div>

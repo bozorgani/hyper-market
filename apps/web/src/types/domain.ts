@@ -27,12 +27,21 @@ export type Product = {
   tags?: string[];
 };
 
-export type ProductListResponse = {
-  items: Product[];
+export type PaginationMeta = {
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+};
+
+export type PaginatedResponse<T> = {
+  items: T[];
   total: number;
   page: number;
   limit: number;
+  meta?: PaginationMeta;
 };
+
+export type ProductListResponse = PaginatedResponse<Product>;
 
 export type Category = {
   _id: string;

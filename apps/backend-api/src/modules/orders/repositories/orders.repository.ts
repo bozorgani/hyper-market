@@ -1,15 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { PaginatedResult } from '../../../shared/interfaces/pagination.interface';
+import { paginatedResult } from '../../../shared/utils/pagination.util';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, isValidObjectId, Model } from 'mongoose';
 import { OrderStatus } from '../enums/order-status.enum';
 import { Order, OrderDocument } from '../schemas/order.schema';
 
-export type OrderListResult = {
-  items: Order[];
-  total: number;
-  page: number;
-  limit: number;
-};
+export type OrderListResult = PaginatedResult<Order>;
 
 @Injectable()
 export class OrdersRepository {
@@ -44,7 +41,7 @@ export class OrdersRepository {
         .exec(),
       this.orderModel.countDocuments(filter).exec(),
     ]);
-    return { items, total, page, limit };
+    return paginatedResult(items, total, page, limit);
   }
 
   async findById(id: string): Promise<Order | null> {
@@ -130,6 +127,6 @@ export class OrdersRepository {
         .exec(),
       this.orderModel.countDocuments(filter).exec(),
     ]);
-    return { items, total, page, limit };
+    return paginatedResult(items, total, page, limit);
   }
 }

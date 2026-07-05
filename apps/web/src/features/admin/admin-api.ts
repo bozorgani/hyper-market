@@ -29,14 +29,14 @@ export function useAdminProducts(page = 1, isActive?: boolean, limit = 100) {
   return useQuery({
     queryKey: ["admin", "products", page, isActive, limit],
     queryFn: async () =>
-      (await api.get<ProductListResponse>("/products/admin/list", { params: { page, limit, isActive } })).data,
+      (await api.get<ProductListResponse>("/admin/products", { params: { page, limit, isActive } })).data,
   });
 }
 
 export function useAdminProduct(id: string) {
   return useQuery({
     queryKey: ["admin", "product", id],
-    queryFn: async () => (await api.get<Product>(`/products/admin/${id}`)).data,
+    queryFn: async () => (await api.get<Product>(`/admin/products/${id}`)).data,
     enabled: Boolean(id),
   });
 }
@@ -44,7 +44,7 @@ export function useAdminProduct(id: string) {
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: ProductFormInput) => (await api.post<Product>("/products", input)).data,
+    mutationFn: async (input: ProductFormInput) => (await api.post<Product>("/admin/products", input)).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "products"] }),
   });
 }
@@ -52,7 +52,7 @@ export function useCreateProduct() {
 export function useUpdateProduct(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: Partial<ProductFormInput>) => (await api.put<Product>(`/products/${id}`, input)).data,
+    mutationFn: async (input: Partial<ProductFormInput>) => (await api.put<Product>(`/admin/products/${id}`, input)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "product", id] });
@@ -66,7 +66,7 @@ export function useUploadProductImage() {
       const formData = new FormData();
       formData.append("image", file);
 
-      return (await api.post<ProductImageUploadResponse>("/products/images/upload", formData, { headers: { "Content-Type": "multipart/form-data" } })).data;
+      return (await api.post<ProductImageUploadResponse>("/admin/products/images/upload", formData, { headers: { "Content-Type": "multipart/form-data" } })).data;
     },
   });
 }
@@ -74,7 +74,7 @@ export function useUploadProductImage() {
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => (await api.delete<Product>(`/products/${id}`)).data,
+    mutationFn: async (id: string) => (await api.delete<Product>(`/admin/products/${id}`)).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "products"] }),
   });
 }
@@ -93,7 +93,7 @@ export type CategoryFormInput = {
 export function useAdminCategories() {
   return useQuery({
     queryKey: ["admin", "categories"],
-    queryFn: async () => (await api.get<Category[]>("/categories/admin/list")).data,
+    queryFn: async () => (await api.get<Category[]>("/admin/categories")).data,
   });
 }
 
@@ -101,7 +101,7 @@ export function useCreateCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: CategoryFormInput) =>
-      (await api.post<Category>("/categories", input)).data,
+      (await api.post<Category>("/admin/categories", input)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
@@ -113,7 +113,7 @@ export function useUpdateCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, input }: { id: string; input: CategoryFormInput }) =>
-      (await api.put<Category>(`/categories/${id}`, input)).data,
+      (await api.put<Category>(`/admin/categories/${id}`, input)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
@@ -125,7 +125,7 @@ export function useDeleteCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) =>
-      (await api.delete<Category>(`/categories/${id}`)).data,
+      (await api.delete<Category>(`/admin/categories/${id}`)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
       queryClient.invalidateQueries({ queryKey: ["categories"] });

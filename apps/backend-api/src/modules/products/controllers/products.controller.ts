@@ -29,30 +29,6 @@ export class ProductsController {
     private readonly productImageStorageService: ProductImageStorageService,
   ) {}
 
-  @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  @Permissions('products.create')
-  createProduct(@Body() dto: CreateProductDto) {
-    return this.productsService.createProduct(dto);
-  }
-
-
-  @Post('images/upload')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  @Permissions('products.update')
-  @UseInterceptors(ProductImageUploadInterceptor)
-  uploadProductImage(
-    @UploadedFile()
-    file: {
-      originalname?: string;
-      mimetype?: string;
-      size?: number;
-      buffer?: Buffer;
-    },
-  ) {
-    return this.productImageStorageService.saveProductImage(file);
-  }
-
   @Get('images/:fileName')
   @Public()
   serveProductImage(
@@ -67,32 +43,6 @@ export class ProductsController {
     // Remote storage (S3, etc.): redirect to the public URL
     const url = this.productImageStorageService.getImageUrl(fileName);
     return response.redirect(url);
-  }
-
-  @Get('admin/list')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  @Permissions('products.read')
-  listProductsForAdmin(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('categoryId') categoryId?: string,
-    @Query('search') search?: string,
-    @Query('isActive') isActive?: string,
-  ) {
-    return this.productsService.listProducts(
-      this.toPositiveInteger(page, 1),
-      this.toPositiveInteger(limit, 20),
-      categoryId,
-      search?.trim() || undefined,
-      this.toOptionalBoolean(isActive),
-    );
-  }
-
-  @Get('admin/:id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  @Permissions('products.read')
-  getProductByIdForAdmin(@Param('id') id: string) {
-    return this.productsService.getProductById(id);
   }
 
   @Get()
@@ -118,15 +68,80 @@ export class ProductsController {
     return this.productsService.getPublicProductById(id);
   }
 
+  private toPositiveInteger(value: string | undefined, fallback: number): number {
+    if (!value) {
+      return fallback;
+    }
+
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 1) {
+      return fallback;
+    }
+
+    return parsed;
+  }
+}
+
+@Controller('admin/products')
+@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+export class AdminProductsController {
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly productImageStorageService: ProductImageStorageService,
+  ) {}
+
+  @Post()
+  @Permissions('products.create')
+  createProduct(@Body() dto: CreateProductDto) {
+    return this.productsService.createProduct(dto);
+  }
+
+  @Post('images/upload')
+  @Permissions('products.update')
+  @UseInterceptors(ProductImageUploadInterceptor)
+  uploadProductImage(
+    @UploadedFile()
+    file: {
+      originalname?: string;
+      mimetype?: string;
+      size?: number;
+      buffer?: Buffer;
+    },
+  ) {
+    return this.productImageStorageService.saveProductImage(file);
+  }
+
+  @Get()
+  @Permissions('products.read')
+  listProductsForAdmin(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('search') search?: string,
+    @Query('isActive') isActive?: string,
+  ) {
+    return this.productsService.listProducts(
+      this.toPositiveInteger(page, 1),
+      this.toPositiveInteger(limit, 20),
+      categoryId,
+      search?.trim() || undefined,
+      this.toOptionalBoolean(isActive),
+    );
+  }
+
+  @Get(':id')
+  @Permissions('products.read')
+  getProductByIdForAdmin(@Param('id') id: string) {
+    return this.productsService.getProductById(id);
+  }
+
   @Put(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Permissions('products.update')
   updateProduct(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return this.productsService.updateProduct(id, dto);
   }
 
   @Delete(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Permissions('products.delete')
   deleteProduct(@Param('id') id: string) {
     return this.productsService.deleteProduct(id);
@@ -146,8 +161,8 @@ export class ProductsController {
   }
 
   private toOptionalBoolean(value: string | undefined): boolean | undefined {
-    if (value === "true") return true;
-    if (value === "false") return false;
+    if (value === 'true') return true;
+    if (value === 'false') return false;
     return undefined;
   }
 }

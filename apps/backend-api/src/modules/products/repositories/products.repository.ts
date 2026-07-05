@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { PaginatedResult } from '../../../shared/interfaces/pagination.interface';
+import { paginatedResult } from '../../../shared/utils/pagination.util';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, isValidObjectId, Model, Types } from 'mongoose';
 import { OrderStatus } from '../../orders/enums/order-status.enum';
 import { Order, OrderDocument } from '../../orders/schemas/order.schema';
 import { Product, ProductDocument } from '../schemas/product.schema';
 
-export type ProductListResult = {
-  items: Product[];
-  total: number;
-  page: number;
-  limit: number;
-};
+export type ProductListResult = PaginatedResult<Product>;
 
 // Escape regex metacharacters so user-supplied search text matches literally
 // instead of being interpreted as a regex pattern (which can throw on input
@@ -172,7 +169,7 @@ export class ProductsRepository {
       this.productModel.countDocuments(filter).exec(),
     ]);
 
-    return { items, total, page, limit };
+    return paginatedResult(items, total, page, limit);
   }
 
   async findByCategory(
@@ -202,6 +199,6 @@ export class ProductsRepository {
       this.productModel.countDocuments(filter).exec(),
     ]);
 
-    return { items, total, page, limit };
+    return paginatedResult(items, total, page, limit);
   }
 }
