@@ -1,14 +1,15 @@
-import { Body, Controller, Get, Headers, Param, Patch, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Headers, Param, Patch, Post, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
+import { IdempotencyService } from '../../../infrastructure/idempotency/idempotency.service';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { Response } from 'express';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
-import { IdempotencyService } from '../../../infrastructure/idempotency/idempotency.service';
 import { Permissions } from '../../permissions/decorators/permissions.decorator';
+import { PermissionsService } from '../../permissions/services/permissions.service';
 import { UserRole } from '../../users/enums/user-role.enum';
-import { OrderStatus } from '../enums/order-status.enum';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { UpdateOrderStatusDto } from '../dto/update-order-status.dto';
+import { OrderStatus } from '../enums/order-status.enum';
 import { OrdersService } from '../services/orders.service';
 
 @Controller('orders')
@@ -16,6 +17,7 @@ export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly idempotencyService: IdempotencyService,
+    private readonly permissionsService: PermissionsService,
   ) {}
 
   @Post()
@@ -56,6 +58,7 @@ export class OrdersController {
 
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Permissions('orders.read')
   listAllOrders(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -79,9 +82,23 @@ export class OrdersController {
 
   @Patch(':id/status')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
-  @Permissions('orders.cancel')
-  updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateOrderStatusDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    await this.assertCanUpdateStatus(user.role as UserRole, dto.status);
     return this.ordersService.updateStatus(id, dto.status);
+  }
+
+  private async assertCanUpdateStatus(role: UserRole, status: OrderStatus): Promise<void> {
+    const requiredPermission =
+      status === OrderStatus.CANCELLED ? 'orders.cancel' : 'orders.update';
+    const allowed = await this.permissionsService.hasPermission(role, requiredPermission);
+
+    if (!allowed) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
   }
 
   private toPositiveInteger(value: string | undefined, fallback: number): number {

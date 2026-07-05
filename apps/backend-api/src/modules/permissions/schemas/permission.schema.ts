@@ -9,7 +9,7 @@ export type PermissionDocument = HydratedDocument<Permission>;
   collection: 'permissions',
 })
 export class Permission {
-  @Prop({ type: String, required: true, unique: true, index: true })
+  @Prop({ type: String, required: true, index: true })
   name!: string;
 
   @Prop({ type: String, required: true, index: true })
@@ -28,6 +28,9 @@ export class Permission {
 }
 
 export const PermissionSchema = SchemaFactory.createForClass(Permission);
-PermissionSchema.index({ resource: 1, action: 1 }, { unique: true });
-// Ensure a role cannot have the same permission assigned twice
+PermissionSchema.index({ name: 1 });
+PermissionSchema.index({ resource: 1, action: 1 });
+// Ensure a role cannot have the same permission assigned twice.
+// Permission definitions are intentionally assignment-oriented, so the same
+// permission name/resource/action may be granted to multiple roles.
 PermissionSchema.index({ role: 1, name: 1 }, { unique: true, sparse: true });

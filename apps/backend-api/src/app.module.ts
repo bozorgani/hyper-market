@@ -9,6 +9,7 @@ import { envValidation } from './config/env/env.validation';
 import { EventBusModule } from './core/events/event-bus.module';
 import { jwtConfig } from './config/jwt/jwt.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { RequestIdMiddleware } from './infrastructure/logger/request-id.middleware';
 import { HealthModule } from './infrastructure/health/health.module';
 import { CsrfProtectionMiddleware } from './infrastructure/security/csrf-protection.middleware';
 import { RedisThrottlerStorage } from './infrastructure/security/redis-throttler-storage';
@@ -97,6 +98,6 @@ const isProduction =
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CsrfProtectionMiddleware).forRoutes('*');
+    consumer.apply(RequestIdMiddleware, CsrfProtectionMiddleware).forRoutes('*');
   }
 }

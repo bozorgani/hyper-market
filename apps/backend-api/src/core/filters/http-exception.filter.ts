@@ -5,7 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { BaseException } from '../exceptions/base.exception';
 
 interface ExceptionResponse {
@@ -18,6 +18,7 @@ interface ExceptionResponse {
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
+    const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -40,10 +41,23 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message = exception.message;
     }
 
+    const requestId = request.requestId ?? request.get('x-request-id');
+    const traceId = request.traceId ?? request.get('x-trace-id') ?? requestId;
+    if (requestId) {
+      response.setHeader('x-request-id', requestId);
+    }
+    if (traceId) {
+      response.setHeader('x-trace-id', traceId);
+    }
+
     response.status(status).json({
       success: false,
       message,
       ...(errors && { errors }),
+      ...(requestId && { requestId }),
+      ...(traceId && { traceId }),
+      path: request.originalUrl ?? request.url,
+      timestamp: new Date().toISOString(),
     });
   }
 }

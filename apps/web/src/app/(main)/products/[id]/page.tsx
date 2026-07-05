@@ -1,148 +1,54 @@
-"use client";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { ProductDetailPageClient } from "@/features/public-pages/product-detail-page-client";
+import { fetchProductForMetadata } from "@/lib/server-api";
+import { formatPrice } from "@/lib/utils";
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect } from "react";
-import { ProductGallery } from "@/components/product-gallery";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/toast";
-import { useAnalytics } from "@/hooks/use-analytics";
-import { useAddToCart } from "@/hooks/use-cart";
-import { useProduct } from "@/hooks/use-products";
-import { formatNumber, formatPrice } from "@/lib/utils";
+type ProductDetailPageProps = {
+  params: Promise<{ id: string }>;
+};
 
-export default function ProductDetailPage() {
-  const params = useParams<{ id: string }>();
-  const product = useProduct(params.id);
-  const addToCart = useAddToCart();
-  const { showToast } = useToast();
-  const { trackProductView } = useAnalytics();
+export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const product = await fetchProductForMetadata(id);
 
-  useEffect(() => {
-    if (product.data) {
-      trackProductView(product.data._id, {
-        title: product.data.name,
-        price: product.data.discountPrice ?? product.data.price,
-        stock: product.data.stock,
-      });
-    }
-  }, [product.data, trackProductView]);
-
-  async function handleAddToCart() {
-    if (!product.data) return;
-
-    try {
-      await addToCart.mutateAsync({ productId: product.data._id, quantity: 1 });
-      showToast({ type: "success", title: "محصول به سبد خرید اضافه شد" });
-    } catch (error) {
-      showToast({
-        type: "error",
-        title: "افزودن به سبد خرید ناموفق بود",
-        description: error instanceof Error ? error.message : undefined,
-      });
-    }
+  if (!product) {
+    return {
+      title: "محصول یافت نشد",
+      description: "محصول مورد نظر در هایپرمارکت یافت نشد یا در حال حاضر فعال نیست.",
+      robots: { index: false, follow: false },
+    };
   }
 
-  if (product.isLoading) {
-    return (
-      <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-2 md:gap-8">
-        <Card className="aspect-square p-6">
-          <Skeleton className="h-full w-full rounded-3xl" />
-        </Card>
-        <Card className="p-6 text-right">
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="mt-5 h-10 w-3/4" />
-          <Skeleton className="mt-4 h-28 w-full" />
-          <Skeleton className="mt-6 h-10 w-40" />
-          <Skeleton className="mt-8 h-11 w-full md:w-44" />
-        </Card>
-      </main>
-    );
+  const price = product.discountPrice ?? product.price;
+  const description = product.description || `${product.name} با قیمت ${formatPrice(price)} در هایپرمارکت`;
+  const image = product.images?.[0];
+
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: `/products/${id}` },
+    openGraph: {
+      type: "website",
+      title: product.name,
+      description,
+      images: image ? [{ url: image, alt: product.name }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title: product.name,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
+
+export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+  const { id } = await params;
+
+  if (!id) {
+    notFound();
   }
 
-  if (product.isError || !product.data) {
-    return (
-      <main className="mx-auto max-w-2xl px-4 py-10">
-        <Card className="border-red-200 bg-red-50 p-8 text-center text-red-700">
-          <p className="text-xl font-black">محصول پیدا نشد یا قابل بارگذاری نیست</p>
-          <p className="mt-3 text-sm leading-7">
-            {product.error instanceof Error ? product.error.message : "دریافت جزئیات محصول با خطا مواجه شد."}
-          </p>
-          <Link href="/products" className="mt-6 inline-flex">
-            <Button type="button">بازگشت به لیست محصولات</Button>
-          </Link>
-        </Card>
-      </main>
-    );
-  }
-
-  const item = product.data;
-  const price = item.discountPrice ?? item.price;
-  const discountPercent = item.discountPrice && item.price > 0
-    ? Math.max(0, Math.round(((item.price - item.discountPrice) / item.price) * 100))
-    : 0;
-
-  return (
-    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-2 md:gap-8">
-      <Card className="p-6">
-        <ProductGallery images={item.images} productName={item.name} />
-      </Card>
-      <section className="rounded-3xl bg-white p-6 text-right shadow-sm">
-        <div className="flex flex-wrap gap-2">
-          <Badge className={item.stock > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}>
-            {item.stock > 0 ? `${formatNumber(item.stock)} ${item.unit ?? "عدد"} موجود` : "ناموجود"}
-          </Badge>
-          {discountPercent > 0 ? <Badge className="bg-rose-50 text-rose-700">{formatNumber(discountPercent)}٪ تخفیف</Badge> : null}
-          {item.brand ? <Badge className="bg-violet-50 text-violet-700">{item.brand}</Badge> : null}
-          {item.sku ? <Badge className="bg-slate-100 text-slate-500 font-mono">{item.sku}</Badge> : null}
-        </div>
-        <h1 className="mt-5 text-3xl font-black leading-tight text-slate-950">{item.name}</h1>
-        <p className="mt-4 leading-8 text-slate-600">{item.description}</p>
-
-        {/* Attributes */}
-        {(item.brand || item.unit || item.weight || (item.tags && item.tags.length > 0)) ? (
-          <div className="mt-5 space-y-3 rounded-xl bg-slate-50 p-4">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">مشخصات</p>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              {item.brand ? (
-                <div><span className="text-slate-500">برند:</span> <span className="font-semibold text-slate-800">{item.brand}</span></div>
-              ) : null}
-              {item.unit ? (
-                <div><span className="text-slate-500">واحد:</span> <span className="font-semibold text-slate-800">{item.unit}</span></div>
-              ) : null}
-              {item.weight ? (
-                <div><span className="text-slate-500">وزن:</span> <span className="font-semibold text-slate-800">{formatNumber(item.weight)} گرم</span></div>
-              ) : null}
-              {item.sku ? (
-                <div><span className="text-slate-500">کد انبار:</span> <span className="font-mono font-semibold text-slate-800">{item.sku}</span></div>
-              ) : null}
-            </div>
-            {item.tags && item.tags.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {item.tags.map((tag) => (
-                  <span key={tag} className="rounded-lg bg-white px-2 py-0.5 text-xs text-slate-600 ring-1 ring-slate-200">{tag}</span>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-        <div className="mt-6 flex flex-wrap items-end gap-3">
-          <p className="text-3xl font-black text-rose-600">{formatPrice(price)}</p>
-          {item.discountPrice ? <p className="text-slate-400 line-through">{formatPrice(item.price)}</p> : null}
-        </div>
-        <p className="mt-5 text-sm leading-7 text-slate-500">با افزودن این محصول به سبد، می‌توانید از صفحه سبد خرید تعداد را تغییر دهید و سپس وارد مسیر پرداخت آزمایشی شوید.</p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button type="button" disabled={item.stock < 1 || addToCart.isPending} onClick={handleAddToCart} className="w-full sm:w-auto">
-            {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد خرید"}
-          </Button>
-          <Link href="/cart" className="w-full sm:w-auto">
-            <Button type="button" variant="outline" className="w-full">مشاهده سبد خرید</Button>
-          </Link>
-        </div>
-      </section>
-    </main>
-  );
+  return <ProductDetailPageClient productId={id} />;
 }

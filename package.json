@@ -18,7 +18,10 @@
     "seed:products": "node scripts/seed-products.js",
     "seed:permissions": "node scripts/seed-permissions.js",
     "seed:admin": "node scripts/seed-admin.js",
-    "seed:all": "node scripts/seed-all.js"
+    "seed:all": "node scripts/seed-all.js",
+    "e2e:infra:up": "docker compose -f docker-compose.test.yml up -d --wait",
+    "e2e:infra:down": "docker compose -f docker-compose.test.yml down -v --remove-orphans",
+    "backend:test:e2e": "npm run test:e2e --workspace=apps/backend-api -- --runInBand"
   },
   "engines": {
     "node": ">=20.0.0",
