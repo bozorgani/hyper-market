@@ -33,7 +33,7 @@ function getStatusConfig(status: OrderStatus) {
 const menuItems = [
   { icon: Package, label: "سفارش‌های من", href: "/orders", color: "text-blue-600", bg: "bg-blue-50" },
   { icon: Heart, label: "علاقه‌مندی‌ها", href: "/products", color: "text-rose-600", bg: "bg-rose-50" },
-  { icon: MapPin, label: "آدرس‌های من", href: "/checkout", color: "text-emerald-600", bg: "bg-emerald-50" },
+  { icon: MapPin, label: "آدرس‌های من", href: "/profile/addresses", color: "text-emerald-600", bg: "bg-emerald-50" },
   { icon: Gift, label: "کد هدیه و تخفیف", href: "/checkout", color: "text-amber-600", bg: "bg-amber-50" },
   { icon: Bell, label: "اعلان‌ها", href: "#", color: "text-purple-600", bg: "bg-purple-50" },
   { icon: Shield, label: "حریم خصوصی", href: "#", color: "text-slate-600", bg: "bg-slate-100" },

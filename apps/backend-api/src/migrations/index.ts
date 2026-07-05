@@ -258,4 +258,17 @@ export const migrations: Migration[] = [
       );
     },
   },
+
+  // ── 0008: Address book indexes ────────────────────────────────────────────
+  {
+    id: '0008',
+    description: 'Create indexes for customer address book',
+    up: async (connection) => {
+      const collection = connection.collection('addresses');
+      await collection.createIndex({ userId: 1, isDefault: 1, deletedAt: 1 });
+      await collection.createIndex({ userId: 1, createdAt: -1 });
+      await collection.createIndex({ province: 1, city: 1 });
+      console.log('[MIGRATION 0008] Address book indexes created.');
+    },
+  },
 ];
