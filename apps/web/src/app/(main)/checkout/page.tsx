@@ -22,20 +22,12 @@ import { JalaliDatePicker } from "@/components/jalali-date-picker";
 import { IRAN_PROVINCES } from "@/data/iran-locations";
 import type { DeliveryAddress, DeliveryWindow } from "@/types/domain";
 import { useCart } from "@/hooks/use-cart";
+import { useValidateCoupon, type CouponValidationResult } from "@/hooks/use-coupons";
 import { useCreateOrder, useCreatePayment } from "@/hooks/use-orders";
 
 const MapPicker = lazy(() =>
   import("@/components/ui/map-picker").then((m) => ({ default: m.MapPicker }))
 );
-
-/* ===== Discount code logic (client-side mock) ===== */
-const VALID_DISCOUNT_CODES: Record<string, number> = {
-  "SNAPP20": 20,
-  "HYPERSALE": 15,
-  "WELCOME10": 10,
-  "FREE50": 50,
-  "MARKET30": 30,
-};
 
 type CheckoutStep = "idle" | "creating_order" | "confirming_payment" | "redirecting";
 
@@ -122,6 +114,7 @@ export default function CheckoutPage() {
   const cart = useCart();
   const createOrder = useCreateOrder();
   const createPayment = useCreatePayment();
+  const validateCoupon = useValidateCoupon();
   const { showToast } = useToast();
   const [error, setError] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -148,13 +141,12 @@ export default function CheckoutPage() {
 
   const [discountInput, setDiscountInput] = useState("");
   const [discountError, setDiscountError] = useState("");
-  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; percent: number } | null>(null);
-  const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
+  const [appliedDiscount, setAppliedDiscount] = useState<CouponValidationResult | null>(null);
 
   const detailedItems = cart.data?.items ?? [];
   const totalPrice = cart.data?.totalPrice ?? 0;
-  const discountAmount = appliedDiscount ? Math.round(totalPrice * (appliedDiscount.percent / 100)) : 0;
-  const finalPrice = totalPrice - discountAmount;
+  const discountAmount = appliedDiscount?.discountAmount ?? 0;
+  const finalPrice = appliedDiscount?.total ?? totalPrice;
   const mutationPending = createOrder.isPending || createPayment.isPending;
   const isSubmitting = mutationPending || isLocalSubmitting;
   const activeStepIndex = stepIndex(currentStep);
@@ -165,22 +157,25 @@ export default function CheckoutPage() {
     return cart.error instanceof Error ? cart.error.message : "دریافت اطلاعات سبد خرید ناموفق بود.";
   }, [cart.error]);
 
-  function handleApplyDiscount() {
-    if (!discountInput.trim()) return;
-    setIsApplyingDiscount(true);
+  async function handleApplyDiscount() {
+    const code = discountInput.trim();
+    if (!code) return;
     setDiscountError("");
-    setTimeout(() => {
-      const percent = VALID_DISCOUNT_CODES[discountInput.toUpperCase()];
-      if (percent) {
-        setAppliedDiscount({ code: discountInput.toUpperCase(), percent });
-        setDiscountError("");
-        setDiscountInput("");
-        showToast({ type: "success", title: `کد تخفیف اعمال شد — ${formatNumber(percent)}٪ تخفیف` });
-      } else {
-        setDiscountError("کد تخفیف نامعتبر است");
-      }
-      setIsApplyingDiscount(false);
-    }, 600);
+
+    try {
+      const result = await validateCoupon.mutateAsync(code);
+      setAppliedDiscount(result);
+      setDiscountInput("");
+      showToast({
+        type: "success",
+        title: `کد تخفیف اعمال شد — ${formatNumber(result.percent)}٪ تخفیف`,
+      });
+    } catch (error) {
+      setAppliedDiscount(null);
+      const message = error instanceof Error ? error.message : "کد تخفیف نامعتبر است";
+      setDiscountError(message);
+      showToast({ type: "error", title: "اعمال کد تخفیف ناموفق بود", description: message });
+    }
   }
 
   function handleMapLocationSelect(lat: number, lng: number, address: string) {
@@ -226,6 +221,7 @@ export default function CheckoutPage() {
           date: `${deliveryWindow.date}T00:00:00.000Z`,
           timeSlot: deliveryWindow.timeSlot,
         },
+        couponCode: appliedDiscount?.code,
       });
 
       setCurrentStep("confirming_payment");
@@ -392,11 +388,11 @@ export default function CheckoutPage() {
                     value={discountInput}
                     onChange={(e) => { setDiscountInput(e.target.value); setDiscountError(""); }}
                     placeholder="مثلاً SNAPP20"
-                    disabled={isApplyingDiscount || isSubmitting}
+                    disabled={validateCoupon.isPending || isSubmitting}
                     onKeyDown={(e) => { if (e.key === "Enter") handleApplyDiscount(); }}
                   />
-                  <Button type="button" variant="outline" onClick={handleApplyDiscount} disabled={isApplyingDiscount || !discountInput.trim()}>
-                    {isApplyingDiscount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Percent className="h-4 w-4" />}
+                  <Button type="button" variant="outline" onClick={handleApplyDiscount} disabled={validateCoupon.isPending || !discountInput.trim()}>
+                    {validateCoupon.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Percent className="h-4 w-4" />}
                     اعمال
                   </Button>
                 </div>

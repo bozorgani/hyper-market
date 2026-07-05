@@ -4,6 +4,7 @@ import { OrdersService } from './orders.service';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { ProductsService } from '../../products/services/products.service';
 import { CartService } from '../../cart/services/cart.service';
+import { CouponsService } from '../../coupons/coupons.service';
 import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
 import { EventBusService } from '../../../core/events/event-bus.service';
 import { OrderStatus } from '../enums/order-status.enum';
@@ -66,6 +67,7 @@ describe('OrdersService — cancellation idempotency (#4)', () => {
         { provide: OrdersRepository, useValue: ordersRepository },
         { provide: ProductsService, useValue: productsService },
         { provide: CartService, useValue: {} },
+        { provide: CouponsService, useValue: { validateCoupon: jest.fn() } },
         {
           provide: DatabaseTransactionService,
           useValue: databaseTransactionService,

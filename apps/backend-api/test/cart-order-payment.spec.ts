@@ -131,6 +131,7 @@ test('OrdersService creates order inside transaction and clears cart', async () 
     ordersRepository as never,
     productsService as never,
     cartService as never,
+    { validateCoupon: () => null } as never,
     transactionService as never,
   );
 
@@ -219,6 +220,7 @@ test('OrdersService restores stock when order is cancelled', async () => {
     ordersRepository as never,
     productsService as never,
     {} as never,
+    { validateCoupon: () => null } as never,
     transactionService as never,
   );
 

@@ -116,6 +116,9 @@ export type Order = {
   _id: string;
   userId: string;
   items: Array<CartItem & { priceAtPurchase: number }>;
+  subtotalPrice?: number;
+  discountAmount?: number;
+  couponCode?: string | null;
   totalPrice: number;
   status: OrderStatus;
   deliveryAddress?: DeliveryAddress;
