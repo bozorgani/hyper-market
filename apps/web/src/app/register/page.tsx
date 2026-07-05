@@ -84,13 +84,13 @@ export default function RegisterPage() {
       description="با ساخت حساب کاربری، از تخفیف‌های اختصاصی، پیگیری سفارش‌ها و تجربه خرید شخصی‌سازی‌شده بهره‌مند شوید."
     >
       {/* Form Header */}
-      <div className="mb-7">
+      <div className="mb-5 sm:mb-7">
         <h2 className="text-xl font-black text-slate-900">ثبت‌نام</h2>
         <p className="mt-1.5 text-sm text-slate-500">اطلاعات خود را وارد کنید تا حساب جدید بسازید</p>
       </div>
 
       {/* Form */}
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} className="space-y-4 sm:space-y-5">
         {/* Email Field */}
         <div>
           <label className="mb-1.5 block text-xs font-semibold text-slate-600">ایمیل</label>
@@ -156,7 +156,8 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+              aria-label={showPassword ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 transition hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-emerald-100"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -201,7 +202,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading || !canSubmit}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-emerald-500 to-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:pointer-events-none"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl whitespace-nowrap bg-gradient-to-l from-emerald-500 to-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:pointer-events-none"
           >
             {loading ? (
               <>
@@ -219,7 +220,7 @@ export default function RegisterPage() {
       </form>
 
       {/* Footer */}
-      <p className="text-center text-sm text-slate-500">
+      <p className="mt-5 text-center text-sm leading-6 text-slate-500">
         حساب دارید؟{" "}
         <Link href="/login" className="font-bold text-emerald-600 transition hover:text-emerald-700">وارد شوید</Link>
       </p>
