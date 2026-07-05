@@ -1,4 +1,5 @@
 import { Migration } from './migration-runner';
+import { safeCreateIndex, safeDropIndex } from './migration-utils';
 
 /**
  * Migration registry.
@@ -88,9 +89,9 @@ export const migrations: Migration[] = [
       );
 
       // Create sparse unique index on sku
-      await collection.createIndex({ sku: 1 }, { unique: true, sparse: true });
-      await collection.createIndex({ brand: 1 });
-      await collection.createIndex({ tags: 1 });
+      await safeCreateIndex(collection, { sku: 1 }, { unique: true, sparse: true });
+      await safeCreateIndex(collection, { brand: 1 });
+      await safeCreateIndex(collection, { tags: 1 });
 
       console.log('[MIGRATION 0002] Indexes created: sku (sparse unique), brand, tags.');
     },
@@ -146,8 +147,8 @@ export const migrations: Migration[] = [
       );
 
       // Create indexes for the new fields
-      await collection.createIndex({ parentId: 1, sortOrder: 1 });
-      await collection.createIndex({ isActive: 1, deletedAt: 1 });
+      await safeCreateIndex(collection, { parentId: 1, sortOrder: 1 });
+      await safeCreateIndex(collection, { isActive: 1, deletedAt: 1 });
 
       console.log('[MIGRATION 0003] Indexes created: parentId+sortOrder, isActive+deletedAt.');
     },
@@ -188,13 +189,13 @@ export const migrations: Migration[] = [
 
       for (const indexName of ['name_1', 'resource_1_action_1']) {
         if (indexNames.has(indexName)) {
-          await collection.dropIndex(indexName);
+          await safeDropIndex(collection, indexName);
         }
       }
 
-      await collection.createIndex({ name: 1 });
-      await collection.createIndex({ resource: 1, action: 1 });
-      await collection.createIndex(
+      await safeCreateIndex(collection, { resource: 1, action: 1 });
+      await safeCreateIndex(
+        collection,
         { role: 1, name: 1 },
         { unique: true, sparse: true },
       );
@@ -265,9 +266,9 @@ export const migrations: Migration[] = [
     description: 'Create indexes for customer address book',
     up: async (connection) => {
       const collection = connection.collection('addresses');
-      await collection.createIndex({ userId: 1, isDefault: 1, deletedAt: 1 });
-      await collection.createIndex({ userId: 1, createdAt: -1 });
-      await collection.createIndex({ province: 1, city: 1 });
+      await safeCreateIndex(collection, { userId: 1, isDefault: 1, deletedAt: 1 });
+      await safeCreateIndex(collection, { userId: 1, createdAt: -1 });
+      await safeCreateIndex(collection, { province: 1, city: 1 });
       console.log('[MIGRATION 0008] Address book indexes created.');
     },
   },
@@ -278,9 +279,9 @@ export const migrations: Migration[] = [
     description: 'Add resource and correlation indexes to audit logs',
     up: async (connection) => {
       const collection = connection.collection('audit_logs');
-      await collection.createIndex({ resource: 1, resourceId: 1, createdAt: -1 });
-      await collection.createIndex({ requestId: 1 });
-      await collection.createIndex({ traceId: 1 });
+      await safeCreateIndex(collection, { resource: 1, resourceId: 1, createdAt: -1 });
+      await safeCreateIndex(collection, { requestId: 1 });
+      await safeCreateIndex(collection, { traceId: 1 });
       console.log('[MIGRATION 0009] Extended audit-log indexes created.');
     },
   },
@@ -296,10 +297,10 @@ export const migrations: Migration[] = [
 
       // Use Mongo's default index names here so this migration remains
       // idempotent when Mongoose has already auto-created the same indexes.
-      await coupons.createIndex({ code: 1 }, { unique: true });
-      await coupons.createIndex({ code: 1, deletedAt: 1 });
-      await coupons.createIndex({ active: 1, startsAt: 1, endsAt: 1, deletedAt: 1 });
-      await usages.createIndex({ couponId: 1, userId: 1, createdAt: -1 });
+      await safeCreateIndex(coupons, { code: 1 }, { unique: true });
+      await safeCreateIndex(coupons, { code: 1, deletedAt: 1 });
+      await safeCreateIndex(coupons, { active: 1, startsAt: 1, endsAt: 1, deletedAt: 1 });
+      await safeCreateIndex(usages, { couponId: 1, userId: 1, createdAt: -1 });
 
       const usageIndexes = await usages.indexes();
       const orderIdIndexes = usageIndexes.filter(
@@ -308,11 +309,11 @@ export const migrations: Migration[] = [
       const hasUniqueOrderIdIndex = orderIdIndexes.some((index) => index.unique);
       for (const index of orderIdIndexes) {
         if (!index.unique && index.name) {
-          await usages.dropIndex(index.name);
+          await safeDropIndex(usages, index.name);
         }
       }
       if (!hasUniqueOrderIdIndex) {
-        await usages.createIndex({ orderId: 1 }, { unique: true });
+        await safeCreateIndex(usages, { orderId: 1 }, { unique: true });
       }
 
       for (const permission of ['coupons.read', 'coupons.create', 'coupons.update', 'coupons.delete']) {

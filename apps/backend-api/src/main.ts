@@ -27,14 +27,18 @@ function isProduction(): boolean {
 }
 
 async function bootstrap() {
+  console.log('[STARTUP] START creating Nest application');
   const app = await NestFactory.create(AppModule, {
     logger: isProduction()
       ? ['error', 'warn', 'log']
       : ['error', 'warn', 'log', 'debug'],
   });
 
+  console.log('[STARTUP] SUCCESS Nest application created');
+
   const configService = app.get(ConfigService);
   const appEnv = configService.get<string>('APP_ENV', 'development');
+  console.log(`[STARTUP] SUCCESS configuration loaded (APP_ENV=${appEnv})`);
   const allowedOrigins = parseCorsOrigins(
     configService.getOrThrow<string>('CORS_ORIGINS'),
   );
@@ -109,10 +113,12 @@ async function bootstrap() {
 
   // ── Run pending database migrations ────────────────────────────────
   if (process.env.SKIP_MIGRATIONS !== 'true') {
+    console.log('[STARTUP] START database migrations');
     try {
       const connection = app.get<Connection>(getConnectionToken() as any);
       const runner = new MigrationRunner(connection);
       await runner.run(migrations);
+      console.log('[STARTUP] SUCCESS database migrations');
     } catch (error) {
       console.error(
         '[MIGRATIONS] Migration runner failed — application will continue but data may be inconsistent.',
@@ -123,9 +129,14 @@ async function bootstrap() {
         process.exit(1);
       }
     }
+  } else {
+    console.log('[STARTUP] SKIPPED database migrations (SKIP_MIGRATIONS=true)');
   }
 
-  await app.listen(configService.get<number>('PORT', 3000));
+  const port = configService.get<number>('PORT', 3000);
+  console.log(`[STARTUP] START HTTP server on port ${port}`);
+  await app.listen(port);
+  console.log(`[STARTUP] SUCCESS HTTP server listening on port ${port}`);
 }
 
 bootstrap();
