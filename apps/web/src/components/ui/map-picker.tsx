@@ -38,6 +38,7 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
   const [selectedAddr, setSelectedAddr] = useState("");
   const [selectedLoc, setSelectedLoc] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -59,6 +60,7 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
+    setIsMapReady(false);
 
     const linkEl = document.createElement("link");
     linkEl.rel = "stylesheet";
@@ -100,6 +102,11 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
 
     mapInstanceRef.current = map;
     markerRef.current = marker;
+
+    map.whenReady(() => {
+      if (!mapInstanceRef.current) return;
+      setIsMapReady(true);
+    });
 
     // Use a flag so the delayed invalidateSize won't run after unmount
     let cancelled = false;
@@ -167,12 +174,14 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
         <div ref={mapRef} className="w-full h-full" />
 
         {/* Loading overlay */}
-        <div className="absolute inset-0 bg-slate-50 flex items-center justify-center z-[999] pointer-events-none">
-          <div className="flex flex-col items-center gap-3 bg-white rounded-2xl p-6 shadow-card">
-            <div className="w-8 h-8 border-[3px] border-rose-200 border-t-rose-600 rounded-full animate-spin" />
-            <p className="text-sm text-slate-500">در حال بارگذاری نقشه...</p>
+        {!isMapReady ? (
+          <div className="absolute inset-0 bg-slate-50 flex items-center justify-center z-[999] pointer-events-none">
+            <div className="flex flex-col items-center gap-3 bg-white rounded-2xl p-6 shadow-card">
+              <div className="w-8 h-8 border-[3px] border-rose-200 border-t-rose-600 rounded-full animate-spin" />
+              <p className="text-sm text-slate-500">در حال بارگذاری نقشه...</p>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {/* Locate me button */}
         <button
