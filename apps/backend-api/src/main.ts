@@ -93,7 +93,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(app.get(HttpExceptionFilter));
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

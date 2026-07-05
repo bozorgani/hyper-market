@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { HttpExceptionFilter } from './core/filters/http-exception.filter';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule, ThrottlerGuard, ThrottlerModuleOptions } from '@nestjs/throttler';
@@ -9,6 +10,7 @@ import { envValidation } from './config/env/env.validation';
 import { EventBusModule } from './core/events/event-bus.module';
 import { jwtConfig } from './config/jwt/jwt.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { ObservabilityModule } from './infrastructure/observability/observability.module';
 import { RequestIdMiddleware } from './infrastructure/logger/request-id.middleware';
 import { HealthModule } from './infrastructure/health/health.module';
 import { CsrfProtectionMiddleware } from './infrastructure/security/csrf-protection.middleware';
@@ -75,6 +77,7 @@ const isProduction =
       : []),
     EventBusModule,
     InfrastructureModule,
+    ObservabilityModule,
     HealthModule,
     SecurityModule,
     AddressesModule,
@@ -92,6 +95,7 @@ const isProduction =
   ],
   controllers: [],
   providers: [
+    HttpExceptionFilter,
     ...(isProduction
       ? [
           {
