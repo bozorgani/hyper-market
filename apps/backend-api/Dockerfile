@@ -21,7 +21,7 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 COPY apps/backend-api/package.json apps/backend-api/package.json
 COPY apps/web/package.json apps/web/package.json
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 FROM node:${NODE_VERSION} AS runner
 WORKDIR /app
