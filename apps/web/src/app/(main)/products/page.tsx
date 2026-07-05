@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ProductsPageClient } from "@/features/public-pages/products-page-client";
-import { fetchCategoryForMetadata } from "@/lib/server-api";
+import { fetchCategoriesForSSR, fetchCategoryForMetadata, fetchProductListForSSR } from "@/lib/server-api";
 
 type ProductsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -43,10 +43,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const initialCategoryId = firstParam(params.category ?? params.categoryId);
   const initialSearch = firstParam(params.search ?? params.q);
 
+  const [initialProducts, initialCategories] = await Promise.all([
+    fetchProductListForSSR({ page: 1, limit: 12, categoryId: initialCategoryId, search: initialSearch }),
+    fetchCategoriesForSSR(),
+  ]);
+
   return (
     <ProductsPageClient
       initialCategoryId={initialCategoryId}
       initialSearch={initialSearch}
+      initialProducts={initialProducts ?? undefined}
+      initialCategories={initialCategories ?? undefined}
     />
   );
 }

@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useCategories } from "@/hooks/use-products";
-import { useProductSearch } from "@/hooks/use-search";
+import { useProductSearch, type SearchResponse } from "@/hooks/use-search";
 import { formatNumber, formatPrice } from "@/lib/utils";
 
 function SearchResultsSkeleton() {
@@ -37,7 +37,7 @@ function SearchResultsSkeleton() {
   );
 }
 
-function SearchContent() {
+function SearchContent({ initialSearch }: { initialSearch?: SearchResponse }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") ?? "";
@@ -50,7 +50,7 @@ function SearchContent() {
   const { trackSearch } = useAnalytics();
   const debouncedMinPrice = useDebounce(minPrice, 400);
   const debouncedMaxPrice = useDebounce(maxPrice, 400);
-  const search = useProductSearch({
+  const searchParamsForQuery = {
     q: query,
     categoryId: categoryId || undefined,
     minPrice: debouncedMinPrice || undefined,
@@ -59,7 +59,10 @@ function SearchContent() {
     sort,
     page: 1,
     limit: 24,
-  });
+  };
+  const canUseInitialSearch =
+    !categoryId && !debouncedMinPrice && !debouncedMaxPrice && !availableOnly && sort === "createdAt:desc";
+  const search = useProductSearch(searchParamsForQuery, canUseInitialSearch ? initialSearch : undefined);
 
   useEffect(() => {
     if (query && search.data) {
@@ -195,10 +198,10 @@ function SearchContent() {
   );
 }
 
-export function SearchPageClient() {
+export function SearchPageClient({ initialSearch }: { initialSearch?: SearchResponse }) {
   return (
     <Suspense fallback={<main className="p-8 text-center text-slate-500">در حال بارگذاری جستجو...</main>}>
-      <SearchContent />
+      <SearchContent initialSearch={initialSearch} />
     </Suspense>
   );
 }

@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { api } from "@/services/api";
+import { validateCouponAction } from "@/app/actions/checkout";
 
 export type CouponValidationResult = {
   code: string;
@@ -11,7 +11,6 @@ export type CouponValidationResult = {
 
 export function useValidateCoupon() {
   return useMutation({
-    mutationFn: async (code: string) =>
-      (await api.post<CouponValidationResult>("/coupons/validate", { code })).data,
+    mutationFn: validateCouponAction,
   });
 }

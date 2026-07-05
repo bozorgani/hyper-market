@@ -12,9 +12,10 @@ import { useAnalytics } from "@/hooks/use-analytics";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useProduct } from "@/hooks/use-products";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import type { Product } from "@/types/domain";
 
-export function ProductDetailPageClient({ productId }: { productId: string }) {
-  const product = useProduct(productId);
+export function ProductDetailPageClient({ productId, initialProduct }: { productId: string; initialProduct?: Product }) {
+  const product = useProduct(productId, initialProduct);
   const addToCart = useAddToCart();
   const { showToast } = useToast();
   const { trackProductView } = useAnalytics();

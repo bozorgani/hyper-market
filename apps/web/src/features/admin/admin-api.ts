@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { updateOrderStatusAction } from "@/app/actions/checkout";
 import { api } from "@/services/api";
 import type { Category, Order, PaginatedResponse, Payment, Product, ProductListResponse, User } from "@/types/domain";
 
@@ -155,8 +156,7 @@ export function useAdminOrders(page?: number, status?: string, limit?: number) {
 export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ orderId, status }: { orderId: string; status: string }) =>
-      (await api.patch<Order>(`/orders/${orderId}/status`, { status })).data,
+    mutationFn: updateOrderStatusAction,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "orders"] }),
   });
 }
