@@ -132,7 +132,7 @@ export default function RegisterPage() {
               )}
             />
           </div>
-          <p className="mt-1 text-xs text-slate-400">حداقل یکی از فیلدهای ایمیل یا موبایل الزامی است</p>
+          <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">حداقل یکی از فیلدهای ایمیل یا موبایل الزامی است.</p>
         </div>
 
         {/* Password Field */}

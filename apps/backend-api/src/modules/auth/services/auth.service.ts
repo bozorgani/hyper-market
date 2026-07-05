@@ -81,12 +81,24 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    if (dto.email && (await this.usersService.emailExists(dto.email))) {
-      throw new ConflictException('Email already exists');
+    const existingEmailUser = dto.email
+      ? await this.usersService.getUserByEmail(dto.email)
+      : null;
+    const existingPhoneUser = dto.phoneNumber
+      ? await this.usersService.getUserByPhone(dto.phoneNumber)
+      : null;
+    const existingUser = existingEmailUser ?? existingPhoneUser;
+
+    if (
+      existingEmailUser &&
+      existingPhoneUser &&
+      getEntityId(existingEmailUser) !== getEntityId(existingPhoneUser)
+    ) {
+      throw new ConflictException('Email or phone number already belongs to another account');
     }
 
-    if (dto.phoneNumber && (await this.usersService.phoneExists(dto.phoneNumber))) {
-      throw new ConflictException('Phone number already exists');
+    if (existingUser) {
+      return this.handleExistingRegistration(dto, existingUser);
     }
 
     const passwordHash = await this.passwordService.hashPassword(dto.password);
@@ -126,6 +138,44 @@ export class AuthService {
       phoneNumber: user.phoneNumber,
       role: user.role,
       accountStatus: user.accountStatus,
+      message: 'verification otp sent',
+    };
+  }
+
+  private async handleExistingRegistration(
+    dto: RegisterDto,
+    user: { email?: string; phoneNumber?: string; accountStatus?: AccountStatus; isEmailVerified?: boolean; isPhoneVerified?: boolean },
+  ) {
+    const userId = getEntityId(user);
+    const isPendingOrUnverified =
+      user.accountStatus === AccountStatus.PENDING ||
+      (dto.email && !user.isEmailVerified) ||
+      (dto.phoneNumber && !user.isPhoneVerified);
+
+    if (!isPendingOrUnverified) {
+      if (dto.email && user.email === dto.email) {
+        throw new ConflictException('Email already exists');
+      }
+      if (dto.phoneNumber && user.phoneNumber === dto.phoneNumber) {
+        throw new ConflictException('Phone number already exists');
+      }
+      throw new ConflictException('Account already exists');
+    }
+
+    if (dto.email && user.email === dto.email && !user.isEmailVerified) {
+      await this.otpService.createVerificationOtp(userId, dto.email, OtpType.EMAIL_VERIFY);
+    }
+
+    if (dto.phoneNumber && user.phoneNumber === dto.phoneNumber && !user.isPhoneVerified) {
+      await this.otpService.createVerificationOtp(userId, dto.phoneNumber, OtpType.PHONE_VERIFY);
+    }
+
+    return {
+      id: userId,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: UserRole.CUSTOMER,
+      accountStatus: user.accountStatus ?? AccountStatus.PENDING,
       message: 'verification otp sent',
     };
   }
