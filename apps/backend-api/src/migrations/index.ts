@@ -175,4 +175,31 @@ export const migrations: Migration[] = [
       console.log('[MIGRATION 0004] Added admin read permissions for products and categories.');
     },
   },
+
+  // ── 0005: Normalize permissions indexes for role-based assignments ────────
+  {
+    id: '0005',
+    description: 'Normalize permissions indexes for role-based permission assignments',
+    up: async (connection) => {
+      const collection = connection.collection('permissions');
+
+      const indexes = await collection.indexes();
+      const indexNames = new Set(indexes.map((index) => index.name));
+
+      for (const indexName of ['name_1', 'resource_1_action_1']) {
+        if (indexNames.has(indexName)) {
+          await collection.dropIndex(indexName);
+        }
+      }
+
+      await collection.createIndex({ name: 1 });
+      await collection.createIndex({ resource: 1, action: 1 });
+      await collection.createIndex(
+        { role: 1, name: 1 },
+        { unique: true, sparse: true },
+      );
+
+      console.log('[MIGRATION 0005] Permissions indexes normalized for role-based assignments.');
+    },
+  },
 ];

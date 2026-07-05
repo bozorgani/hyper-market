@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CartModule } from '../cart/cart.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 import { ProductsModule } from '../products/products.module';
 import { OrdersController } from './controllers/orders.controller';
 import { OrdersRepository } from './repositories/orders.repository';
@@ -11,6 +12,7 @@ import { OrdersService } from './services/orders.service';
   imports: [
     CartModule,
     ProductsModule,
+    PermissionsModule,
     MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
   ],
   controllers: [OrdersController],

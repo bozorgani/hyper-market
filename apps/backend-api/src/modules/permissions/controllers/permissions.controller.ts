@@ -1,27 +1,16 @@
 import {
+  BadRequestException,
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   Post,
 } from '@nestjs/common';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { Permissions } from '../decorators/permissions.decorator';
 import { UserRole } from '../../users/enums/user-role.enum';
+import { Permissions } from '../decorators/permissions.decorator';
+import { GrantPermissionDto, RevokePermissionDto } from '../dto/permission.dto';
 import { PermissionsService } from '../services/permissions.service';
-
-class GrantPermissionDto {
-  role!: string;
-  permissionName!: string;
-  resource!: string;
-  action!: string;
-}
-
-class RevokePermissionDto {
-  role!: string;
-  permissionName!: string;
-}
 
 @Controller('permissions')
 @Roles(UserRole.SUPER_ADMIN)
@@ -43,6 +32,10 @@ export class PermissionsController {
   @Get(':role')
   @Permissions('permissions.read')
   async getRolePermissions(@Param('role') role: string) {
+    if (!Object.values(UserRole).includes(role as UserRole)) {
+      throw new BadRequestException('Invalid role');
+    }
+
     const permissions = await this.permissionsService.getPermissionsForRole(role as UserRole);
     return { role, permissions };
   }
@@ -63,7 +56,7 @@ export class PermissionsController {
   }
 
   /**
-   * POST /permissions/revoke — revoke a permission from a role
+   * POST /permissions/revoke — revoke a permission to a role
    */
   @Post('revoke')
   @Permissions('permissions.update')
