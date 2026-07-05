@@ -17,7 +17,7 @@ export default function AdminDashboardPage() {
   const users = useAdminUsers();
 
   const { revenue, revenueByDay } = useMemo(() => {
-    const ordersList = orders.data ?? [];
+    const ordersList = orders.data?.items ?? [];
     const paidOrders = ordersList.filter((order) => order.status === "paid");
     const revenue = paidOrders.reduce((sum, order) => sum + order.totalPrice, 0);
 
@@ -38,9 +38,9 @@ export default function AdminDashboardPage() {
     }
     const max = Math.max(0, ...buckets);
     return { revenue, revenueByDay: { values: buckets, max } };
-  }, [orders.data]);
+  }, [orders.data?.items]);
 
-  const recentOrders = (orders.data ?? []).slice(0, 6);
+  const recentOrders = (orders.data?.items ?? []).slice(0, 6);
   const today = new Date().getDay();
   const dayLabels = Array.from({ length: 7 }, (_, i) => {
     const dayIdx = (today - 6 + i + 7) % 7;
@@ -77,7 +77,7 @@ export default function AdminDashboardPage() {
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <AdminStatCard
           title="کل سفارش‌ها"
-          value={orders.data?.length ?? 0}
+          value={orders.data?.total ?? 0}
           icon={ShoppingCart}
           gradient="bg-emerald-500"
           delay={0}
@@ -101,7 +101,7 @@ export default function AdminDashboardPage() {
         />
         <AdminStatCard
           title="کل کاربران"
-          value={users.data?.length ?? 0}
+          value={users.data?.total ?? 0}
           icon={Users}
           gradient="bg-violet-500"
           delay={0.24}

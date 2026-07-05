@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
-import type { Category, Order, Payment, Product, ProductListResponse, User } from "@/types/domain";
+import type { Category, Order, PaginatedResponse, Payment, Product, ProductListResponse, User } from "@/types/domain";
 
 export type ProductFormInput = {
   name: string;
@@ -90,10 +90,16 @@ export type CategoryFormInput = {
   isActive?: boolean;
 };
 
-export function useAdminCategories() {
+export function useAdminCategories(page?: number, limit?: number) {
   return useQuery({
-    queryKey: ["admin", "categories"],
-    queryFn: async () => (await api.get<Category[]>("/admin/categories")).data,
+    queryKey: ["admin", "categories", page, limit],
+    queryFn: async () => {
+      if (page || limit) {
+        return (await api.get<PaginatedResponse<Category>>("/admin/categories", { params: { page, limit } })).data;
+      }
+      const items = (await api.get<Category[]>("/admin/categories")).data;
+      return { items, total: items.length, page: 1, limit: items.length || 1, meta: { totalPages: 1, hasNextPage: false, hasPreviousPage: false } };
+    },
   });
 }
 
@@ -133,10 +139,16 @@ export function useDeleteCategory() {
   });
 }
 
-export function useAdminOrders() {
+export function useAdminOrders(page?: number, status?: string, limit?: number) {
   return useQuery({
-    queryKey: ["admin", "orders"],
-    queryFn: async () => (await api.get<Order[]>("/orders")).data,
+    queryKey: ["admin", "orders", page, status, limit],
+    queryFn: async () => {
+      if (page || limit || status) {
+        return (await api.get<PaginatedResponse<Order>>("/orders", { params: { page, limit, status } })).data;
+      }
+      const items = (await api.get<Order[]>("/orders")).data;
+      return { items, total: items.length, page: 1, limit: items.length || 1, meta: { totalPages: 1, hasNextPage: false, hasPreviousPage: false } };
+    },
   });
 }
 
@@ -195,10 +207,16 @@ export function useAdminAnalyticsDashboard() {
   });
 }
 
-export function useAdminUsers() {
+export function useAdminUsers(page?: number, role?: string, accountStatus?: string, limit?: number) {
   return useQuery({
-    queryKey: ["admin", "users"],
-    queryFn: async () => (await api.get<User[]>("/users")).data,
+    queryKey: ["admin", "users", page, role, accountStatus, limit],
+    queryFn: async () => {
+      if (page || limit || role || accountStatus) {
+        return (await api.get<PaginatedResponse<User>>("/users", { params: { page, limit, role, accountStatus } })).data;
+      }
+      const items = (await api.get<User[]>("/users")).data;
+      return { items, total: items.length, page: 1, limit: items.length || 1, meta: { totalPages: 1, hasNextPage: false, hasPreviousPage: false } };
+    },
     retry: false,
   });
 }

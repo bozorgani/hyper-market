@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
@@ -151,9 +152,12 @@ export function Header() {
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
               {item.images?.[0] ? (
-                <img
+                <Image
                   src={item.images[0]}
                   alt=""
+                  width={40}
+                  height={40}
+                  unoptimized
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -384,9 +388,12 @@ export function Header() {
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
                         {item.images?.[0] ? (
-                          <img
+                          <Image
                             src={item.images[0]}
                             alt=""
+                            width={36}
+                            height={36}
+                            unoptimized
                             className="h-full w-full object-cover"
                           />
                         ) : (

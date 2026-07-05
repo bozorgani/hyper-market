@@ -119,11 +119,11 @@ export function ProductForm({
             required
           >
             <option value="">انتخاب دسته‌بندی</option>
-            {(categories.data ?? []).map((category) => (
+            {(categories.data?.items ?? []).map((category) => (
               <option key={category._id} value={category._id}>{category.name}</option>
             ))}
           </select>
-          {categories.data?.length === 0 ? (
+          {(categories.data?.items.length ?? 0) === 0 ? (
             <p className="text-xs leading-5 text-amber-600">برای ساخت محصول باید ابتدا حداقل یک دسته‌بندی در دیتابیس وجود داشته باشد.</p>
           ) : null}
         </label>

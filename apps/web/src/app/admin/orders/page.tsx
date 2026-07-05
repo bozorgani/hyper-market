@@ -29,24 +29,26 @@ const statuses: Array<{ value: OrderStatus | "all"; label: string; color: string
 const PAGE_SIZE = 10;
 
 export default function AdminOrdersPage() {
-  const orders = useAdminOrders();
-  const updateStatus = useUpdateOrderStatus();
-  const { showToast } = useToast();
   const [status, setStatus] = useState<OrderStatus | "all">("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const orders = useAdminOrders(page, status === "all" ? undefined : status, PAGE_SIZE);
+  const updateStatus = useUpdateOrderStatus();
+  const { showToast } = useToast();
 
   const filteredOrders = useMemo(() => {
-    const items = orders.data ?? [];
+    const items = orders.data?.items ?? [];
     return items.filter((order) => {
-      const matchesStatus = status === "all" ? true : order.status === status;
       const matchesQuery = query.trim() ? order._id.toLowerCase().includes(query.trim().toLowerCase()) : true;
-      return matchesStatus && matchesQuery;
+      return matchesQuery;
     });
-  }, [orders.data, query, status]);
+  }, [orders.data?.items, query]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
-  const paginatedOrders = filteredOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalItems = query.trim() ? filteredOrders.length : (orders.data?.total ?? 0);
+  const totalPages = query.trim()
+    ? Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE))
+    : (orders.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE)));
+  const paginatedOrders = filteredOrders;
   const errorMessage = orders.error instanceof Error ? orders.error.message : "دریافت سفارش‌ها ناموفق بود.";
 
   async function handleStatusChange(orderId: string, nextStatus: string) {

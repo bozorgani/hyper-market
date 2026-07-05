@@ -25,7 +25,10 @@ const emptyForm: CategoryFormInput = { name: "", slug: "", description: "", icon
 const PAGE_SIZE = 8;
 
 export default function AdminCategoriesPage() {
-  const categories = useAdminCategories();
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const categories = useAdminCategories(page, PAGE_SIZE);
+  const allCategories = useAdminCategories();
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
@@ -33,29 +36,30 @@ export default function AdminCategoriesPage() {
   const [form, setForm] = useState<CategoryFormInput>(emptyForm);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
 
   const isSubmitting = createCategory.isPending || updateCategory.isPending;
 
   const filteredCategories = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return categories.data ?? [];
-    return (categories.data ?? []).filter((category) =>
+    if (!normalizedQuery) return categories.data?.items ?? [];
+    return (categories.data?.items ?? []).filter((category) =>
       category.name.toLowerCase().includes(normalizedQuery) || category.slug.toLowerCase().includes(normalizedQuery),
     );
-  }, [categories.data, query]);
+  }, [categories.data?.items, query]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / PAGE_SIZE));
-  const paginatedCategories = filteredCategories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalItems = query.trim() ? filteredCategories.length : (categories.data?.total ?? 0);
+  const totalPages = query.trim()
+    ? Math.max(1, Math.ceil(filteredCategories.length / PAGE_SIZE))
+    : (categories.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE)));
+  const paginatedCategories = filteredCategories;
 
   // Build parent category options (root categories only, excluding current editing)
   const rootCategories = useMemo(() => {
-    return (categories.data ?? []).filter((cat) => {
+    return (allCategories.data?.items ?? []).filter((cat) => {
       if (!cat.parentId) return cat._id !== editingCategory?._id;
       return false;
     });
-  }, [categories.data, editingCategory]);
+  }, [allCategories.data?.items, editingCategory]);
 
   function resetForm() { setForm(emptyForm); setEditingCategory(null); }
   function startEdit(category: Category) {
@@ -112,7 +116,7 @@ export default function AdminCategoriesPage() {
   /** Find parent name for display */
   function getParentName(parentId?: string | null): string | null {
     if (!parentId) return null;
-    const parent = (categories.data ?? []).find((c) => c._id === parentId);
+    const parent = (allCategories.data?.items ?? []).find((c) => c._id === parentId);
     return parent?.name ?? null;
   }
 
@@ -252,7 +256,7 @@ export default function AdminCategoriesPage() {
               <FolderTree className="h-4 w-4 text-slate-400" />
               <span className="text-sm font-semibold text-slate-700">فهرست دسته‌بندی‌ها</span>
             </div>
-            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">{formatNumber(filteredCategories.length)} مورد</span>
+            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">{formatNumber(totalItems)} مورد</span>
           </div>
 
           {/* Desktop Table */}
@@ -329,10 +333,10 @@ export default function AdminCategoriesPage() {
             ))}
           </div>
 
-          {!categories.isLoading && filteredCategories.length === 0 ? (
+          {!categories.isLoading && totalItems === 0 ? (
             <div className="p-8"><EmptyState title="دسته‌بندی‌ای یافت نشد" description="عبارت جستجو را تغییر دهید یا دسته‌بندی جدید بسازید." actions={<Button type="button" onClick={() => { setQuery(""); setPage(1); }}>پاک‌کردن</Button>} /></div>
           ) : null}
-          {!categories.isLoading && filteredCategories.length > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={filteredCategories.length} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
+          {!categories.isLoading && totalItems > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={totalItems} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
         </div>
       )}
 

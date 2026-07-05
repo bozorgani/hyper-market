@@ -16,8 +16,11 @@ import { formatPrice } from "@/lib/utils";
 const PAGE_SIZE = 10;
 
 export default function AdminPaymentsPage() {
-  const orders = useAdminOrders();
-  const orderIds = useMemo(() => (orders.data ?? []).map((order) => order._id), [orders.data]);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const orders = useAdminOrders(page, undefined, PAGE_SIZE);
+  const orderIds = useMemo(() => (orders.data?.items ?? []).map((order) => order._id), [orders.data?.items]);
   const payments = useAdminPayments(orderIds);
   const paymentMetaMap = useMemo(() => {
     const meta: Record<string, { status?: string; transactionId?: string | null }> = {};
@@ -27,23 +30,23 @@ export default function AdminPaymentsPage() {
     return meta;
   }, [payments.data]);
 
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [page, setPage] = useState(1);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const filteredOrders = useMemo(() => {
-    return (orders.data ?? []).filter((order) => {
+    return (orders.data?.items ?? []).filter((order) => {
       const meta = paymentMetaMap[order._id];
       const queryValue = query.trim().toLowerCase();
       const matchesQuery = queryValue ? [order._id, meta?.transactionId ?? ""].some((value) => value.toLowerCase().includes(queryValue)) : true;
       const matchesStatus = statusFilter === "all" ? true : (meta?.status ?? "unknown") === statusFilter;
       return matchesQuery && matchesStatus;
     });
-  }, [orders.data, paymentMetaMap, query, statusFilter]);
+  }, [orders.data?.items, paymentMetaMap, query, statusFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
-  const paginatedOrders = filteredOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalItems = query.trim() || statusFilter !== "all" ? filteredOrders.length : (orders.data?.total ?? 0);
+  const totalPages = query.trim() || statusFilter !== "all"
+    ? Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE))
+    : (orders.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE)));
+  const paginatedOrders = filteredOrders;
   const errorMessage = orders.error instanceof Error ? orders.error.message : "دریافت اطلاعات پرداخت ناموفق بود.";
 
   return (
@@ -84,7 +87,7 @@ export default function AdminPaymentsPage() {
               <CreditCard className="h-4 w-4 text-slate-400" />
               <span className="text-sm font-semibold text-slate-700">فهرست پرداخت‌ها</span>
             </div>
-            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">{filteredOrders.length} مورد</span>
+            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">{totalItems} مورد</span>
           </div>
 
           {/* Desktop Table */}
