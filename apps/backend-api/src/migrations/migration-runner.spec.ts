@@ -7,6 +7,10 @@ function createMockConnection() {
   return {
     collection: jest.fn().mockReturnValue({
       createIndex: jest.fn().mockResolvedValue(undefined),
+      indexes: jest.fn().mockResolvedValue([]),
+      dropIndex: jest.fn().mockResolvedValue(undefined),
+      findOneAndUpdate: jest.fn().mockImplementation(async (_filter: any, update: any) => update.$set),
+      deleteOne: jest.fn().mockResolvedValue({ deletedCount: 1 }),
       find: jest.fn().mockReturnValue({
         toArray: jest.fn().mockResolvedValue(applied),
       }),

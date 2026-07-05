@@ -105,7 +105,7 @@ export class SearchIndexer implements OnModuleInit {
       // Index might not exist yet — that's fine
     }
 
-    // Recreate index with correct settings and primaryKey
+    // Recreate index settings; document ingestion supplies the primary key.
     await this.ensureProductIndex();
 
     // Batch-index all active (non-deleted) products from MongoDB
