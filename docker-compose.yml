@@ -17,6 +17,7 @@ x-backend-env: &backend-env
   JWT_ISSUER: ${JWT_ISSUER:-hyper-market}
   JWT_AUDIENCE: ${JWT_AUDIENCE:-hyper-market-api}
   PASSWORD_PEPPER: ${PASSWORD_PEPPER:-change_me_password_pepper_32_chars_minimum_123456789}
+  OTP_HASH_SECRET: ${OTP_HASH_SECRET:-change_me_otp_hash_secret_32_chars_minimum_123456789}
   AUTH_COOKIE_SAME_SITE: ${AUTH_COOKIE_SAME_SITE:-lax}
   AUTH_RETURN_TOKENS_IN_BODY: ${AUTH_RETURN_TOKENS_IN_BODY:-false}
   AUTH_LOG_OTP_CODES: ${AUTH_LOG_OTP_CODES:-false}

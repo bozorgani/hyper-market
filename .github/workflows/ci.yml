@@ -147,6 +147,7 @@ jobs:
       JWT_ISSUER: hyper-market
       JWT_AUDIENCE: hyper-market-api
       PASSWORD_PEPPER: test-password-pepper-e2e-min-32chars!
+      OTP_HASH_SECRET: test-otp-hash-secret-e2e-min-32chars!
       CORS_ORIGINS: http://localhost:3000,http://localhost:3001
       AUTH_COOKIE_SAME_SITE: lax
       AUTH_RETURN_TOKENS_IN_BODY: "false"

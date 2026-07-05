@@ -153,6 +153,27 @@ describe('AuthService', () => {
       await expect(
         service.login({ email: 'wrong@example.com', password: 'wrong', deviceId: 'device-123' }),
       ).rejects.toThrow(UnauthorizedException);
+
+      expect(mockPasswordService.comparePassword).toHaveBeenCalledWith(
+        'wrong',
+        expect.stringMatching(/^\$2b\$12\$/),
+      );
+    });
+
+    it('should not reveal pending accounts when password is wrong', async () => {
+      mockUsersService.getUserByEmailWithPassword.mockResolvedValue({
+        _id: '507f1f77bcf86cd799439011',
+        email: 'pending@example.com',
+        passwordHash: 'stored-hash',
+        role: UserRole.CUSTOMER,
+        accountStatus: AccountStatus.PENDING,
+      });
+      mockPasswordService.comparePassword.mockResolvedValue(false);
+      mockUsersService.incrementFailedLoginAttempts.mockResolvedValue({ failedLoginAttempts: 1 });
+
+      await expect(
+        service.login({ email: 'pending@example.com', password: 'wrong', deviceId: 'device-123' }),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 

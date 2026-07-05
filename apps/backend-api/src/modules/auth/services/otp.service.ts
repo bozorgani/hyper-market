@@ -4,7 +4,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { createHash, randomInt } from 'crypto';
+import { createHmac, randomInt } from 'crypto';
 import { Types } from 'mongoose';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
@@ -237,7 +237,23 @@ export class OtpService {
   }
 
   private hashOtpCode(code: string): string {
-    return createHash('sha256').update(code).digest('hex');
+    return createHmac('sha256', this.getOtpHashSecret())
+      .update(code)
+      .digest('hex');
+  }
+
+  private getOtpHashSecret(): string {
+    const secret =
+      process.env.OTP_HASH_SECRET ??
+      process.env.PASSWORD_PEPPER ??
+      process.env.JWT_REFRESH_SECRET ??
+      process.env.JWT_ACCESS_SECRET;
+
+    if (!secret && process.env.APP_ENV === 'production') {
+      throw new Error('OTP_HASH_SECRET or PASSWORD_PEPPER must be set in production');
+    }
+
+    return secret ?? 'development-otp-hash-secret-do-not-use-in-production';
   }
 
   private getLockoutDate(): Date {

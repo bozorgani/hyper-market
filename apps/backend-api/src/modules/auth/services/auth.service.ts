@@ -5,7 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { createHash, randomInt, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { Types } from 'mongoose';
 import { EventBusService } from '../../../core/events/event-bus.service';
 import { EventType } from '../../../core/events/enums/event-type.enum';
@@ -50,6 +50,11 @@ type AuthTokens = {
   accessToken: string;
   refreshToken: string;
 };
+
+// A valid bcrypt hash used only to equalize timing for unknown accounts.
+// It is intentionally not a real user password and comparePassword() will
+// still apply the runtime pepper before bcrypt verification.
+const DUMMY_PASSWORD_HASH = '$2b$12$CwTycUXWue0Thq9StjUM0uJ8BzzhLQjCjULVxYHK4QBVpLw3C6l9W';
 
 @Injectable()
 export class AuthService {
@@ -216,6 +221,7 @@ export class AuthService {
     const user = await this.findLoginUser(dto);
 
     if (!user || !user.passwordHash) {
+      await this.compareAgainstDummyPassword(dto.password);
       await this.logSecurityEvent(AuditAction.LOGIN_FAILED, null, {
         ...context,
         deviceId: dto.deviceId,
@@ -224,6 +230,16 @@ export class AuthService {
     }
 
     const userId = getEntityId(user);
+
+    const passwordMatches = await this.passwordService.comparePassword(
+      dto.password,
+      user.passwordHash,
+    );
+
+    if (!passwordMatches) {
+      await this.handleFailedLogin(userId, dto.deviceId, context);
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       await this.logSecurityEvent(AuditAction.LOGIN_FAILED, userId, {
@@ -235,16 +251,6 @@ export class AuthService {
 
     if (user.accountStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException('Account verification is required');
-    }
-
-    const passwordMatches = await this.passwordService.comparePassword(
-      dto.password,
-      user.passwordHash,
-    );
-
-    if (!passwordMatches) {
-      await this.handleFailedLogin(userId, dto.deviceId, context);
-      throw new UnauthorizedException('Invalid credentials');
     }
 
     await this.usersService.resetLoginSecurity(userId);
@@ -465,6 +471,14 @@ export class AuthService {
   // Use OtpService, SessionService, or RefreshTokenService directly instead.
   // These wrappers will be removed in a future version.
 
+  private async compareAgainstDummyPassword(password: string): Promise<void> {
+    try {
+      await this.passwordService.comparePassword(password, DUMMY_PASSWORD_HASH);
+    } catch {
+      // Timing equalization is best-effort and must not change auth semantics.
+    }
+  }
+
   private async findUserByTarget(
     email?: string,
     phoneNumber?: string,
@@ -495,10 +509,6 @@ export class AuthService {
       ...context,
       deviceId: payload.deviceId,
     });
-  }
-
-  private generateOtpCode(): string {
-    return randomInt(100000, 1000000).toString();
   }
 
   private async findLoginUser(dto: LoginDto): Promise<UserWithId | null> {
@@ -588,10 +598,6 @@ export class AuthService {
 
   private getLockoutDate(): Date {
     return new Date(Date.now() + this.lockoutMs);
-  }
-
-  private hashOtpCode(code: string): string {
-    return createHash('sha256').update(code).digest('hex');
   }
 
   private async logSecurityEvent(
