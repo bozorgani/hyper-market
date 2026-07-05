@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsDateString,
+  IsEnum,
   IsOptional,
   IsString,
   Matches,
@@ -8,6 +9,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import { ShippingMethod } from '../../shipping/enums/shipping-method.enum';
 
 export class DeliveryAddressDto {
   @IsString()
@@ -73,4 +75,8 @@ export class CreateOrderDto {
   @MaxLength(40)
   @Matches(/^[A-Za-z0-9_-]+$/)
   couponCode?: string;
+
+  @IsOptional()
+  @IsEnum(ShippingMethod)
+  shippingMethod?: ShippingMethod;
 }

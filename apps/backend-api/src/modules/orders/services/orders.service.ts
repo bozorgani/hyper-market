@@ -12,6 +12,7 @@ import { CouponsService } from '../../coupons/coupons.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { CartService } from '../../cart/services/cart.service';
 import { ProductsService } from '../../products/services/products.service';
+import { ShippingService } from '../../shipping/shipping.service';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { OrderStatus } from '../enums/order-status.enum';
@@ -43,6 +44,7 @@ export class OrdersService {
     private readonly productsService: ProductsService,
     private readonly cartService: CartService,
     private readonly couponsService: CouponsService,
+    private readonly shippingService: ShippingService,
     private readonly databaseTransactionService: DatabaseTransactionService,
     private readonly eventBusService?: EventBusService,
   ) {}
@@ -110,7 +112,23 @@ export class OrdersService {
           dto.couponCode,
           subtotalPrice,
         );
-        const totalPrice = coupon?.total ?? subtotalPrice;
+        const merchandiseTotal = coupon?.total ?? subtotalPrice;
+        const shippingQuote = this.shippingService.getQuote({
+          province: dto.deliveryAddress.province.trim(),
+          city: dto.deliveryAddress.city.trim(),
+          subtotal: merchandiseTotal,
+          deliveryDate: new Date(dto.deliveryWindow.date),
+          timeSlot: dto.deliveryWindow.timeSlot,
+          method: dto.shippingMethod,
+        });
+        await this.ensureDeliveryCapacity(
+          new Date(dto.deliveryWindow.date),
+          dto.deliveryWindow.timeSlot,
+          dto.deliveryAddress.province.trim(),
+          dto.deliveryAddress.city.trim(),
+          shippingQuote.capacity,
+        );
+        const totalPrice = merchandiseTotal + shippingQuote.deliveryFee;
 
         const createdOrder = await this.ordersRepository.create(
           {
@@ -119,6 +137,9 @@ export class OrdersService {
             subtotalPrice,
             discountAmount: coupon?.discountAmount ?? 0,
             couponCode: coupon?.code ?? null,
+            shippingMethod: shippingQuote.method,
+            deliveryFee: shippingQuote.deliveryFee,
+            freeShippingApplied: shippingQuote.freeShippingApplied,
             totalPrice,
             status: OrderStatus.PENDING,
             deliveryAddress: {
@@ -175,6 +196,8 @@ export class OrdersService {
         subtotalPrice: order.subtotalPrice,
         discountAmount: order.discountAmount,
         couponCode: order.couponCode,
+        deliveryFee: order.deliveryFee,
+        shippingMethod: order.shippingMethod,
         itemsCount: order.items.length,
       },
       timestamp: Date.now(),
@@ -344,6 +367,25 @@ export class OrdersService {
     }
 
     return recentPending;
+  }
+
+  private async ensureDeliveryCapacity(
+    deliveryDate: Date,
+    timeSlot: string,
+    province: string,
+    city: string,
+    capacity: number,
+  ): Promise<void> {
+    const reserved = await this.ordersRepository.countActiveByDeliveryWindow(
+      deliveryDate,
+      timeSlot,
+      province,
+      city,
+    );
+
+    if (reserved >= capacity) {
+      throw new BadRequestException('Selected delivery window is full');
+    }
   }
 
   private validateDeliveryWindow(dto: CreateOrderDto): void {

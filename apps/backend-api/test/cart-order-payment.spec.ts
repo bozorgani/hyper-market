@@ -132,6 +132,7 @@ test('OrdersService creates order inside transaction and clears cart', async () 
     productsService as never,
     cartService as never,
     { validateCoupon: () => null } as never,
+    { getQuote: () => ({ method: 'standard', deliveryFee: 0, freeShippingApplied: false, capacity: 50 }) } as never,
     transactionService as never,
   );
 
@@ -221,6 +222,7 @@ test('OrdersService restores stock when order is cancelled', async () => {
     productsService as never,
     {} as never,
     { validateCoupon: () => null } as never,
+    { getQuote: () => ({ method: 'standard', deliveryFee: 0, freeShippingApplied: false, capacity: 50 }) } as never,
     transactionService as never,
   );
 

@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { ProductsService } from '../../products/services/products.service';
+import { ShippingService } from '../../shipping/shipping.service';
 import { CartService } from '../../cart/services/cart.service';
 import { CouponsService } from '../../coupons/coupons.service';
 import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
@@ -68,6 +69,7 @@ describe('OrdersService — cancellation idempotency (#4)', () => {
         { provide: ProductsService, useValue: productsService },
         { provide: CartService, useValue: {} },
         { provide: CouponsService, useValue: { validateCoupon: jest.fn() } },
+        { provide: ShippingService, useValue: { getQuote: jest.fn(), getCapacityForWindow: jest.fn() } },
         {
           provide: DatabaseTransactionService,
           useValue: databaseTransactionService,

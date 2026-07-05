@@ -69,6 +69,35 @@ export class OrdersRepository {
       .exec();
   }
 
+  async countActiveByDeliveryWindow(
+    date: Date,
+    timeSlot: string,
+    province: string,
+    city: string,
+  ): Promise<number> {
+    const selectedDate = new Date(date);
+    selectedDate.setHours(0, 0, 0, 0);
+    const nextDate = new Date(selectedDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+
+    return this.orderModel
+      .countDocuments({
+        status: {
+          $in: [
+            OrderStatus.PENDING,
+            OrderStatus.PAID,
+            OrderStatus.PROCESSING,
+            OrderStatus.SHIPPED,
+          ],
+        },
+        'deliveryWindow.date': { $gte: selectedDate, $lt: nextDate },
+        'deliveryWindow.timeSlot': timeSlot,
+        'deliveryAddress.province': province,
+        'deliveryAddress.city': city,
+      })
+      .exec();
+  }
+
   async updateStatus(
     id: string,
     status: OrderStatus,
