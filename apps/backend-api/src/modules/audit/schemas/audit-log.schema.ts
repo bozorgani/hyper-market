@@ -15,6 +15,21 @@ export class AuditLog {
   @Prop({ type: String, enum: AuditAction, required: true, index: true })
   action!: AuditAction;
 
+  @Prop({ type: String, default: null, index: true })
+  resource?: string | null;
+
+  @Prop({ type: String, default: null, index: true })
+  resourceId?: string | null;
+
+  @Prop({ type: SchemaTypes.Mixed, default: {} })
+  metadata?: Record<string, unknown>;
+
+  @Prop({ type: String, default: null, index: true })
+  requestId?: string | null;
+
+  @Prop({ type: String, default: null, index: true })
+  traceId?: string | null;
+
   @Prop({ type: String, default: null })
   ipAddress?: string | null;
 
@@ -31,3 +46,4 @@ export class AuditLog {
 export const AuditLogSchema = SchemaFactory.createForClass(AuditLog);
 AuditLogSchema.index({ userId: 1, createdAt: -1 });
 AuditLogSchema.index({ action: 1, createdAt: -1 });
+AuditLogSchema.index({ resource: 1, resourceId: 1, createdAt: -1 });

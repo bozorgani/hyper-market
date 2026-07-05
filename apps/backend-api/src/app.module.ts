@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { HttpExceptionFilter } from './core/filters/http-exception.filter';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule, ThrottlerGuard, ThrottlerModuleOptions } from '@nestjs/throttler';
@@ -9,11 +10,14 @@ import { envValidation } from './config/env/env.validation';
 import { EventBusModule } from './core/events/event-bus.module';
 import { jwtConfig } from './config/jwt/jwt.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
+import { ObservabilityModule } from './infrastructure/observability/observability.module';
 import { RequestIdMiddleware } from './infrastructure/logger/request-id.middleware';
 import { HealthModule } from './infrastructure/health/health.module';
 import { CsrfProtectionMiddleware } from './infrastructure/security/csrf-protection.middleware';
 import { RedisThrottlerStorage } from './infrastructure/security/redis-throttler-storage';
 import { SecurityModule } from './infrastructure/security/security.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
+import { AuditModule } from './modules/audit/audit.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CartModule } from './modules/cart/cart.module';
@@ -74,8 +78,11 @@ const isProduction =
       : []),
     EventBusModule,
     InfrastructureModule,
+    ObservabilityModule,
     HealthModule,
     SecurityModule,
+    AddressesModule,
+    AuditModule,
     AnalyticsModule,
     AuthModule,
     UsersModule,
@@ -90,6 +97,7 @@ const isProduction =
   ],
   controllers: [],
   providers: [
+    HttpExceptionFilter,
     ...(isProduction
       ? [
           {

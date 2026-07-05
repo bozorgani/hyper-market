@@ -1,4 +1,7 @@
-import { Controller, Get, Param, Patch, Query } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Query, Req } from '@nestjs/common';
+import { Request } from 'express';
+import { AuditService } from '../../audit/audit.service';
+import { AuditAction } from '../../audit/enums/audit-action.enum';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
@@ -9,7 +12,10 @@ import { UsersService } from '../services/users.service';
 @Controller('users')
 @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Get()
   @Permissions('users.read')
@@ -38,14 +44,40 @@ export class UsersController {
 
   @Patch(':id/block')
   @Permissions('users.ban')
-  blockUser(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
-    return this.usersService.blockUser(id, user.sub);
+  async blockUser(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
+    const blocked = await this.usersService.blockUser(id, user.sub);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.USER_BLOCKED,
+      resource: 'user',
+      resourceId: id,
+      metadata: { targetRole: blocked.role },
+      request,
+    });
+    return blocked;
   }
 
   @Patch(':id/unblock')
   @Permissions('users.ban')
-  unblockUser(@Param('id') id: string) {
-    return this.usersService.unblockUser(id);
+  async unblockUser(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
+    const unblocked = await this.usersService.unblockUser(id);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.USER_UNBLOCKED,
+      resource: 'user',
+      resourceId: id,
+      metadata: { targetRole: unblocked.role },
+      request,
+    });
+    return unblocked;
   }
 
   private toPositiveInteger(value: string | undefined, fallback: number): number {

@@ -1,5 +1,7 @@
-import { Body, Controller, ForbiddenException, Get, Headers, Param, Patch, Post, Query, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, ForbiddenException, Get, Headers, Param, Patch, Post, Query, Req, Res } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { AuditService } from '../../audit/audit.service';
+import { AuditAction } from '../../audit/enums/audit-action.enum';
 import { IdempotencyService } from '../../../infrastructure/idempotency/idempotency.service';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -18,6 +20,7 @@ export class OrdersController {
     private readonly ordersService: OrdersService,
     private readonly idempotencyService: IdempotencyService,
     private readonly permissionsService: PermissionsService,
+    private readonly auditService: AuditService,
   ) {}
 
   @Post()
@@ -86,9 +89,19 @@ export class OrdersController {
     @Param('id') id: string,
     @Body() dto: UpdateOrderStatusDto,
     @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
   ) {
     await this.assertCanUpdateStatus(user.role as UserRole, dto.status);
-    return this.ordersService.updateStatus(id, dto.status);
+    const order = await this.ordersService.updateStatus(id, dto.status);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.ORDER_STATUS_CHANGED,
+      resource: 'order',
+      resourceId: id,
+      metadata: { status: dto.status },
+      request,
+    });
+    return order;
   }
 
   private async assertCanUpdateStatus(role: UserRole, status: OrderStatus): Promise<void> {

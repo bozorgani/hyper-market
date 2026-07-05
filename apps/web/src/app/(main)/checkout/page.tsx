@@ -21,6 +21,7 @@ import { formatPrice, formatNumber } from "@/lib/utils";
 import { JalaliDatePicker } from "@/components/jalali-date-picker";
 import { IRAN_PROVINCES } from "@/data/iran-locations";
 import type { DeliveryAddress, DeliveryWindow } from "@/types/domain";
+import { useMyAddresses } from "@/hooks/use-addresses";
 import { useCart } from "@/hooks/use-cart";
 import { useValidateCoupon, type CouponValidationResult } from "@/hooks/use-coupons";
 import { useCreateOrder, useCreatePayment } from "@/hooks/use-orders";
@@ -113,6 +114,7 @@ function getFieldErrors(address: DeliveryAddress, window: DeliveryWindow) {
 export default function CheckoutPage() {
   const router = useRouter();
   const cart = useCart();
+  const savedAddresses = useMyAddresses();
   const createOrder = useCreateOrder();
   const createPayment = useCreatePayment();
   const validateCoupon = useValidateCoupon();
@@ -187,6 +189,23 @@ export default function CheckoutPage() {
       setDiscountError(message);
       showToast({ type: "error", title: "اعمال کد تخفیف ناموفق بود", description: message });
     }
+  }
+
+
+  function applySavedAddress(addressId: string) {
+    const address = (savedAddresses.data ?? []).find((item) => item._id === addressId);
+    if (!address) return;
+
+    setDeliveryAddress({
+      recipientName: address.recipientName,
+      phoneNumber: address.phoneNumber,
+      province: address.province,
+      city: address.city,
+      addressLine: address.addressLine,
+      plate: address.plate ?? "",
+      unit: address.unit ?? "",
+      postalCode: address.postalCode ?? "",
+    });
   }
 
   function handleMapLocationSelect(lat: number, lng: number, address: string) {
@@ -322,6 +341,25 @@ export default function CheckoutPage() {
                   <Navigation className="h-4 w-4" />
                   انتخاب از روی نقشه
                 </button>
+
+                {(savedAddresses.data ?? []).length > 0 ? (
+                  <label className="mt-4 block space-y-2">
+                    <span className="text-sm font-semibold text-slate-600">انتخاب از آدرس‌های ذخیره‌شده</span>
+                    <select
+                      onChange={(event) => applySavedAddress(event.target.value)}
+                      disabled={isSubmitting}
+                      defaultValue=""
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
+                    >
+                      <option value="" disabled>انتخاب آدرس</option>
+                      {(savedAddresses.data ?? []).map((address) => (
+                        <option key={address._id} value={address._id}>
+                          {address.isDefault ? "پیش‌فرض — " : ""}{address.label || address.recipientName}، {address.city}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <div>

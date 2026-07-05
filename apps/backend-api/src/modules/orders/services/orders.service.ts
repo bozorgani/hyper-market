@@ -3,9 +3,12 @@ import {
   ForbiddenException,
   Injectable,
   Logger,
+  Optional,
 } from '@nestjs/common';
 import { ClientSession, isValidObjectId, Types } from 'mongoose';
 import { EventBusService } from '../../../core/events/event-bus.service';
+import { AuditService } from '../../audit/audit.service';
+import { AuditAction } from '../../audit/enums/audit-action.enum';
 import { EventType } from '../../../core/events/enums/event-type.enum';
 import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
 import { CouponsService } from '../../coupons/coupons.service';
@@ -46,7 +49,8 @@ export class OrdersService {
     private readonly couponsService: CouponsService,
     private readonly shippingService: ShippingService,
     private readonly databaseTransactionService: DatabaseTransactionService,
-    private readonly eventBusService?: EventBusService,
+    @Optional() private readonly eventBusService?: EventBusService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   async createOrder(userId: string, dto: CreateOrderDto): Promise<Order> {
@@ -186,6 +190,21 @@ export class OrdersService {
         this.productsService.syncProductToSearch(productId),
       ),
     );
+
+    if (order.couponCode && order.discountAmount > 0) {
+      await this.auditService?.log({
+        actorUserId: userId,
+        action: AuditAction.COUPON_APPLIED,
+        resource: 'order',
+        resourceId: getEntityId(order),
+        metadata: {
+          couponCode: order.couponCode,
+          discountAmount: order.discountAmount,
+          subtotalPrice: order.subtotalPrice,
+          totalPrice: order.totalPrice,
+        },
+      });
+    }
 
     this.eventBusService?.emit({
       type: EventType.ORDER_CREATED,

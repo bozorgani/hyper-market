@@ -7,17 +7,23 @@ import {
   Post,
   Put,
   Query,
+  Req,
   Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Public } from '../../auth/decorators/public.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Permissions } from '../../permissions/decorators/permissions.decorator';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
+import { AuditService } from '../../audit/audit.service';
+import { AuditAction } from '../../audit/enums/audit-action.enum';
+import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
+import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { ProductImageStorageService } from '../services/product-image-storage.service';
 import { ProductsService } from '../services/products.service';
 import { ProductImageUploadInterceptor } from '../storage/product-image-upload.interceptor';
@@ -27,6 +33,7 @@ export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly productImageStorageService: ProductImageStorageService,
+    private readonly auditService: AuditService,
   ) {}
 
   @Get('images/:fileName')
@@ -88,18 +95,32 @@ export class AdminProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly productImageStorageService: ProductImageStorageService,
+    private readonly auditService: AuditService,
   ) {}
 
   @Post()
   @Permissions('products.create')
-  createProduct(@Body() dto: CreateProductDto) {
-    return this.productsService.createProduct(dto);
+  async createProduct(
+    @Body() dto: CreateProductDto,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
+    const product = await this.productsService.createProduct(dto);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.PRODUCT_CREATED,
+      resource: 'product',
+      resourceId: getEntityId(product),
+      metadata: { name: product.name, categoryId: getEntityId(product.categoryId) },
+      request,
+    });
+    return product;
   }
 
   @Post('images/upload')
   @Permissions('products.update')
   @UseInterceptors(ProductImageUploadInterceptor)
-  uploadProductImage(
+  async uploadProductImage(
     @UploadedFile()
     file: {
       originalname?: string;
@@ -107,8 +128,19 @@ export class AdminProductsController {
       size?: number;
       buffer?: Buffer;
     },
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
   ) {
-    return this.productImageStorageService.saveProductImage(file);
+    const image = await this.productImageStorageService.saveProductImage(file);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.PRODUCT_IMAGE_UPLOADED,
+      resource: 'product-image',
+      resourceId: image.fileName,
+      metadata: { size: image.size, mimeType: image.mimeType },
+      request,
+    });
+    return image;
   }
 
   @Get()
@@ -137,14 +169,41 @@ export class AdminProductsController {
 
   @Put(':id')
   @Permissions('products.update')
-  updateProduct(@Param('id') id: string, @Body() dto: UpdateProductDto) {
-    return this.productsService.updateProduct(id, dto);
+  async updateProduct(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductDto,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
+    const product = await this.productsService.updateProduct(id, dto);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.PRODUCT_UPDATED,
+      resource: 'product',
+      resourceId: id,
+      metadata: { changedFields: Object.keys(dto) },
+      request,
+    });
+    return product;
   }
 
   @Delete(':id')
   @Permissions('products.delete')
-  deleteProduct(@Param('id') id: string) {
-    return this.productsService.deleteProduct(id);
+  async deleteProduct(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Req() request: Request,
+  ) {
+    const product = await this.productsService.deleteProduct(id);
+    await this.auditService.log({
+      actorUserId: user.sub,
+      action: AuditAction.PRODUCT_DELETED,
+      resource: 'product',
+      resourceId: id,
+      metadata: { name: product.name },
+      request,
+    });
+    return product;
   }
 
   private toPositiveInteger(value: string | undefined, fallback: number): number {

@@ -1,6 +1,6 @@
 import { createLogger, format, transports } from 'winston';
 
-const SENSITIVE_KEYS = ['password', 'passwordHash', 'token', 'accessToken', 'refreshToken', 'authorization'];
+const SENSITIVE_KEYS = ['password', 'passwordHash', 'token', 'accessToken', 'refreshToken', 'authorization', 'cookie'];
 const isProduction = process.env.APP_ENV === 'production';
 
 const redactSensitiveData = format((info) => {
@@ -20,8 +20,10 @@ export const winstonLogger = createLogger({
     redactSensitiveData(),
     isProduction
       ? format.json()
-      : format.printf(({ timestamp, level, message }) => {
-          return `[${timestamp}] ${level}: ${message}`;
+      : format.printf((info) => {
+          const { timestamp, level, message, ...meta } = info;
+          const serializedMeta = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : '';
+          return `[${timestamp}] ${level}: ${message}${serializedMeta}`;
         }),
   ),
   transports: [new transports.Console()],

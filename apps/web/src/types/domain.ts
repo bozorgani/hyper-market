@@ -112,6 +112,15 @@ export type DeliveryWindow = {
   timeSlot: string;
 };
 
+export type Address = DeliveryAddress & {
+  _id: string;
+  userId?: string;
+  label?: string | null;
+  isDefault?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type Order = {
   _id: string;
   userId: string;
