@@ -202,4 +202,32 @@ export const migrations: Migration[] = [
       console.log('[MIGRATION 0005] Permissions indexes normalized for role-based assignments.');
     },
   },
+
+  // ── 0006: Backfill order pricing fields for coupon-aware orders ───────────
+  {
+    id: '0006',
+    description: 'Backfill subtotalPrice, discountAmount and couponCode on legacy orders',
+    up: async (connection) => {
+      const collection = connection.collection('orders');
+
+      const subtotalResult = await collection.updateMany(
+        { subtotalPrice: { $exists: false } },
+        [{ $set: { subtotalPrice: '$totalPrice' } }],
+      );
+      const discountResult = await collection.updateMany(
+        { discountAmount: { $exists: false } },
+        { $set: { discountAmount: 0 } },
+        { upsert: false },
+      );
+      const couponResult = await collection.updateMany(
+        { couponCode: { $exists: false } },
+        { $set: { couponCode: null } },
+        { upsert: false },
+      );
+
+      console.log(
+        `[MIGRATION 0006] Backfilled order pricing fields (subtotal=${subtotalResult.modifiedCount}, discount=${discountResult.modifiedCount}, coupon=${couponResult.modifiedCount}).`,
+      );
+    },
+  },
 ];

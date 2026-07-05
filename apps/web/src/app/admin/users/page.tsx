@@ -19,15 +19,20 @@ import type { User } from "@/types/domain";
 const PAGE_SIZE = 10;
 
 export default function AdminUsersPage() {
-  const users = useAdminUsers();
-  const blockUser = useBlockUser();
-  const unblockUser = useUnblockUser();
-  const { showToast } = useToast();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const users = useAdminUsers(
+    page,
+    roleFilter === "all" ? undefined : roleFilter,
+    statusFilter === "all" ? undefined : statusFilter,
+    PAGE_SIZE,
+  );
+  const blockUser = useBlockUser();
+  const unblockUser = useUnblockUser();
+  const { showToast } = useToast();
 
   const selectedUserId = selectedUser?.id ?? selectedUser?._id ?? "";
   const selectedUserIsSuspended = selectedUser?.accountStatus === "suspended";
@@ -35,20 +40,21 @@ export default function AdminUsersPage() {
   const errorMessage = users.error instanceof Error ? users.error.message : "امکان دریافت لیست کاربران وجود ندارد.";
 
   const filteredUsers = useMemo(() => {
-    return (users.data ?? []).filter((user) => {
+    return (users.data?.items ?? []).filter((user) => {
       const id = user.id ?? user._id ?? "";
       const queryValue = query.trim().toLowerCase();
       const matchesQuery = queryValue
         ? [id, user.email ?? "", user.phoneNumber ?? ""].some((value) => value.toLowerCase().includes(queryValue))
         : true;
-      const matchesRole = roleFilter === "all" ? true : user.role === roleFilter;
-      const matchesStatus = statusFilter === "all" ? true : (user.accountStatus ?? "") === statusFilter;
-      return matchesQuery && matchesRole && matchesStatus;
+      return matchesQuery;
     });
-  }, [users.data, query, roleFilter, statusFilter]);
+  }, [users.data?.items, query]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
-  const paginatedUsers = filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalItems = query.trim() ? filteredUsers.length : (users.data?.total ?? 0);
+  const totalPages = query.trim()
+    ? Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE))
+    : (users.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE)));
+  const paginatedUsers = filteredUsers;
 
   async function toggleUserBlock() {
     if (!selectedUserId) return;
@@ -120,7 +126,7 @@ export default function AdminUsersPage() {
               <Users className="h-4 w-4 text-slate-400" />
               <span className="text-sm font-semibold text-slate-700">فهرست کاربران</span>
             </div>
-            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">{filteredUsers.length} مورد</span>
+            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">{totalItems} مورد</span>
           </div>
 
           {/* Desktop Table */}

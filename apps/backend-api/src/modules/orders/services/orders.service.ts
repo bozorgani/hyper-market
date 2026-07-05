@@ -8,6 +8,7 @@ import { ClientSession, isValidObjectId, Types } from 'mongoose';
 import { EventBusService } from '../../../core/events/event-bus.service';
 import { EventType } from '../../../core/events/enums/event-type.enum';
 import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
+import { CouponsService } from '../../coupons/coupons.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { CartService } from '../../cart/services/cart.service';
 import { ProductsService } from '../../products/services/products.service';
@@ -41,6 +42,7 @@ export class OrdersService {
     private readonly ordersRepository: OrdersRepository,
     private readonly productsService: ProductsService,
     private readonly cartService: CartService,
+    private readonly couponsService: CouponsService,
     private readonly databaseTransactionService: DatabaseTransactionService,
     private readonly eventBusService?: EventBusService,
   ) {}
@@ -67,7 +69,7 @@ export class OrdersService {
         }
 
         const orderItems: OrderItem[] = [];
-        let totalPrice = 0;
+        let subtotalPrice = 0;
 
         for (const item of cart.items) {
           const productId = getEntityId(item.productId);
@@ -92,7 +94,7 @@ export class OrdersService {
             priceAtPurchase,
           });
 
-          totalPrice += priceAtPurchase * item.quantity;
+          subtotalPrice += priceAtPurchase * item.quantity;
 
           await this.productsService.reduceStock(
             productId,
@@ -104,10 +106,19 @@ export class OrdersService {
           reducedItems.push({ productId, quantity: item.quantity });
         }
 
+        const coupon = this.couponsService.validateCoupon(
+          dto.couponCode,
+          subtotalPrice,
+        );
+        const totalPrice = coupon?.total ?? subtotalPrice;
+
         const createdOrder = await this.ordersRepository.create(
           {
             userId: new Types.ObjectId(userId),
             items: orderItems,
+            subtotalPrice,
+            discountAmount: coupon?.discountAmount ?? 0,
+            couponCode: coupon?.code ?? null,
             totalPrice,
             status: OrderStatus.PENDING,
             deliveryAddress: {
@@ -161,6 +172,9 @@ export class OrdersService {
         userId,
         orderId: getEntityId(order),
         totalPrice: order.totalPrice,
+        subtotalPrice: order.subtotalPrice,
+        discountAmount: order.discountAmount,
+        couponCode: order.couponCode,
         itemsCount: order.items.length,
       },
       timestamp: Date.now(),

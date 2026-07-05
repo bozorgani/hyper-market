@@ -67,4 +67,10 @@ export class CreateOrderDto {
   @ValidateNested()
   @Type(() => DeliveryWindowDto)
   deliveryWindow!: DeliveryWindowDto;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  @Matches(/^[A-Za-z0-9_-]+$/)
+  couponCode?: string;
 }

@@ -30,9 +30,9 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 text-right shadow-2xl">
-        <h2 className="text-xl font-black text-slate-950">{title}</h2>
-        <p className="mt-3 leading-7 text-slate-600">{description}</p>
+      <div role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-description" className="w-full max-w-md rounded-3xl bg-white p-6 text-right shadow-2xl">
+        <h2 id="confirm-dialog-title" className="text-xl font-black text-slate-950">{title}</h2>
+        <p id="confirm-dialog-description" className="mt-3 leading-7 text-slate-600">{description}</p>
         <div className="mt-6 flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>{cancelText}</Button>
           <Button type="button" variant={destructive ? "destructive" : "default"} onClick={onConfirm} disabled={loading}>

@@ -56,6 +56,31 @@ button {
   font-family: inherit;
 }
 
+a,
+button,
+input,
+select,
+textarea,
+[tabindex]:not([tabindex="-1"]) {
+  outline-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(244, 63, 94, 0.55);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 input,
 textarea,
 select {

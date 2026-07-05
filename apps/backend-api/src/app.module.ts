@@ -18,6 +18,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CartModule } from './modules/cart/cart.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { CouponsModule } from './modules/coupons/coupons.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ProductsModule } from './modules/products/products.module';
@@ -81,6 +82,7 @@ const isProduction =
     SearchModule,
     CategoriesModule,
     CartModule,
+    CouponsModule,
     OrdersModule,
     PaymentsModule,
   ],

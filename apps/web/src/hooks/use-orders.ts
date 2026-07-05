@@ -7,6 +7,7 @@ type CreateOrderInput = {
   idempotencyKey?: string;
   deliveryAddress: DeliveryAddress;
   deliveryWindow: DeliveryWindow;
+  couponCode?: string;
 };
 
 type CreatePaymentInput = {
@@ -41,7 +42,11 @@ export function useCreateOrder() {
       (
         await api.post<Order>(
           "/orders",
-          { deliveryAddress: input.deliveryAddress, deliveryWindow: input.deliveryWindow },
+          {
+            deliveryAddress: input.deliveryAddress,
+            deliveryWindow: input.deliveryWindow,
+            ...(input.couponCode ? { couponCode: input.couponCode } : {}),
+          },
           { headers: idempotencyHeaders(input.idempotencyKey ?? createIdempotencyKey("order")) },
         )
       ).data,

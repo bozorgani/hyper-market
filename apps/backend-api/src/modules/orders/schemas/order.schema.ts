@@ -74,6 +74,15 @@ export class Order {
   items!: OrderItem[];
 
   @Prop({ type: Number, required: true, min: 0 })
+  subtotalPrice!: number;
+
+  @Prop({ type: Number, default: 0, min: 0 })
+  discountAmount!: number;
+
+  @Prop({ type: String, default: null, trim: true })
+  couponCode?: string | null;
+
+  @Prop({ type: Number, required: true, min: 0 })
   totalPrice!: number;
 
   @Prop({

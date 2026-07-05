@@ -33,34 +33,49 @@ type MapPickerProps = {
   initialLng?: number;
 };
 
-export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }: MapPickerProps) {
+export function MapPicker({
+  onLocationSelect,
+  onClose,
+  initialLat,
+  initialLng,
+}: MapPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [mapError, setMapError] = useState("");
   const [selectedAddr, setSelectedAddr] = useState("");
-  const [selectedLoc, setSelectedLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedLoc, setSelectedLoc] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const startLat = initialLat ?? TEHRAN_CENTER[0];
   const startLng = initialLng ?? TEHRAN_CENTER[1];
 
-  const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string> => {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=fa`
-      );
-      const data = await res.json();
-      if (data.display_name) {
-        return data.display_name.split(",").slice(0, 3).join(",").trim();
+  const reverseGeocode = useCallback(
+    async (lat: number, lng: number): Promise<string> => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=fa`,
+        );
+        const data = await res.json();
+        if (data.display_name) {
+          return data.display_name.split(",").slice(0, 3).join(",").trim();
+        }
+      } catch {
+        /* fallback */
       }
-    } catch { /* fallback */ }
-    return `عرض: ${lat.toFixed(4)}، طول: ${lng.toFixed(4)}`;
-  }, []);
+      return `عرض: ${lat.toFixed(4)}، طول: ${lng.toFixed(4)}`;
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
     setIsMapReady(false);
+    setMapError("");
 
     const linkEl = document.createElement("link");
     linkEl.rel = "stylesheet";
@@ -77,12 +92,35 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
       attributionControl: false,
     });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-    }).addTo(map);
+    const tileLayer = L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        maxZoom: 19,
+      },
+    );
+
+    let tileSettled = false;
+    const markMapReady = () => {
+      if (tileSettled) return;
+      tileSettled = true;
+      setIsMapReady(true);
+    };
+    const markMapError = () => {
+      setMapError(
+        "بارگذاری کاشی‌های نقشه انجام نشد. همچنان می‌توانید موقعیت را انتخاب کنید.",
+      );
+      markMapReady();
+    };
+
+    tileLayer.once("load", markMapReady);
+    tileLayer.once("tileerror", markMapError);
+    tileLayer.addTo(map);
 
     const icon = createCustomIcon();
-    const marker = L.marker([startLat, startLng], { icon, draggable: true }).addTo(map);
+    const marker = L.marker([startLat, startLng], {
+      icon,
+      draggable: true,
+    }).addTo(map);
 
     marker.on("dragend", async () => {
       const pos = marker.getLatLng();
@@ -103,14 +141,11 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
     mapInstanceRef.current = map;
     markerRef.current = marker;
 
-    map.whenReady(() => {
-      if (!mapInstanceRef.current) return;
-      setIsMapReady(true);
-    });
+    const readyFallbackTimeout = window.setTimeout(markMapReady, 3000);
 
     // Use a flag so the delayed invalidateSize won't run after unmount
     let cancelled = false;
-    setTimeout(() => {
+    const invalidateSizeTimeout = window.setTimeout(() => {
       if (!cancelled && mapInstanceRef.current) {
         try {
           mapInstanceRef.current.invalidateSize();
@@ -122,14 +157,17 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
 
     return () => {
       cancelled = true;
+      window.clearTimeout(readyFallbackTimeout);
+      window.clearTimeout(invalidateSizeTimeout);
+      tileLayer.off("load", markMapReady);
+      tileLayer.off("tileerror", markMapError);
       mapInstanceRef.current?.remove();
       mapInstanceRef.current = null;
       markerRef.current = null;
       if (linkEl.parentNode) document.head.removeChild(linkEl);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- map should only mount once
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- map should only mount once
   }, []);
-
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) return;
@@ -140,11 +178,13 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
         mapInstanceRef.current?.setView([latitude, longitude], 16);
         markerRef.current?.setLatLng([latitude, longitude]);
         setSelectedLoc({ lat: latitude, lng: longitude });
-        reverseGeocode(latitude, longitude).then((addr) => setSelectedAddr(addr));
+        reverseGeocode(latitude, longitude).then((addr) =>
+          setSelectedAddr(addr),
+        );
         setIsLocating(false);
       },
       () => setIsLocating(false),
-      { enableHighAccuracy: true, timeout: 8000 }
+      { enableHighAccuracy: true, timeout: 8000 },
     );
   };
 
@@ -162,9 +202,14 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
           <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
             <MapPin className="w-4 h-4 text-rose-600" />
           </div>
-          <h2 className="font-black text-sm text-slate-900">انتخاب آدرس از نقشه</h2>
+          <h2 className="font-black text-sm text-slate-900">
+            انتخاب آدرس از نقشه
+          </h2>
         </div>
-        <button onClick={onClose} className="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors">
+        <button
+          onClick={onClose}
+          className="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors"
+        >
           <X className="w-5 h-5 text-slate-500" />
         </button>
       </div>
@@ -180,6 +225,12 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
               <div className="w-8 h-8 border-[3px] border-rose-200 border-t-rose-600 rounded-full animate-spin" />
               <p className="text-sm text-slate-500">در حال بارگذاری نقشه...</p>
             </div>
+          </div>
+        ) : null}
+
+        {mapError ? (
+          <div className="absolute right-4 top-4 z-[1000] max-w-xs rounded-xl bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-700 shadow-card">
+            {mapError}
           </div>
         ) : null}
 
@@ -214,7 +265,7 @@ export function MapPicker({ onLocationSelect, onClose, initialLat, initialLng }:
             "w-full h-12 rounded-xl text-sm font-bold transition-all",
             selectedLoc
               ? "bg-rose-600 hover:bg-rose-500 text-white shadow-sm"
-              : "bg-slate-100 text-slate-400 cursor-not-allowed"
+              : "bg-slate-100 text-slate-400 cursor-not-allowed",
           )}
         >
           تأیید آدرس روی نقشه
