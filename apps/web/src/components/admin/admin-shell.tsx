@@ -10,6 +10,7 @@ import {
   Boxes,
   ChevronLeft,
   CreditCard,
+  Gift,
   FolderTree,
   LayoutDashboard,
   LogOut,
@@ -29,6 +30,7 @@ const menuItems = [
   { href: "/admin/categories", label: "دسته‌بندی‌ها", icon: FolderTree },
   { href: "/admin/orders", label: "سفارش‌ها", icon: ReceiptText },
   { href: "/admin/payments", label: "پرداخت‌ها", icon: CreditCard },
+  { href: "/admin/coupons", label: "کوپن‌ها", icon: Gift },
   { href: "/admin/users", label: "کاربران", icon: Users },
   { href: "/admin/roles", label: "نقش‌ها و دسترسی‌ها", icon: Shield },
 ];

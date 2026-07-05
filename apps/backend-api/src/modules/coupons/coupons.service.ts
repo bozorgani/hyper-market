@@ -1,6 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Types } from 'mongoose';
+import { PaginatedResult } from '../../shared/interfaces/pagination.interface';
+import { CreateCouponDto, UpdateCouponDto } from './dto/coupon.dto';
+import { CouponRepository } from './repositories/coupon.repository';
+import { Coupon } from './schemas/coupon.schema';
 
 export type CouponValidationResult = {
+  couponId?: string;
   code: string;
   percent: number;
   discountAmount: number;
@@ -8,46 +14,28 @@ export type CouponValidationResult = {
   total: number;
 };
 
-type CouponConfig = {
-  code: string;
-  percent: number;
-  active?: boolean;
-  minSubtotal?: number;
-  maxDiscountAmount?: number;
-  startsAt?: string;
-  endsAt?: string;
-};
-
-const DEVELOPMENT_COUPONS: CouponConfig[] = [
-  { code: 'SNAPP20', percent: 20 },
-  { code: 'HYPERSALE', percent: 15 },
-  { code: 'WELCOME10', percent: 10 },
-  { code: 'FREE50', percent: 50 },
-  { code: 'MARKET30', percent: 30 },
-];
-
 @Injectable()
 export class CouponsService {
-  validateCoupon(code: string | undefined, subtotal: number): CouponValidationResult | null {
+  constructor(private readonly couponRepository: CouponRepository) {}
+
+  async validateCoupon(
+    code: string | undefined,
+    subtotal: number,
+    userId?: string,
+  ): Promise<CouponValidationResult | null> {
     const normalizedCode = this.normalizeCode(code);
-    if (!normalizedCode) {
-      return null;
-    }
+    if (!normalizedCode) return null;
 
     if (!Number.isFinite(subtotal) || subtotal <= 0) {
       throw new BadRequestException('Cart total must be greater than zero');
     }
 
-    const coupon = this.getConfiguredCoupons().find((item) => item.code === normalizedCode);
+    const coupon = await this.couponRepository.findByCode(normalizedCode);
     if (!coupon || coupon.active === false) {
       throw new BadRequestException('Invalid coupon code');
     }
 
-    this.assertCouponIsCurrentlyValid(coupon);
-
-    if (coupon.minSubtotal !== undefined && subtotal < coupon.minSubtotal) {
-      throw new BadRequestException('Cart total is below coupon minimum');
-    }
+    await this.assertCouponIsUsable(coupon, subtotal, userId);
 
     const rawDiscount = Math.round(subtotal * (coupon.percent / 100));
     const cappedDiscount = coupon.maxDiscountAmount
@@ -56,6 +44,7 @@ export class CouponsService {
     const discountAmount = Math.min(Math.max(cappedDiscount, 0), subtotal);
 
     return {
+      couponId: coupon._id.toString(),
       code: normalizedCode,
       percent: coupon.percent,
       discountAmount,
@@ -64,42 +53,130 @@ export class CouponsService {
     };
   }
 
+  async recordUsage(input: {
+    couponId?: string;
+    code?: string | null;
+    userId: string;
+    orderId: string;
+    discountAmount: number;
+  }): Promise<void> {
+    if (!input.couponId || !input.code || input.discountAmount <= 0) return;
+    try {
+      await this.couponRepository.createUsage({
+        couponId: new Types.ObjectId(input.couponId),
+        code: input.code,
+        userId: new Types.ObjectId(input.userId),
+        orderId: new Types.ObjectId(input.orderId),
+        discountAmount: input.discountAmount,
+      });
+      await this.couponRepository.incrementUsedCount(input.couponId);
+    } catch {
+      // Coupon usage audit is best-effort; order creation must not fail after payment-critical writes.
+    }
+  }
+
+  async listAvailableCoupons(subtotal: number, userId: string): Promise<CouponValidationResult[]> {
+    const coupons = await this.couponRepository.list(1, 100, true);
+    const results: CouponValidationResult[] = [];
+    for (const coupon of coupons.items as Array<Coupon & { _id?: Types.ObjectId }>) {
+      try {
+        const result = await this.validateCoupon(coupon.code, subtotal, userId);
+        if (result) results.push(result);
+      } catch {
+        // Hide unavailable coupons from customer-facing visibility.
+      }
+    }
+    return results;
+  }
+
+  listCoupons(page = 1, limit = 20, active?: boolean): Promise<PaginatedResult<Coupon>> {
+    return this.couponRepository.list(Math.max(page, 1), Math.min(Math.max(limit, 1), 100), active);
+  }
+
+  async getCoupon(id: string): Promise<Coupon> {
+    const coupon = await this.couponRepository.findById(id);
+    if (!coupon) throw new NotFoundException('Coupon not found');
+    return coupon;
+  }
+
+  async createCoupon(dto: CreateCouponDto): Promise<Coupon> {
+    const data = this.normalizeCouponDto(dto);
+    const existing = await this.couponRepository.findByCode(data.code as string);
+    if (existing) throw new ConflictException('Coupon code already exists');
+    return this.couponRepository.create(data);
+  }
+
+  async updateCoupon(id: string, dto: UpdateCouponDto): Promise<Coupon> {
+    const data = this.normalizeCouponDto(dto);
+    if (data.code) {
+      const existing = await this.couponRepository.findByCode(data.code as string);
+      if (existing && existing._id.toString() !== id) {
+        throw new ConflictException('Coupon code already exists');
+      }
+    }
+    const coupon = await this.couponRepository.update(id, data);
+    if (!coupon) throw new NotFoundException('Coupon not found');
+    return coupon;
+  }
+
+  async deleteCoupon(id: string): Promise<Coupon> {
+    const coupon = await this.couponRepository.softDelete(id);
+    if (!coupon) throw new NotFoundException('Coupon not found');
+    return coupon;
+  }
+
+  getAnalytics() {
+    return this.couponRepository.getAnalytics();
+  }
+
+  private normalizeCouponDto(dto: Partial<CreateCouponDto>): Partial<Coupon> {
+    const startsAt = dto.startsAt ? new Date(dto.startsAt) : null;
+    const endsAt = dto.endsAt ? new Date(dto.endsAt) : null;
+    if (startsAt && endsAt && startsAt > endsAt) {
+      throw new BadRequestException('Coupon start date must be before end date');
+    }
+
+    return {
+      ...(dto.code ? { code: this.normalizeCode(dto.code)! } : {}),
+      ...(dto.percent !== undefined ? { percent: Number(dto.percent) } : {}),
+      ...(dto.active !== undefined ? { active: dto.active } : {}),
+      minSubtotal: Number(dto.minSubtotal ?? 0),
+      maxDiscountAmount: dto.maxDiscountAmount === undefined ? null : dto.maxDiscountAmount,
+      startsAt,
+      endsAt,
+      usageLimit: dto.usageLimit === undefined ? null : dto.usageLimit,
+      perUserLimit: dto.perUserLimit === undefined ? null : dto.perUserLimit,
+    };
+  }
+
   private normalizeCode(code: string | undefined): string | null {
     const normalized = code?.trim().toUpperCase();
     return normalized || null;
   }
 
-  private getConfiguredCoupons(): CouponConfig[] {
-    const raw = process.env.COUPON_CODES_JSON;
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw) as CouponConfig[];
-        if (Array.isArray(parsed)) {
-          return parsed
-            .filter((coupon) => coupon.code && Number.isFinite(Number(coupon.percent)))
-            .map((coupon) => ({
-              ...coupon,
-              code: coupon.code.trim().toUpperCase(),
-              percent: Math.min(Math.max(Number(coupon.percent), 0), 100),
-              minSubtotal: coupon.minSubtotal === undefined ? undefined : Number(coupon.minSubtotal),
-              maxDiscountAmount: coupon.maxDiscountAmount === undefined ? undefined : Number(coupon.maxDiscountAmount),
-            }));
-        }
-      } catch {
-        throw new BadRequestException('Coupon configuration is invalid');
-      }
-    }
-
-    return process.env.APP_ENV === 'production' ? [] : DEVELOPMENT_COUPONS;
-  }
-
-  private assertCouponIsCurrentlyValid(coupon: CouponConfig): void {
+  private async assertCouponIsUsable(
+    coupon: Coupon & { _id: Types.ObjectId },
+    subtotal: number,
+    userId?: string,
+  ): Promise<void> {
     const now = Date.now();
-    if (coupon.startsAt && Date.parse(coupon.startsAt) > now) {
+    if (coupon.startsAt && coupon.startsAt.getTime() > now) {
       throw new BadRequestException('Coupon is not active yet');
     }
-    if (coupon.endsAt && Date.parse(coupon.endsAt) < now) {
+    if (coupon.endsAt && coupon.endsAt.getTime() < now) {
       throw new BadRequestException('Coupon has expired');
+    }
+    if (coupon.minSubtotal !== undefined && subtotal < coupon.minSubtotal) {
+      throw new BadRequestException('Cart total is below coupon minimum');
+    }
+    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+      throw new BadRequestException('Coupon usage limit reached');
+    }
+    if (coupon.perUserLimit && userId) {
+      const userUsage = await this.couponRepository.countUsageForUser(coupon._id.toString(), userId);
+      if (userUsage >= coupon.perUserLimit) {
+        throw new BadRequestException('Coupon user usage limit reached');
+      }
     }
   }
 }

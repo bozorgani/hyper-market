@@ -39,3 +39,8 @@ coverage/
 
 # Misc
 .cache/
+
+secrets/
+*.age
+*.sops.*
+.env*.local

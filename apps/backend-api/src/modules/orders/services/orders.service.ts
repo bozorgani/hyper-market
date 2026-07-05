@@ -112,9 +112,10 @@ export class OrdersService {
           reducedItems.push({ productId, quantity: item.quantity });
         }
 
-        const coupon = this.couponsService.validateCoupon(
+        const coupon = await this.couponsService.validateCoupon(
           dto.couponCode,
           subtotalPrice,
+          userId,
         );
         const merchandiseTotal = coupon?.total ?? subtotalPrice;
         const shippingQuote = this.shippingService.getQuote({
@@ -163,6 +164,16 @@ export class OrdersService {
           },
           session,
         );
+
+        if (coupon) {
+          await this.couponsService.recordUsage({
+            couponId: coupon.couponId,
+            code: coupon.code,
+            userId,
+            orderId: getEntityId(createdOrder),
+            discountAmount: coupon.discountAmount,
+          });
+        }
 
         await this.cartService.clearCart(userId, session);
 

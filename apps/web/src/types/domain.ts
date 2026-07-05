@@ -43,6 +43,22 @@ export type PaginatedResponse<T> = {
 
 export type ProductListResponse = PaginatedResponse<Product>;
 
+export type Coupon = {
+  _id: string;
+  code: string;
+  percent: number;
+  active: boolean;
+  minSubtotal?: number;
+  maxDiscountAmount?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  usageLimit?: number | null;
+  perUserLimit?: number | null;
+  usedCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type Category = {
   _id: string;
   name: string;
