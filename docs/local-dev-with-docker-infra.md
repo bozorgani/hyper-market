@@ -50,6 +50,7 @@ PUBLIC_API_BASE_URL=http://localhost:3001
 JWT_ACCESS_SECRET=change_me_access_secret_32_chars_minimum_123456789
 JWT_REFRESH_SECRET=change_me_refresh_secret_32_chars_minimum_123456789
 PASSWORD_PEPPER=local_password_pepper_32_chars_minimum_123456789
+OTP_HASH_SECRET=local_otp_hash_secret_32_chars_minimum_123456789
 WORKERS_ENABLED=true
 SKIP_MIGRATIONS=false
 ```

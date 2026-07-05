@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { HealthService, HealthReport } from './health.service';
 
 @Controller('health')
@@ -22,17 +23,17 @@ export class HealthController {
    * Readiness probe — checks all critical dependencies:
    *   Database, Redis, Meilisearch, SMTP
    *
-   * Returns 200 with detailed report even when components are down,
-   * so that monitoring dashboards can display the specifics.
-   * The caller (Kubernetes, load balancer, etc.) should check the
-   * top-level `status` field:
-   *   - "ok"       → all healthy
-   *   - "degraded" → some non-critical components down (still routable)
-   *   - "down"     → critical component (database) is unreachable
+   * HTTP status mapping:
+   *   - 200 when status is "ok" or "degraded" (instance can still serve traffic)
+   *   - 503 when status is "down" (critical dependency, currently database, is unavailable)
    */
   @Get('ready')
-  async readiness(): Promise<HealthReport> {
-    return this.healthService.check();
+  async readiness(
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<HealthReport> {
+    const report = await this.healthService.check();
+    this.applyReadinessStatusCode(response, report);
+    return report;
   }
 
   /**
@@ -40,7 +41,17 @@ export class HealthController {
    * Now delegates to the readiness check.
    */
   @Get()
-  async getHealth(): Promise<HealthReport> {
-    return this.healthService.check();
+  async getHealth(
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<HealthReport> {
+    const report = await this.healthService.check();
+    this.applyReadinessStatusCode(response, report);
+    return report;
+  }
+
+  private applyReadinessStatusCode(response: Response, report: HealthReport): void {
+    if (report.status === 'down') {
+      response.status(503);
+    }
   }
 }
