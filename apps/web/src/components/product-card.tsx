@@ -32,10 +32,10 @@ export function ProductCard({ product }: { product: Product }) {
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-md"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-md focus-within:ring-4 focus-within:ring-emerald-100"
     >
       {/* Image */}
-      <Link href={`/products/${product._id}`} className="relative block aspect-square bg-slate-50 overflow-hidden">
+      <Link href={`/products/${product._id}`} className="relative block aspect-square bg-slate-50 overflow-hidden focus-visible:ring-4 focus-visible:ring-emerald-100">
         {product.images?.[0] ? (
           <Image
             src={product.images[0]}
@@ -71,7 +71,7 @@ export function ProductCard({ product }: { product: Product }) {
         )}
 
         {/* Name */}
-        <Link href={`/products/${product._id}`} className="line-clamp-2 text-sm font-bold leading-6 text-slate-800 transition group-hover:text-emerald-700">
+        <Link href={`/products/${product._id}`} className="line-clamp-2 text-sm font-bold leading-6 text-slate-800 transition group-hover:text-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-200">
           {product.name}
         </Link>
 
@@ -105,7 +105,8 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           onClick={handleAddToCart}
           disabled={product.stock < 1 || addToCart.isPending}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-50 py-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98]"
+          aria-label={`افزودن ${product.name} به سبد خرید`}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-50 py-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 focus-visible:ring-4 focus-visible:ring-emerald-100 disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98]"
         >
           <ShoppingCart className="h-3.5 w-3.5" />
           {addToCart.isPending ? "..." : "افزودن به سبد"}
