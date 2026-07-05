@@ -26,8 +26,8 @@ export function Header() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const { showToast } = useToast();
-  const cart = useCart();
-  const cartCount = (cart.data?.items ?? []).length;
+  const cart = useCart(Boolean(user));
+  const cartCount = user ? (cart.data?.items ?? []).length : 0;
   const [query, setQuery] = useState("");
   const [isSuggestOpen, setIsSuggestOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);

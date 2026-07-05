@@ -4,10 +4,11 @@ import { addToCartAction, clearCartAction, removeFromCartAction, updateCartQuant
 import { api } from "@/services/api";
 import type { CartSummary } from "@/types/domain";
 
-export function useCart() {
+export function useCart(enabled = true) {
   return useQuery({
     queryKey: ["cart"],
     queryFn: async () => (await api.get<CartSummary>("/cart/my")).data,
+    enabled,
   });
 }
 

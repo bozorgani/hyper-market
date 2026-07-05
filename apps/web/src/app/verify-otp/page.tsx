@@ -100,9 +100,9 @@ function VerifyOtpContent() {
     try {
       const normalizedTarget = type === "phone_verify" ? normalizePhoneNumber(target) : target.trim().toLowerCase();
       if (type === "phone_verify") {
-        await api.post("/auth/send-verification-otp", { phoneNumber: normalizedTarget, type: "phone_verify" });
+        await api.post("/auth/send-verification-otp", { phoneNumber: normalizedTarget });
       } else {
-        await api.post("/auth/send-verification-otp", { email: normalizedTarget, type: "email_verify" });
+        await api.post("/auth/send-verification-otp", { email: normalizedTarget });
       }
       showToast({ type: "success", title: "کد جدید ارسال شد" });
     } catch {
@@ -280,7 +280,7 @@ function VerifyOtpContent() {
       {/* Footer */}
       <div className="flex flex-col gap-3 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
         <Link href="/login" className="font-bold text-emerald-600 transition hover:text-emerald-700">بازگشت به ورود</Link>
-        <Link href="/register" className="font-medium text-slate-500 transition hover:text-emerald-600">نیاز به ساخت حساب دارید؟</Link>
+        <Link href="/" className="font-medium text-slate-500 transition hover:text-emerald-600">بازگشت به فروشگاه</Link>
       </div>
     </AuthShell>
   );
