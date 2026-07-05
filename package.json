@@ -21,7 +21,9 @@
     "seed:all": "node scripts/seed-all.js",
     "e2e:infra:up": "docker compose -f docker-compose.test.yml up -d --wait",
     "e2e:infra:down": "docker compose -f docker-compose.test.yml down -v --remove-orphans",
-    "backend:test:e2e": "npm run test:e2e --workspace=apps/backend-api -- --runInBand"
+    "backend:test:e2e": "npm run test:e2e --workspace=apps/backend-api -- --runInBand",
+    "web:e2e": "npx playwright test --config apps/web/playwright.config.ts",
+    "web:e2e:headed": "npx playwright test --config apps/web/playwright.config.ts --headed"
   },
   "engines": {
     "node": ">=20.0.0",
