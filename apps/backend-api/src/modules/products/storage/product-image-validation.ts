@@ -12,9 +12,12 @@ export function createProductImageMulterLimits(maxFileSizeBytes: number) {
   return {
     fileSize: maxFileSizeBytes,
     files: 1,
-    fields: 0,
+    // Some multipart encoders include an extra non-file part in addition to the
+    // file part. Keep this small to prevent abuse, but do not make it so strict
+    // that a valid single-file browser upload is rejected as LIMIT_PART_COUNT.
+    fields: 2,
     fieldNameSize: 100,
-    parts: 1,
+    parts: 3,
   };
 }
 
