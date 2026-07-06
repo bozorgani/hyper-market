@@ -12,8 +12,13 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMyOrders, usePaymentsBatch } from "@/hooks/use-orders";
+import { useAuthStore } from "@/store/auth-store";
 import { formatNumber } from "@/lib/utils";
 import type { OrderStatus, Payment } from "@/types/domain";
+
+function isCustomerRole(role?: string) {
+  return role === "customer" || role === "CUSTOMER";
+}
 
 const statuses: Array<{ value: OrderStatus | "all"; label: string }> = [
   { value: "all", label: "همه" },
@@ -26,7 +31,10 @@ const statuses: Array<{ value: OrderStatus | "all"; label: string }> = [
 ];
 
 export default function OrdersPage() {
-  const orders = useMyOrders();
+  const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
+  const isCustomer = isCustomerRole(user?.role);
+  const orders = useMyOrders(Boolean(hydrated && isCustomer));
   const orderIds = useMemo(
     () => (orders.data ?? []).map((order) => order._id),
     [orders.data],

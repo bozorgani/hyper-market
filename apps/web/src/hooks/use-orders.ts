@@ -10,10 +10,12 @@ type CreatePaymentInput = {
 
 
 
-export function useMyOrders() {
+export function useMyOrders(enabled = true) {
   return useQuery({
     queryKey: ["orders", "my"],
     queryFn: async () => (await api.get<Order[]>("/orders/my")).data,
+    enabled,
+    retry: false,
   });
 }
 

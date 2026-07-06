@@ -7,6 +7,10 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/hooks/use-cart";
 import { useAuthStore } from "@/store/auth-store";
 
+function isCustomerRole(role?: string) {
+  return role === "customer" || role === "CUSTOMER";
+}
+
 const navItems = [
   { href: "/", label: "خانه", icon: Home },
   { href: "/products", label: "محصولات", icon: ShoppingBag },
@@ -18,8 +22,9 @@ const navItems = [
 export function BottomNav() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
-  const cart = useCart(Boolean(user));
-  const cartCount = (cart.data?.items ?? []).length;
+  const isCustomer = isCustomerRole(user?.role);
+  const cart = useCart(isCustomer);
+  const cartCount = isCustomer ? (cart.data?.items ?? []).length : 0;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 backdrop-blur-xl md:hidden pb-safe">

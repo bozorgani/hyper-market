@@ -12,6 +12,10 @@ import { firstValidationError, loginSchema, normalizeDigits, normalizePhoneNumbe
 import { useAuthStore } from "@/store/auth-store";
 import { cn } from "@/lib/utils";
 
+function isAdminRole(role?: string) {
+  return role === "admin" || role === "super_admin" || role === "ADMIN" || role === "SUPER_ADMIN";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
@@ -41,8 +45,9 @@ export default function LoginPage() {
         ? validation.data.identifier.trim().toLowerCase()
         : normalizePhoneNumber(validation.data.identifier);
       await login(normalizedIdentifier.includes("@") ? { email: normalizedIdentifier, password } : { phoneNumber: normalizedIdentifier, password });
+      const loggedInUser = useAuthStore.getState().user;
       showToast({ type: "success", title: "با موفقیت وارد شدید" });
-      router.push("/profile");
+      router.push(isAdminRole(loggedInUser?.role) ? "/admin" : "/profile");
     } catch (err) {
       const message = err instanceof Error ? err.message : "ورود ناموفق بود. دوباره تلاش کنید.";
       setError(message);
