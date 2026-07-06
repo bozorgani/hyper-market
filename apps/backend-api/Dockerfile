@@ -39,6 +39,7 @@ COPY --from=prod-deps --chown=node:node /app/package.json /app/package-lock.json
 COPY --from=prod-deps --chown=node:node /app/apps/backend-api/package.json apps/backend-api/package.json
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/apps/backend-api/dist apps/backend-api/dist
+COPY --from=build --chown=node:node /app/scripts scripts
 
 USER node
 EXPOSE 3001
