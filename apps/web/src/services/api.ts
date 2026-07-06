@@ -39,7 +39,6 @@ type RetriableRequestConfig = InternalAxiosRequestConfig & {
 
 function localizeApiMessage(message: string, status?: number) {
   if (status === 429) return "تعداد درخواست‌ها زیاد است. لطفاً چند لحظه صبر کنید و دوباره تلاش کنید.";
-  if (status === 409) return "این عملیات هم‌اکنون در حال پردازش است. لطفاً چند لحظه صبر کنید.";
   if (status && status >= 500) return "خطای سرور رخ داد. لطفاً کمی بعد دوباره تلاش کنید.";
 
   const normalized = message.toLowerCase();
@@ -59,6 +58,7 @@ function localizeApiMessage(message: string, status?: number) {
   // Resource / CRUD
   if (normalized.includes("not found")) return "موردی یافت نشد.";
   if (normalized.includes("already exists") || normalized.includes("email already") || normalized.includes("phone number already")) return "این اطلاعات قبلاً ثبت شده است.";
+  if (status === 409) return "این عملیات هم‌اکنون در حال پردازش است. لطفاً چند لحظه صبر کنید.";
   if (normalized.includes("insufficient stock")) return "موجودی محصول کافی نیست.";
   if (normalized.includes("insufficient product stock")) return "موجودی محصول کافی نیست.";
   if (normalized.includes("cart is empty")) return "سبد خرید شما خالی است.";

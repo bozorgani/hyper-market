@@ -137,12 +137,41 @@ describe('AuthService', () => {
       expect(mockOtpService.createVerificationOtp).toHaveBeenCalled();
     });
 
-    it('should throw ConflictException if email exists', async () => {
-      mockUsersService.emailExists.mockResolvedValue(true);
+    it('should throw ConflictException if a verified email exists', async () => {
+      mockUsersService.getUserByEmail.mockResolvedValue({
+        _id: '507f1f77bcf86cd799439011',
+        email: 'existing@example.com',
+        role: UserRole.CUSTOMER,
+        accountStatus: AccountStatus.ACTIVE,
+        isEmailVerified: true,
+      });
 
       await expect(
         service.register({ email: 'existing@example.com', password: 'pass' }),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('should resend verification OTP for pending unverified registration', async () => {
+      mockUsersService.getUserByEmail.mockResolvedValue({
+        _id: '507f1f77bcf86cd799439011',
+        email: 'pending@example.com',
+        role: UserRole.CUSTOMER,
+        accountStatus: AccountStatus.PENDING,
+        isEmailVerified: false,
+      });
+
+      const result = await service.register({
+        email: 'pending@example.com',
+        password: 'StrongPass123!',
+      });
+
+      expect(result).toHaveProperty('message', 'verification otp sent');
+      expect(mockOtpService.createVerificationOtp).toHaveBeenCalledWith(
+        '507f1f77bcf86cd799439011',
+        'pending@example.com',
+        expect.any(String),
+      );
+      expect(mockUsersService.createUser).not.toHaveBeenCalled();
     });
   });
 
