@@ -42,6 +42,13 @@ export class ProductsController {
     @Param('fileName') fileName: string,
     @Res() response: Response,
   ) {
+    // Product images are intentionally embeddable by the web app, admin panel,
+    // and external object-storage/CDN frontends. Helmet's default CORP value is
+    // same-origin, which blocks localhost:3000 from rendering localhost:3001
+    // images even when the response is 200 OK.
+    response.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+
     if (this.productImageStorageService.supportsLocalFileServing) {
       // Local storage: serve file from disk
       return response.sendFile(this.productImageStorageService.getImagePath(fileName));
