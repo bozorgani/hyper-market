@@ -1,26 +1,50 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ShoppingCart, UserRound, Package } from "lucide-react";
+import { Home, ShoppingBag, ShoppingCart, UserRound, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useCart } from "@/hooks/use-cart";
+import { useAuthStore } from "@/store/auth-store";
 
 const navItems = [
   { href: "/", label: "خانه", icon: Home },
-  { href: "/products", label: "محصولات", icon: Package },
+  { href: "/products", label: "محصولات", icon: ShoppingBag },
+  { href: "/search", label: "جستجو", icon: Search },
   { href: "/cart", label: "سبد", icon: ShoppingCart },
   { href: "/profile", label: "حساب", icon: UserRound },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const user = useAuthStore((s) => s.user);
+  const cart = useCart(Boolean(user));
+  const cartCount = (cart.data?.items ?? []).length;
+
   return (
-    <nav aria-label="ناوبری پایین" className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-around px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 backdrop-blur-xl md:hidden pb-safe">
+      <div className="mx-auto grid h-16 max-w-md grid-cols-5 items-center px-1 text-xs">
         {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+          const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
           return (
-            <Link key={href} href={href} aria-current={active ? "page" : undefined} className={`flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-semibold transition-colors focus-visible:ring-4 focus-visible:ring-rose-100 ${active ? "text-rose-600" : "text-slate-400"}`}>
-              <Icon size={20} />
-              <span>{label}</span>
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 rounded-xl py-1 transition-all active:scale-[0.96]",
+                isActive ? "text-emerald-600 font-bold" : "text-slate-500 hover:text-slate-800"
+              )}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <div className="relative">
+                <Icon className="h-5 w-5" />
+                {href === "/cart" && cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-black text-white ring-2 ring-white">
+                    {cartCount > 9 ? "۹+" : cartCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-medium tracking-tight">{label}</span>
             </Link>
           );
         })}

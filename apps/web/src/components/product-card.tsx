@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingCart, Tag } from "lucide-react";
+import { ShoppingCart, Tag, Star } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useAddToCart } from "@/hooks/use-cart";
 import { formatNumber, formatPrice } from "@/lib/utils";
@@ -22,7 +22,7 @@ export function ProductCard({ product }: { product: Product }) {
     e.stopPropagation();
     try {
       await addToCart.mutateAsync({ productId: product._id, quantity: 1 });
-      showToast({ type: "success", title: "به سبد اضافه شد" });
+      showToast({ type: "success", title: "به سبد خرید اضافه شد" });
     } catch (error) {
       showToast({ type: "error", title: "افزودن ناموفق", description: error instanceof Error ? error.message : undefined });
     }
@@ -30,86 +30,78 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <motion.div
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.2 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-md focus-within:ring-4 focus-within:ring-emerald-100"
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 260, damping: 25 }}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:shadow-lg focus-within:ring-2 focus-within:ring-emerald-200 focus-within:ring-offset-2"
     >
-      {/* Image */}
-      <Link href={`/products/${product._id}`} className="relative block aspect-square bg-slate-50 overflow-hidden focus-visible:ring-4 focus-visible:ring-emerald-100">
+      <Link 
+        href={`/products/${product._id}`} 
+        className="relative block aspect-square bg-slate-50 overflow-hidden"
+        aria-label={`مشاهده جزئیات ${product.name}`}
+      >
         {product.images?.[0] ? (
           <Image
             src={product.images[0]}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
             unoptimized
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-4xl">🛒</div>
+          <div className="flex h-full items-center justify-center text-4xl bg-slate-100">🛒</div>
         )}
-        {/* Discount Badge */}
+
         {discountPercent > 0 && (
-          <div className="absolute top-2.5 left-2.5 flex items-center gap-1 rounded-lg bg-red-500 px-2 py-1 text-white shadow-sm">
+          <div className="absolute top-3 right-3 flex items-center gap-1 rounded-xl bg-red-500 px-2.5 py-1 text-white shadow-md">
             <Tag className="h-3 w-3" />
             <span className="text-[11px] font-bold">{formatNumber(discountPercent)}%</span>
           </div>
         )}
-        {/* Stock Status */}
+
         {product.stock < 1 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm">
-            <span className="rounded-xl bg-red-500 px-3 py-1.5 text-xs font-bold text-white">ناموجود</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <span className="rounded-2xl bg-white/95 px-4 py-1.5 text-xs font-bold text-red-600 shadow">ناموجود</span>
           </div>
+        )}
+
+        {product.stock > 0 && product.stock < 6 && (
+          <div className="absolute bottom-3 right-3 rounded-xl bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">فقط {formatNumber(product.stock)} باقی</div>
         )}
       </Link>
 
-      {/* Content */}
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        {/* Stock */}
-        {product.stock > 0 && product.stock < 10 && (
-          <p className="text-[10px] font-semibold text-amber-600 mb-1.5">فقط {formatNumber(product.stock)} عدد باقیمانده!</p>
-        )}
-
-        {/* Name */}
-        <Link href={`/products/${product._id}`} className="line-clamp-2 text-sm font-bold leading-6 text-slate-800 transition group-hover:text-emerald-700 focus-visible:ring-2 focus-visible:ring-emerald-200">
+      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+        <Link href={`/products/${product._id}`} className="line-clamp-2 text-sm font-bold leading-tight text-slate-900 transition-colors group-hover:text-emerald-700">
           {product.name}
         </Link>
 
-        {/* Brand + Unit */}
-        {(product.brand || product.unit) ? (
-          <div className="mt-1 flex items-center gap-1.5">
-            {product.brand ? (
-              <span className="text-[10px] font-semibold text-slate-400">{product.brand}</span>
-            ) : null}
-            {product.brand && product.unit ? (
-              <span className="text-slate-300">·</span>
-            ) : null}
-            {product.unit ? (
-              <span className="text-[10px] text-slate-400">هر {product.unit}</span>
-            ) : null}
+        {(product.brand || product.unit) && (
+          <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400">
+            {product.brand && <span className="font-medium">{product.brand}</span>}
+            {product.brand && product.unit && <span className="text-slate-300">·</span>}
+            {product.unit && <span>{product.unit}</span>}
           </div>
-        ) : null}
+        )}
 
-        {/* Price */}
-        <div className="mt-auto pt-3">
-          {discountPercent > 0 && (
-            <p className="text-xs text-slate-400 line-through">{formatPrice(product.price)}</p>
-          )}
-          <div className="flex items-end justify-between gap-2">
-            <p className="text-base font-black text-slate-900 sm:text-lg">{formatPrice(price)}</p>
-            <p className="text-[10px] text-slate-400">تومان</p>
+        <div className="mt-auto pt-3 flex items-baseline justify-between gap-2">
+          <div>
+            {discountPercent > 0 && (
+              <p className="text-xs text-slate-400 line-through">{formatPrice(product.price)}</p>
+            )}
+            <p className="text-[15px] font-black text-slate-900">{formatPrice(price)}</p>
           </div>
+          <span className="text-[10px] font-medium text-slate-400">تومان</span>
         </div>
 
-        {/* Add to Cart */}
         <button
           onClick={handleAddToCart}
           disabled={product.stock < 1 || addToCart.isPending}
           aria-label={`افزودن ${product.name} به سبد خرید`}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-50 py-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 focus-visible:ring-4 focus-visible:ring-emerald-100 disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98]"
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-emerald-50 py-[9px] text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-100 active:bg-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ShoppingCart className="h-3.5 w-3.5" />
-          {addToCart.isPending ? "..." : "افزودن به سبد"}
+          {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد"}
         </button>
       </div>
     </motion.div>
