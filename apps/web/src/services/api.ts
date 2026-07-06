@@ -25,6 +25,23 @@ function getCookieValue(name: string): string | null {
   return null;
 }
 
+function isBrowserFormData(value: unknown): value is FormData {
+  return typeof FormData !== "undefined" && value instanceof FormData;
+}
+
+function removeContentTypeHeader(headers: unknown): void {
+  if (!headers) return;
+
+  if (typeof (headers as { delete?: (name: string) => void }).delete === "function") {
+    (headers as { delete: (name: string) => void }).delete("Content-Type");
+    (headers as { delete: (name: string) => void }).delete("content-type");
+    return;
+  }
+
+  const record = headers as Record<string, unknown>;
+  delete record["Content-Type"];
+  delete record["content-type"];
+}
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -132,6 +149,12 @@ export const api = axios.create({
 
 
 api.interceptors.request.use((config) => {
+  if (isBrowserFormData(config.data)) {
+    // Let the browser/axios set multipart/form-data with the correct boundary.
+    // Keeping the default application/json header makes Multer receive an empty file.
+    removeContentTypeHeader(config.headers);
+  }
+
   const method = config.method?.toLowerCase() ?? "get";
   if (!CSRF_SAFE_METHODS.has(method)) {
     const csrfToken = getCookieValue(CSRF_TOKEN_COOKIE);
