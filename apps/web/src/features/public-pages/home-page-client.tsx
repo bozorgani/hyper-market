@@ -126,7 +126,7 @@ export function HomePageClient() {
 
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
           {categoryList.length > 0 ? (
-            categoryList.slice(0, 12).map((cat: { _id: string; name: string; icon?: string }) => (
+            categoryList.slice(0, 12).map((cat: { _id: string; name: string; icon?: string | null }) => (
               <Link
                 key={cat._id}
                 href={`/products?category=${cat._id}`}
@@ -190,7 +190,7 @@ export function HomePageClient() {
             ))
           ) : bestSellers.length > 0 ? (
             bestSellers.map((product) => (
-              <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}>
+              <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
                 <ProductCard product={product} />
               </motion.div>
             ))
@@ -215,7 +215,7 @@ export function HomePageClient() {
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {(discounted.length > 0 ? discounted : items.slice(0, 6)).map((product) => (
-            <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.04 }}>
+            <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.04 }}>
               <ProductCard product={product} />
             </motion.div>
           ))}
@@ -234,7 +234,7 @@ export function HomePageClient() {
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {newArrivals.length > 0 ? newArrivals.map((product) => (
-            <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}>
+            <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
               <ProductCard product={product} />
             </motion.div>
           )) : (
