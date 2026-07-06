@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-import { addToCartAction, clearCartAction, removeFromCartAction, updateCartQuantityAction } from "@/app/actions/cart";
 import { api } from "@/services/api";
 import type { CartSummary } from "@/types/domain";
 
@@ -15,7 +14,7 @@ export function useCart(enabled = true) {
 export function useAddToCart() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: addToCartAction,
+    mutationFn: async (input: { productId: string; quantity: number }) => (await api.post<CartSummary>("/cart/add", input)).data,
     onSuccess: (_data, variables) => {
       trackAnalyticsEvent({ type: "ADD_TO_CART", metadata: variables });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -26,7 +25,7 @@ export function useAddToCart() {
 export function useUpdateCartQuantity() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updateCartQuantityAction,
+    mutationFn: async (input: { productId: string; quantity: number }) => (await api.post<CartSummary>("/cart/update", input)).data,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
@@ -36,7 +35,7 @@ export function useUpdateCartQuantity() {
 export function useRemoveFromCart() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: removeFromCartAction,
+    mutationFn: async (productId: string) => (await api.post<CartSummary>("/cart/remove", { productId })).data,
     onSuccess: (_data, productId) => {
       trackAnalyticsEvent({ type: "REMOVE_FROM_CART", metadata: { productId } });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -47,7 +46,7 @@ export function useRemoveFromCart() {
 export function useClearCart() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: clearCartAction,
+    mutationFn: async () => (await api.post("/cart/clear", {})).data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cart"] }),
   });
 }
