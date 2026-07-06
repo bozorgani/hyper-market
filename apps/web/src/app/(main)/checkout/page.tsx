@@ -209,13 +209,11 @@ export default function CheckoutPage() {
     });
   }
 
-  function handleMapLocationSelect(data: { lat: number; lng: number; address: string; province: string; city: string }) {
-    setMapLocation({ lat: data.lat, lng: data.lng });
+  function handleMapLocationSelect(lat: number, lng: number, address: string) {
+    setMapLocation({ lat, lng });
     setDeliveryAddress((prev) => ({
       ...prev,
-      addressLine: data.address.length > 8 ? data.address : prev.addressLine,
-      province: data.province || prev.province,
-      city: data.city || prev.city,
+      addressLine: address.length > 8 ? address : prev.addressLine,
     }));
     showToast({ type: "success", title: "آدرس از نقشه انتخاب شد" });
   }

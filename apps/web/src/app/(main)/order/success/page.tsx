@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { AlertTriangle, CheckCircle2, Clock, MapPin, PackageCheck, ReceiptText, RefreshCw, ShoppingBag, UserRound } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, MapPin, PackageCheck, ReceiptText, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,12 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrder, usePayment } from "@/hooks/use-orders";
 import { formatPersianDate, formatPrice, translateOrderStatus, translatePaymentMethod, translatePaymentStatus } from "@/lib/utils";
+
+type OrderItemSnapshot = {
+  name?: string;
+  quantity?: number;
+  priceAtPurchase?: number;
+};
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
@@ -87,7 +93,7 @@ function OrderSuccessContent() {
               <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4 text-right">
                 <p className="font-black text-sm mb-3">اقلام سفارش</p>
                 <div className="space-y-2 text-sm">
-                  {order.data.items.map((item: any, idx: number) => (
+                  {order.data.items.map((item: OrderItemSnapshot, idx: number) => (
                     <div key={idx} className="flex justify-between border-b pb-2 last:border-0">
                       <div>
                         <span className="font-medium">{item.name || `محصول`}</span>
