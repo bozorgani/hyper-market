@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1.7
-
 ARG NODE_VERSION=20-bookworm-slim
 
 FROM node:${NODE_VERSION} AS deps
