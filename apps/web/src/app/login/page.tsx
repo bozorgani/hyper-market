@@ -46,8 +46,10 @@ export default function LoginPage() {
         : normalizePhoneNumber(validation.data.identifier);
       await login(normalizedIdentifier.includes("@") ? { email: normalizedIdentifier, password } : { phoneNumber: normalizedIdentifier, password });
       const loggedInUser = useAuthStore.getState().user;
+      const redirect = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null;
+      const safeRedirect = redirect?.startsWith("/") && !redirect.startsWith("//") ? redirect : null;
       showToast({ type: "success", title: "با موفقیت وارد شدید" });
-      router.push(isAdminRole(loggedInUser?.role) ? "/admin" : "/profile");
+      router.push(safeRedirect ?? (isAdminRole(loggedInUser?.role) ? "/admin" : "/profile"));
     } catch (err) {
       const message = err instanceof Error ? err.message : "ورود ناموفق بود. دوباره تلاش کنید.";
       setError(message);

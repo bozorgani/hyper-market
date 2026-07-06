@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AlertTriangle, Minus, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,9 +16,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { useCart, useClearCart, useRemoveFromCart, useUpdateCartQuantity } from "@/hooks/use-cart";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth-store";
+
+function isCustomerRole(role?: string) {
+  return role === "customer" || role === "CUSTOMER";
+}
 
 export default function CartPage() {
-  const cart = useCart();
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
+  const isCustomer = isCustomerRole(user?.role);
+  const cart = useCart(Boolean(hydrated && isCustomer));
   const remove = useRemoveFromCart();
   const updateQuantity = useUpdateCartQuantity();
   const clear = useClearCart();
@@ -32,6 +42,12 @@ export default function CartPage() {
     if (!cart.error) return "";
     return cart.error instanceof Error ? cart.error.message : "دریافت سبد خرید ناموفق بود.";
   }, [cart.error]);
+
+  useEffect(() => {
+    if (hydrated && user && !isCustomer) {
+      router.replace("/admin");
+    }
+  }, [hydrated, isCustomer, router, user]);
 
   async function decrementItem(productId: string, quantity: number) {
     if (isMutating) return;
