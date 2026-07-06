@@ -45,7 +45,7 @@ export function HomePageClient() {
   const bestSellers = items.length > 0 ? items.slice(0, 8) : [];
   const newArrivals = items.length > 0 ? [...items].reverse().slice(0, 6) : [];
   const discounted = items.length > 0 
-    ? items.filter((p: { discountPrice?: number }) => !!p.discountPrice).slice(0, 6) 
+    ? items.filter((p) => p.discountPrice != null).slice(0, 6) 
     : items.slice(0, 4); // fallback
 
   return (
