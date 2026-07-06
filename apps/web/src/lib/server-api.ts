@@ -2,7 +2,7 @@ import type { Category, Product, ProductListResponse } from "@/types/domain";
 import type { SearchResponse } from "@/hooks/use-search";
 
 function getServerApiBaseUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.PUBLIC_API_BASE_URL;
+  const configured = process.env.SERVER_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.PUBLIC_API_BASE_URL;
   if (configured?.startsWith("http")) {
     return configured.replace(/\/$/, "");
   }

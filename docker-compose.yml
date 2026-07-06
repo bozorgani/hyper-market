@@ -168,6 +168,9 @@ services:
       PORT: 3000
       HOSTNAME: 0.0.0.0
       NEXT_TELEMETRY_DISABLED: "1"
+      # Internal URL used by Next.js Server Components / Server Actions from inside the web container.
+      # Browser-side requests still use NEXT_PUBLIC_API_BASE_URL.
+      SERVER_API_BASE_URL: ${SERVER_API_BASE_URL:-http://backend:3001/api/v1}
     ports:
       - "3000:3000"
     depends_on:
