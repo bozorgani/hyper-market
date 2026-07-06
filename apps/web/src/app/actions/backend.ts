@@ -6,7 +6,7 @@ const CSRF_TOKEN_COOKIE = "hyper_market_csrf_token";
 const CSRF_TOKEN_HEADER = "x-csrf-token";
 
 function getApiBaseUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.PUBLIC_API_BASE_URL;
+  const configured = process.env.SERVER_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.PUBLIC_API_BASE_URL;
   if (configured?.startsWith("http")) return configured.replace(/\/$/, "");
   return "http://localhost:3001/api/v1";
 }

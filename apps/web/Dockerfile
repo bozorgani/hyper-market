@@ -31,7 +31,8 @@ WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    SERVER_API_BASE_URL=http://localhost:3001/api/v1
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends dumb-init \
