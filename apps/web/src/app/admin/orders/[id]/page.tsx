@@ -127,15 +127,15 @@ export default function AdminOrderDetailPage() {
               <table className="w-full min-w-[600px] text-right text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/50">
-                    <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">شناسه محصول</th>
+                    <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">نام محصول</th>
                     <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">تعداد</th>
                     <th className="px-5 py-3 text-xs font-semibold uppercase text-slate-400">قیمت خرید</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {order.items.map((item) => (
-                    <tr key={item.productId} className="transition hover:bg-slate-50/50">
-                      <td className="px-5 py-3.5 ltr text-left font-mono text-xs text-slate-500">{item.productId}</td>
+                    <tr key={item.product?.name || item.productId.slice(-6)} className="transition hover:bg-slate-50/50">
+                      <td className="px-5 py-3.5 ltr text-left font-mono text-xs text-slate-500">{item.product?.name || item.productId.slice(-6)}</td>
                       <td className="px-5 py-3.5 font-semibold text-slate-700">{formatNumber(item.quantity)}</td>
                       <td className="px-5 py-3.5 font-bold text-slate-900">{formatPrice(item.priceAtPurchase)}</td>
                     </tr>
