@@ -41,9 +41,12 @@ export function HomePageClient() {
   const items = products.data?.items ?? [];
   const categoryList = categories.data ?? [];
 
-  const bestSellers = items.slice(0, 8);
-  const newArrivals = [...items].reverse().slice(0, 6);
-  const discounted = items.filter((p: any) => p.discountPrice).slice(0, 6);
+  // همیشه داده داشته باشیم
+  const bestSellers = items.length > 0 ? items.slice(0, 8) : [];
+  const newArrivals = items.length > 0 ? [...items].reverse().slice(0, 6) : [];
+  const discounted = items.length > 0 
+    ? items.filter((p: any) => p.discountPrice).slice(0, 6) 
+    : items.slice(0, 4); // fallback
 
   return (
     <main className="pb-20 lg:pb-10 bg-slate-50">
@@ -123,7 +126,7 @@ export function HomePageClient() {
 
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
           {categoryList.length > 0 ? (
-            categoryList.slice(0, 12).map((cat: any, index: number) => (
+            categoryList.slice(0, 12).map((cat: any) => (
               <Link
                 key={cat._id}
                 href={`/products?category=${cat._id}`}
@@ -195,31 +198,29 @@ export function HomePageClient() {
         </div>
       </section>
 
-      {/* ==================== FLASH SALE ==================== */}
-      {discounted.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pt-12">
-          <div className="mb-6 flex items-center justify-between rounded-3xl bg-gradient-to-l from-red-500 to-orange-500 px-6 py-4 text-white">
-            <div className="flex items-center gap-3">
-              <Percent className="h-6 w-6" />
-              <div>
-                <div className="font-black text-xl">فروش ویژه</div>
-                <div className="text-sm text-white/90">تا ۷۰٪ تخفیف — محدود</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Clock className="h-4 w-4" /> ۱۲ ساعت باقی‌مانده
+      {/* ==================== FLASH SALE (همیشه نمایش داده می‌شود) ==================== */}
+      <section className="mx-auto max-w-7xl px-4 pt-12">
+        <div className="mb-6 flex items-center justify-between rounded-3xl bg-gradient-to-l from-red-500 to-orange-500 px-6 py-4 text-white">
+          <div className="flex items-center gap-3">
+            <Percent className="h-6 w-6" />
+            <div>
+              <div className="font-black text-xl">فروش ویژه</div>
+              <div className="text-sm text-white/90">تا ۷۰٪ تخفیف — محدود</div>
             </div>
           </div>
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Clock className="h-4 w-4" /> ۱۲ ساعت باقی‌مانده
+          </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {discounted.map((product, idx) => (
-              <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.04 }}>
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {(discounted.length > 0 ? discounted : items.slice(0, 6)).map((product, idx) => (
+            <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: idx * 0.04 }}>
+              <ProductCard product={product} />
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
       {/* ==================== NEW ARRIVALS ==================== */}
       <section className="mx-auto max-w-7xl px-4 pt-12 pb-8">
@@ -232,11 +233,15 @@ export function HomePageClient() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {newArrivals.map((product, idx) => (
+          {newArrivals.length > 0 ? newArrivals.map((product, idx) => (
             <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}>
               <ProductCard product={product} />
             </motion.div>
-          ))}
+          )) : (
+            items.slice(0, 6).map((product, idx) => (
+              <ProductCard key={product._id} product={product} />
+            ))
+          )}
         </div>
       </section>
 
