@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { PackageOpen, ShoppingBag } from "lucide-react";
+import { PackageOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export function EmptyState({
@@ -11,7 +11,7 @@ export function EmptyState({
   title: string;
   description: string;
   actions?: ReactNode;
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<{ className?: string }>;
 }) {
   return (
     <Card className="p-10 text-center empty-state">

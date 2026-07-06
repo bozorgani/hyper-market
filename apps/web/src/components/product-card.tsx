@@ -2,14 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ShoppingCart, Tag, Star } from "lucide-react";
+import { ShoppingCart, Tag } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useAddToCart } from "@/hooks/use-cart";
+import { useAuthStore } from "@/store/auth-store";
 import { formatNumber, formatPrice } from "@/lib/utils";
 import type { Product } from "@/types/domain";
 
 export function ProductCard({ product }: { product: Product }) {
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const addToCart = useAddToCart();
   const { showToast } = useToast();
   const price = product.discountPrice ?? product.price;
@@ -20,6 +24,15 @@ export function ProductCard({ product }: { product: Product }) {
   async function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    if (!user) {
+      showToast({ type: "info", title: "برای افزودن به سبد خرید ابتدا وارد شوید" });
+      router.push("/login");
+      return;
+    }
+    if (user.role !== "customer" && user.role !== "CUSTOMER") {
+      showToast({ type: "error", title: "سبد خرید فقط برای حساب مشتری فعال است" });
+      return;
+    }
     try {
       await addToCart.mutateAsync({ productId: product._id, quantity: 1 });
       showToast({ type: "success", title: "به سبد خرید اضافه شد" });

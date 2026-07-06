@@ -16,13 +16,18 @@ import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth-store";
 
+function isCustomerRole(role?: string) {
+  return role === "customer" || role === "CUSTOMER";
+}
+
 export function Header() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const { showToast } = useToast();
-  const cart = useCart(Boolean(user));
-  const cartCount = user ? (cart.data?.items ?? []).length : 0;
+  const isCustomer = isCustomerRole(user?.role);
+  const cart = useCart(isCustomer);
+  const cartCount = isCustomer ? (cart.data?.items ?? []).length : 0;
   const [query, setQuery] = useState("");
   const [isSuggestOpen, setIsSuggestOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);

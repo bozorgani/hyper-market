@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 
 export function ProductGallery({ images, productName }: { images?: string[]; productName: string }) {
   const safeImages = (images ?? []).filter(Boolean);

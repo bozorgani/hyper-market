@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Mail, Phone, KeyRound, ArrowLeft, Loader2, ShieldCheck, RefreshCw, 
@@ -26,7 +26,7 @@ function VerifyOtpContent() {
   
   const { showToast } = useToast();
   
-  const [target, setTarget] = useState(initialTarget);
+  const target = initialTarget;
   const [code, setCode] = useState("");
   const [type, setType] = useState(initialType);
   const [error, setError] = useState("");
@@ -97,12 +97,11 @@ function VerifyOtpContent() {
 
   function handleAutoSubmit(fullCode: string) {
     if (fullCode.length === OTP_LENGTH && target.trim()) {
-      submit({ preventDefault: () => {} } as FormEvent<HTMLFormElement>, fullCode);
+      void submitOtp(fullCode);
     }
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>, autoCode?: string) {
-    event.preventDefault();
+  async function submitOtp(autoCode?: string) {
     setError(""); setSuccess("");
 
     const finalCode = autoCode || code;
@@ -158,9 +157,7 @@ function VerifyOtpContent() {
     try {
       const normTarget = type === "phone_verify" ? normalizePhoneNumber(target) : target.trim().toLowerCase();
       await api.post("/auth/send-verification-otp", {
-        phoneNumber: type === "phone_verify" ? normTarget : undefined,
-        email: type !== "phone_verify" ? normTarget : undefined,
-        type,
+        ...(type === "phone_verify" ? { phoneNumber: normTarget } : { email: normTarget }),
       });
 
       showToast({ type: "success", title: "کد جدید ارسال شد" });
@@ -287,7 +284,7 @@ function VerifyOtpContent() {
         {/* Action Button */}
         <button
           type="button"
-          onClick={(e) => submit(e as any)}
+          onClick={() => void submitOtp()}
           disabled={loading || !isComplete || !target.trim()}
           className={cn(
             "group flex h-12 w-full items-center justify-center gap-2 rounded-2xl font-bold transition-all active:scale-[0.985]",

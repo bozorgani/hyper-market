@@ -67,7 +67,7 @@ export function useUploadProductImage() {
       const formData = new FormData();
       formData.append("image", file);
 
-      return (await api.post<ProductImageUploadResponse>("/admin/products/images/upload", formData, { headers: { "Content-Type": "multipart/form-data" } })).data;
+      return (await api.post<ProductImageUploadResponse>("/admin/products/images/upload", formData)).data;
     },
   });
 }

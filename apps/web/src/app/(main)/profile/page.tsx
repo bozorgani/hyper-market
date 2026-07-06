@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,6 +17,14 @@ import {
   CheckCircle2, Truck, Camera, Gift,
 } from "lucide-react";
 import type { OrderStatus } from "@/types/domain";
+
+function isAdminRole(role?: string) {
+  return role === "admin" || role === "super_admin" || role === "ADMIN" || role === "SUPER_ADMIN";
+}
+
+function isCustomerRole(role?: string) {
+  return role === "customer" || role === "CUSTOMER";
+}
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; Icon: typeof CheckCircle2 }> = {
   delivered: { label: "تحویل شده", color: "text-emerald-600", bg: "bg-emerald-50", Icon: CheckCircle2 },
@@ -41,14 +50,23 @@ const menuItems = [
 ];
 
 export default function ProfilePage() {
+  const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
   const logout = useAuthStore((state) => state.logout);
   const { showToast } = useToast();
-  const ordersQuery = useMyOrders();
+  const isCustomer = isCustomerRole(user?.role);
+  const ordersQuery = useMyOrders(Boolean(hydrated && isCustomer));
   const recentOrders = useMemo(
     () => (ordersQuery.data ?? []).slice(0, 3),
     [ordersQuery.data],
   );
+
+  useEffect(() => {
+    if (hydrated && isAdminRole(user?.role)) {
+      router.replace("/admin");
+    }
+  }, [hydrated, router, user?.role]);
 
   function handleLogout() {
     void logout();
