@@ -36,6 +36,12 @@ const NUMERIC_VALIDATIONS: Record<string, { min?: number; max?: number; default?
   OUTBOX_SWEEP_INTERVAL_MS: { min: 1000, max: 60000 },
   OUTBOX_PENDING_GRACE_MS: { min: 1000, max: 300000 },
   OUTBOX_RELAY_MAX_ATTEMPTS: { min: 1, max: 50 },
+  RATE_LIMIT_SENSITIVE_TTL_MS: { min: 1000, max: 3600000 },
+  RATE_LIMIT_AUTH_TTL_MS: { min: 1000, max: 3600000 },
+  RATE_LIMIT_DEFAULT_TTL_MS: { min: 1000, max: 3600000 },
+  RATE_LIMIT_SENSITIVE_LIMIT: { min: 1, max: 100000 },
+  RATE_LIMIT_AUTH_LIMIT: { min: 1, max: 100000 },
+  RATE_LIMIT_DEFAULT_LIMIT: { min: 1, max: 100000 },
 };
 
 // ── Enum validation ───────────────────────────────────────────────────────────

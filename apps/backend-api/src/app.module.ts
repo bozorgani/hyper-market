@@ -33,8 +33,7 @@ import { UsersModule } from './modules/users/users.module';
 // Rate limiting uses Redis-backed storage so limits are shared across all
 // API instances behind a load-balancer. When Redis is unavailable the
 // storage fails open (allows the request) instead of blocking all traffic.
-const isProduction =
-  process.env.APP_ENV === 'production' || process.env.NODE_ENV === 'production';
+const isProduction = process.env.APP_ENV === 'production';
 
 @Module({
   imports: [
@@ -58,18 +57,18 @@ const isProduction =
               throttlers: [
                 {
                   name: 'default',
-                  ttl: 60000,
-                  limit: 100,
+                  ttl: Number(process.env.RATE_LIMIT_DEFAULT_TTL_MS ?? 60000),
+                  limit: Number(process.env.RATE_LIMIT_DEFAULT_LIMIT ?? 1000),
                 },
                 {
                   name: 'auth',
-                  ttl: 60000,
-                  limit: 5,
+                  ttl: Number(process.env.RATE_LIMIT_AUTH_TTL_MS ?? 60000),
+                  limit: Number(process.env.RATE_LIMIT_AUTH_LIMIT ?? 30),
                 },
                 {
                   name: 'sensitive',
-                  ttl: 60000,
-                  limit: 10,
+                  ttl: Number(process.env.RATE_LIMIT_SENSITIVE_TTL_MS ?? 60000),
+                  limit: Number(process.env.RATE_LIMIT_SENSITIVE_LIMIT ?? 100),
                 },
               ],
             }),
