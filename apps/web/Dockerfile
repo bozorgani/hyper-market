@@ -1,6 +1,6 @@
-ARG NODE_VERSION=20-bookworm-slim
+ARG NODE_IMAGE=node:20-bookworm-slim
 
-FROM node:${NODE_VERSION} AS deps
+FROM ${NODE_IMAGE} AS deps
 WORKDIR /app
 ENV CI=true
 COPY package.json package-lock.json ./
@@ -18,7 +18,7 @@ ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL} \
 COPY . .
 RUN npm run build --workspace=apps/web
 
-FROM node:${NODE_VERSION} AS prod-deps
+FROM ${NODE_IMAGE} AS prod-deps
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json ./
@@ -26,7 +26,7 @@ COPY apps/backend-api/package.json apps/backend-api/package.json
 COPY apps/web/package.json apps/web/package.json
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
-FROM node:${NODE_VERSION} AS runner
+FROM ${NODE_IMAGE} AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \

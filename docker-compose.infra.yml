@@ -14,7 +14,7 @@ name: hyper-market-infra
 
 services:
   mongo:
-    image: mongo:7
+    image: ${MONGO_IMAGE:-mongo:7}
     restart: unless-stopped
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
@@ -33,7 +33,7 @@ services:
       start_period: 10s
 
   redis:
-    image: redis:7-alpine
+    image: ${REDIS_IMAGE:-redis:7-alpine}
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     ports:
@@ -47,7 +47,7 @@ services:
       retries: 30
 
   meilisearch:
-    image: getmeili/meilisearch:v1.12
+    image: ${MEILI_IMAGE:-getmeili/meilisearch:v1.12}
     restart: unless-stopped
     environment:
       MEILI_ENV: development
