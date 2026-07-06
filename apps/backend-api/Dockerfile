@@ -12,12 +12,10 @@ ENV CI=true \
     NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000 \
     NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 
-# Copy only package files first (best cache)
 COPY package.json package-lock.json ./
 COPY apps/backend-api/package.json ./apps/backend-api/
 COPY apps/web/package.json ./apps/web/
 
-# Install all dependencies with cache mount
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --prefer-offline --no-audit --progress=false
 
@@ -45,8 +43,7 @@ COPY package.json package-lock.json ./
 COPY apps/backend-api/package.json ./apps/backend-api/
 
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev --ignore-scripts --prefer-offline && \
-    npm cache clean --force
+    npm ci --omit=dev --ignore-scripts --prefer-offline
 
 # ============================================
 # 4. RUNTIME (Minimal production image)
@@ -59,19 +56,16 @@ ENV NODE_ENV=production \
     PORT=3001 \
     PRODUCT_IMAGE_UPLOAD_DIR=/app/uploads/product-images
 
-# Install dumb-init + create directories
 RUN apt-get update && \
     apt-get install -y --no-install-recommends dumb-init && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /app/uploads/product-images && \
     chown -R node:node /app
 
-# Copy production artifacts
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=prod-deps --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=prod-deps --chown=node:node /app/apps/backend-api/package.json ./apps/backend-api/
 
-# Copy compiled backend
 COPY --from=build --chown=node:node /app/apps/backend-api/dist ./apps/backend-api/dist
 COPY --from=build --chown=node:node /app/scripts ./scripts
 
