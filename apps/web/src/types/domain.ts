@@ -140,7 +140,7 @@ export type Address = DeliveryAddress & {
 export type Order = {
   _id: string;
   userId: string;
-  items: Array<CartItem & { priceAtPurchase: number }>;
+  items: Array<CartItem & { priceAtPurchase: number; product?: { name?: string } | null }>;
   subtotalPrice?: number;
   discountAmount?: number;
   couponCode?: string | null;
