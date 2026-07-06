@@ -10,11 +10,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useAddToCart } from "@/hooks/use-cart";
+import { useAuthStore } from "@/store/auth-store";
+import { useRouter } from "next/navigation";
 import { useProduct } from "@/hooks/use-products";
 import { formatNumber, formatPrice } from "@/lib/utils";
 import type { Product } from "@/types/domain";
 
 export function ProductDetailPageClient({ productId, initialProduct }: { productId: string; initialProduct?: Product }) {
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const product = useProduct(productId, initialProduct);
   const addToCart = useAddToCart();
   const { showToast } = useToast();
@@ -32,6 +36,15 @@ export function ProductDetailPageClient({ productId, initialProduct }: { product
 
   async function handleAddToCart() {
     if (!product.data) return;
+    if (!user) {
+      showToast({ type: "info", title: "برای افزودن به سبد خرید ابتدا وارد شوید" });
+      router.push("/login");
+      return;
+    }
+    if (user.role !== "customer" && user.role !== "CUSTOMER") {
+      showToast({ type: "error", title: "سبد خرید فقط برای حساب مشتری فعال است" });
+      return;
+    }
 
     try {
       await addToCart.mutateAsync({ productId: product.data._id, quantity: 1 });
