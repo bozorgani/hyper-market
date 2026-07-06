@@ -88,11 +88,13 @@ Runtime characteristics detected in code:
 Implemented module directories:
 
 ```text
+addresses
 analytics
 audit
 auth
 cart
 categories
+coupons
 mail
 orders
 outbox
@@ -101,6 +103,7 @@ permissions
 products
 queue
 search
+shipping
 users
 ```
 
@@ -108,19 +111,22 @@ Module implementation matrix:
 
 | Module | Module file | Controllers | Services | Repositories | Schemas | DTOs |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| addresses | yes | 1 | 1 | 1 | 1 | 1 |
 | analytics | yes | 1 | 1 | 1 | 1 | 1 |
-| audit | yes | 0 | 0 | 1 | 1 | 0 |
+| audit | yes | 0 | 1 | 1 | 1 | 0 |
 | auth | yes | 1 | 4 | 3 | 3 | 10 |
 | cart | yes | 1 | 1 | 1 | 1 | 2 |
 | categories | yes | 1 | 1 | 1 | 1 | 2 |
+| coupons | yes | 1 | 1 | 1 | 2 | 2 |
 | mail | yes | 0 | 3 | 0 | 0 | 0 |
 | orders | yes | 1 | 1 | 1 | 1 | 2 |
 | outbox | yes | 0 | 1 | 1 | 1 | 0 |
 | payments | yes | 1 | 1 | 1 | 1 | 2 |
-| permissions | yes | 1 | 1 | 1 | 1 | 0 |
+| permissions | yes | 1 | 1 | 1 | 1 | 1 |
 | products | yes | 1 | 2 | 1 | 1 | 2 |
 | queue | yes | 0 | 1 | 0 | 0 | 0 |
 | search | yes | 1 | 2 | 0 | 0 | 0 |
+| shipping | yes | 1 | 1 | 0 | 0 | 1 |
 | users | yes | 1 | 1 | 1 | 1 | 0 |
 
 Infrastructure/core detected:
@@ -195,6 +201,55 @@ GET /health
 
 Detected controller endpoints:
 
+### apps/backend-api/src/modules/addresses/controllers/address.controller.ts
+
+```text
+POST   /addresses    [Roles(UserRole.CUSTOMER)]
+DELETE /addresses/:id    [Roles(UserRole.CUSTOMER)]
+PUT    /addresses/:id    [Roles(UserRole.CUSTOMER)]
+PATCH  /addresses/:id/default    [Roles(UserRole.CUSTOMER)]
+GET    /addresses/my    [Roles(UserRole.CUSTOMER)]
+```
+
+### apps/backend-api/src/modules/categories/controllers/categories.controller.ts
+
+```text
+GET    /admin/categories    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.read')]
+POST   /admin/categories    [Permissions('categories.create')]
+DELETE /admin/categories/:id    [Permissions('categories.delete')]
+GET    /admin/categories/:id    [Permissions('categories.read')]
+PUT    /admin/categories/:id    [Permissions('categories.update')]
+GET    /categories    [Public()]
+GET    /categories/:id    [Public()]
+```
+
+### apps/backend-api/src/modules/coupons/coupons.controller.ts
+
+```text
+GET    /admin/coupons    [Roles(UserRole.CUSTOMER), Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('coupons.read')]
+POST   /admin/coupons    [Roles(UserRole.CUSTOMER), Permissions('coupons.create')]
+DELETE /admin/coupons/:id    [Roles(UserRole.CUSTOMER), Permissions('coupons.delete')]
+GET    /admin/coupons/:id    [Roles(UserRole.CUSTOMER), Permissions('coupons.read')]
+PUT    /admin/coupons/:id    [Roles(UserRole.CUSTOMER), Permissions('coupons.update')]
+GET    /admin/coupons/analytics    [Roles(UserRole.CUSTOMER), Permissions('coupons.read')]
+GET    /coupons/available    [Roles(UserRole.CUSTOMER)]
+POST   /coupons/validate    [Roles(UserRole.CUSTOMER)]
+```
+
+### apps/backend-api/src/modules/products/controllers/products.controller.ts
+
+```text
+GET    /admin/products    [Permissions('products.read')]
+POST   /admin/products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.create')]
+DELETE /admin/products/:id    [Permissions('products.delete')]
+GET    /admin/products/:id    [Permissions('products.read')]
+PUT    /admin/products/:id    [Permissions('products.update')]
+POST   /admin/products/images/upload    [Permissions('products.update')]
+GET    /products    [Public()]
+GET    /products/:id    [Public()]
+GET    /products/images/:fileName    [Public()]
+```
+
 ### apps/backend-api/src/modules/search/search.controller.ts
 
 ```text
@@ -241,33 +296,28 @@ POST   /cart/remove    [Roles(UserRole.CUSTOMER)]
 POST   /cart/update    [Roles(UserRole.CUSTOMER)]
 ```
 
-### apps/backend-api/src/modules/categories/controllers/categories.controller.ts
-
-```text
-GET    /categories    [Public()]
-POST   /categories    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.create')]
-DELETE /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.delete')]
-GET    /categories/:id    [Public()]
-PUT    /categories/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.update')]
-GET    /categories/admin/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.read')]
-GET    /categories/admin/list    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('categories.read')]
-```
-
 ### apps/backend-api/src/infrastructure/health/health.controller.ts
 
 ```text
-GET    /health
-GET    /health/live
-GET    /health/ready
+GET    /health    [Public()]
+GET    /health/live    [Public()]
+GET    /health/ready    [Public()]
+```
+
+### apps/backend-api/src/infrastructure/observability/observability.controller.ts
+
+```text
+GET    /metrics    [Public()]
+GET    /observability/dashboard    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 ```
 
 ### apps/backend-api/src/modules/orders/controllers/orders.controller.ts
 
 ```text
-GET    /orders    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
+GET    /orders    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('orders.read')]
 POST   /orders    [Roles(UserRole.CUSTOMER)]
 GET    /orders/:id
-PATCH  /orders/:id/status    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('orders.cancel')]
+PATCH  /orders/:id/status    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 GET    /orders/my    [Roles(UserRole.CUSTOMER)]
 ```
 
@@ -283,24 +333,16 @@ POST   /payments/create
 
 ```text
 GET    /permissions    [Roles(UserRole.SUPER_ADMIN), Permissions('permissions.read')]
-GET    /permissions/:role    [Permissions('permissions.read')]
-POST   /permissions/grant    [Permissions('permissions.update')]
-POST   /permissions/revoke    [Permissions('permissions.update')]
-POST   /permissions/seed    [Permissions('permissions.update')]
+GET    /permissions/:role    [Roles(UserRole.SUPER_ADMIN), Permissions('permissions.read')]
+POST   /permissions/grant    [Roles(UserRole.SUPER_ADMIN), Permissions('permissions.update')]
+POST   /permissions/revoke    [Roles(UserRole.SUPER_ADMIN), Permissions('permissions.update')]
+POST   /permissions/seed    [Roles(UserRole.SUPER_ADMIN), Permissions('permissions.update')]
 ```
 
-### apps/backend-api/src/modules/products/controllers/products.controller.ts
+### apps/backend-api/src/modules/shipping/shipping.controller.ts
 
 ```text
-GET    /products    [Public()]
-POST   /products    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.create')]
-DELETE /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.delete')]
-GET    /products/:id    [Public()]
-PUT    /products/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
-GET    /products/admin/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.read')]
-GET    /products/admin/list    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.read')]
-GET    /products/images/:fileName    [Public()]
-POST   /products/images/upload    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('products.update')]
+POST   /shipping/quote    [Roles(UserRole.CUSTOMER)]
 ```
 
 ### apps/backend-api/src/modules/users/controllers/users.controller.ts
@@ -590,10 +632,15 @@ action
 
 ## 7. Missing / Broken Features
 
-- No missing or broken features detected by the sync script.
+- Category create API is missing: `POST /categories`.
+- Category update API is missing: `PUT /categories/:id`.
+- Category delete API is missing: `DELETE /categories/:id`.
 
 ## 8. High Priority TODOs
 
+- Category create API is missing: `POST /categories`
+- Category update API is missing: `PUT /categories/:id`
+- Category delete API is missing: `DELETE /categories/:id`
 - Add transaction usage to critical order/payment/cart flows if not already applied.
 - Add tests for auth, permissions, cart/order/payment, search, and analytics flows.
 
@@ -690,6 +737,7 @@ Rules from docs:
 
 ## 10. Risks / Technical Debt
 
+- Admin product creation depends on pre-existing categories, but admin category CRUD is not available through API.
 - Meilisearch index can become stale because no bulk reindex command was detected.
 - Permission model is partly static in code even though permission schema exists.
 - No comprehensive automated test suite was detected by this script.
