@@ -204,6 +204,57 @@ describe('AuthService', () => {
         service.login({ email: 'pending@example.com', password: 'wrong', deviceId: 'device-123' }),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it('should login successfully with valid credentials', async () => {
+      const mockUser = {
+        _id: '507f1f77bcf86cd799439011',
+        email: 'test@example.com',
+        passwordHash: 'hashed_password',
+        role: UserRole.CUSTOMER,
+        accountStatus: AccountStatus.ACTIVE,
+        tokenVersion: 1,
+        isEmailVerified: true,
+      };
+
+      mockUsersService.getUserByEmailWithPassword.mockResolvedValue(mockUser);
+      mockPasswordService.comparePassword.mockResolvedValue(true);
+      mockUsersService.resetLoginSecurity.mockResolvedValue(undefined);
+      mockSessionService.createSession.mockResolvedValue({ _id: 'session-123' });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token-123');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token-123');
+      mockRefreshTokenService.createRefreshToken.mockResolvedValue({ _id: 'rt-123' });
+
+      const result = await service.login({
+        email: 'test@example.com',
+        password: 'StrongPass123!',
+        deviceId: 'device-123',
+      });
+
+      expect(result).toHaveProperty('accessToken', 'access-token-123');
+      expect(result).toHaveProperty('refreshToken', 'refresh-token-123');
+      expect(mockSessionService.createSession).toHaveBeenCalled();
+      expect(mockRefreshTokenService.createRefreshToken).toHaveBeenCalled();
+    });
+
+    it('should lock account after max failed attempts', async () => {
+      mockUsersService.getUserByEmailWithPassword.mockResolvedValue({
+        _id: '507f1f77bcf86cd799439011',
+        email: 'test@example.com',
+        passwordHash: 'hashed_password',
+        role: UserRole.CUSTOMER,
+        accountStatus: AccountStatus.ACTIVE,
+      });
+      mockPasswordService.comparePassword.mockResolvedValue(false);
+      mockUsersService.incrementFailedLoginAttempts.mockResolvedValue({ 
+        failedLoginAttempts: 5 
+      });
+
+      await expect(
+        service.login({ email: 'test@example.com', password: 'wrong', deviceId: 'device-123' }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(mockUsersService.incrementFailedLoginAttempts).toHaveBeenCalled();
+    });
   });
 
   describe('forgotPassword', () => {
@@ -214,6 +265,171 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('message');
       expect(mockOtpService.createPasswordResetOtp).toHaveBeenCalled();
+    });
+
+    it('should not reveal if user does not exist', async () => {
+      mockUsersService.getUserByEmail.mockResolvedValue(null);
+
+      const result = await service.forgotPassword({ email: 'nonexistent@example.com' });
+
+      expect(result).toHaveProperty('message');
+      expect(mockOtpService.createPasswordResetOtp).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should reset password successfully with valid OTP', async () => {
+      const mockUser = {
+        _id: '507f1f77bcf86cd799439011',
+        email: 'test@example.com',
+      };
+
+      mockUsersService.getUserByEmail.mockResolvedValue(mockUser);
+      mockOtpService.verifyOtpCode.mockResolvedValue(undefined);
+      mockPasswordService.hashPassword.mockResolvedValue('new_hashed_password');
+
+      const result = await service.resetPassword({
+        email: 'test@example.com',
+        otp: '123456',
+        newPassword: 'NewStrongPass123!',
+      });
+
+      expect(result).toHaveProperty('message');
+      expect(mockPasswordService.hashPassword).toHaveBeenCalledWith('NewStrongPass123!');
+    });
+
+    it('should throw error for invalid OTP', async () => {
+      mockUsersService.getUserByEmail.mockResolvedValue({ _id: 'user123' });
+      mockOtpService.verifyOtpCode.mockRejectedValue(new Error('Invalid OTP'));
+
+      await expect(
+        service.resetPassword({
+          email: 'test@example.com',
+          otp: '000000',
+          newPassword: 'NewStrongPass123!',
+        }),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('logout', () => {
+    it('should logout successfully and revoke tokens', async () => {
+      const mockPayload = {
+        sub: '507f1f77bcf86cd799439011',
+        role: UserRole.CUSTOMER,
+        sessionId: 'session-123',
+        deviceId: 'device-123',
+        tokenVersion: 1,
+        jti: 'jti-123',
+      };
+
+      mockTokenService.verifyRefreshToken.mockReturnValue(mockPayload);
+      mockTokenHashService.hashToken.mockReturnValue('hashed-token');
+      mockRefreshTokenService.findByTokenHash.mockResolvedValue({
+        _id: 'rt-123',
+        tokenFamilyId: 'family-123',
+      });
+      mockRefreshTokenService.revokeToken.mockResolvedValue(undefined);
+      mockSessionService.revokeSession.mockResolvedValue(undefined);
+
+      const result = await service.logout('valid-refresh-token', {
+        ipAddress: '127.0.0.1',
+        userAgent: 'Test Agent',
+        deviceId: 'device-123',
+      });
+
+      expect(result).toHaveProperty('message', 'logout successful');
+      expect(mockRefreshTokenService.revokeToken).toHaveBeenCalled();
+      expect(mockSessionService.revokeSession).toHaveBeenCalledWith('session-123');
+    });
+
+    it('should handle logout with invalid token gracefully', async () => {
+      mockTokenService.verifyRefreshToken.mockImplementation(() => {
+        throw new Error('Invalid token');
+      });
+      mockTokenService.decodeToken.mockReturnValue(null);
+
+      await expect(
+        service.logout('invalid-refresh-token', {}),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('verifyOtp', () => {
+    it('should verify OTP successfully', async () => {
+      mockOtpService.verifyOtpCode.mockResolvedValue(undefined);
+
+      const result = await service.verifyOtp({
+        target: 'test@example.com',
+        type: 'EMAIL_VERIFY',
+        code: '123456',
+      });
+
+      expect(result).toHaveProperty('message', 'otp verified');
+      expect(mockOtpService.verifyOtpCode).toHaveBeenCalledWith(
+        'test@example.com',
+        'EMAIL_VERIFY',
+        '123456',
+        {},
+      );
+    });
+
+    it('should throw error for invalid OTP', async () => {
+      mockOtpService.verifyOtpCode.mockRejectedValue(new Error('Invalid OTP'));
+
+      await expect(
+        service.verifyOtp({
+          target: 'test@example.com',
+          type: 'EMAIL_VERIFY',
+          code: '000000',
+        }),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('getCurrentUser', () => {
+    it('should return current user data', async () => {
+      const mockPayload = {
+        sub: '507f1f77bcf86cd799439011',
+        role: UserRole.CUSTOMER,
+        sessionId: 'session-123',
+        deviceId: 'device-123',
+        tokenVersion: 1,
+        jti: 'jti-123',
+      };
+
+      const mockUser = {
+        _id: '507f1f77bcf86cd799439011',
+        email: 'test@example.com',
+        phoneNumber: '09123456789',
+        role: UserRole.CUSTOMER,
+        accountStatus: AccountStatus.ACTIVE,
+        isEmailVerified: true,
+        isPhoneVerified: false,
+      };
+
+      mockUsersService.getUserById.mockResolvedValue(mockUser);
+
+      const result = await service.getCurrentUser(mockPayload);
+
+      expect(result).toHaveProperty('email', 'test@example.com');
+      expect(result).toHaveProperty('role', UserRole.CUSTOMER);
+      expect(result).toHaveProperty('sessionId', 'session-123');
+    });
+
+    it('should throw UnauthorizedException if user not found', async () => {
+      mockUsersService.getUserById.mockResolvedValue(null);
+
+      await expect(
+        service.getCurrentUser({
+          sub: 'nonexistent',
+          role: UserRole.CUSTOMER,
+          sessionId: 'session-123',
+          deviceId: 'device-123',
+          tokenVersion: 1,
+          jti: 'jti-123',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 

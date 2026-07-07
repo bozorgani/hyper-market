@@ -163,12 +163,15 @@ export class ProductsService {
       throw new BadRequestException('Insufficient product stock');
     }
 
-    if (syncSearch) {
-      await this.searchIndexer.indexProduct(product);
+    // Only sync search and invalidate cache if NOT inside a transaction
+    // These operations should happen after the transaction commits
+    if (!session) {
+      if (syncSearch) {
+        await this.searchIndexer.indexProduct(product);
+      }
+      // Invalidate cache after stock change
+      await this.invalidateProductCache(id);
     }
-
-    // Invalidate cache after stock change
-    await this.invalidateProductCache(id);
 
     return product;
   }
@@ -182,12 +185,15 @@ export class ProductsService {
     this.ensureValidObjectId(id, 'Invalid product id');
     const product = await this.productsRepository.restoreStock(id, quantity, session);
 
-    if (product && syncSearch) {
-      await this.searchIndexer.indexProduct(product);
+    // Only sync search and invalidate cache if NOT inside a transaction
+    // These operations should happen after the transaction commits
+    if (product && !session) {
+      if (syncSearch) {
+        await this.searchIndexer.indexProduct(product);
+      }
+      // Invalidate cache after stock change
+      await this.invalidateProductCache(id);
     }
-
-    // Invalidate cache after stock change
-    await this.invalidateProductCache(id);
 
     return product;
   }

@@ -24,6 +24,7 @@ import { AuditService } from '../../audit/audit.service';
 import { AuditAction } from '../../audit/enums/audit-action.enum';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
+import { parsePaginationParams } from '../../../shared/utils/pagination.util';
 import { ProductImageStorageService } from '../services/product-image-storage.service';
 import { ProductsService } from '../services/products.service';
 import { ProductImageUploadInterceptor } from '../storage/product-image-upload.interceptor';
@@ -67,9 +68,11 @@ export class ProductsController {
     @Query('categoryId') categoryId?: string,
     @Query('search') search?: string,
   ) {
+    const { page: safePage, limit: safeLimit } = parsePaginationParams(page, limit);
+    
     return this.productsService.listProducts(
-      this.toPositiveInteger(page, 1),
-      this.toPositiveInteger(limit, 20),
+      safePage,
+      safeLimit,
       categoryId,
       search?.trim() || undefined,
       true,
@@ -80,19 +83,6 @@ export class ProductsController {
   @Public()
   getProductById(@Param('id') id: string) {
     return this.productsService.getPublicProductById(id);
-  }
-
-  private toPositiveInteger(value: string | undefined, fallback: number): number {
-    if (!value) {
-      return fallback;
-    }
-
-    const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed < 1) {
-      return fallback;
-    }
-
-    return parsed;
   }
 }
 
@@ -159,9 +149,11 @@ export class AdminProductsController {
     @Query('search') search?: string,
     @Query('isActive') isActive?: string,
   ) {
+    const { page: safePage, limit: safeLimit } = parsePaginationParams(page, limit);
+    
     return this.productsService.listProducts(
-      this.toPositiveInteger(page, 1),
-      this.toPositiveInteger(limit, 20),
+      safePage,
+      safeLimit,
       categoryId,
       search?.trim() || undefined,
       this.toOptionalBoolean(isActive),
@@ -211,19 +203,6 @@ export class AdminProductsController {
       request,
     });
     return product;
-  }
-
-  private toPositiveInteger(value: string | undefined, fallback: number): number {
-    if (!value) {
-      return fallback;
-    }
-
-    const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed < 1) {
-      return fallback;
-    }
-
-    return parsed;
   }
 
   private toOptionalBoolean(value: string | undefined): boolean | undefined {

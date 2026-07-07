@@ -12,6 +12,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { setupSwagger } from './config/swagger/swagger.config';
 import { HttpExceptionFilter } from './core/filters/http-exception.filter';
+import { SanitizePipe } from './core/pipes/sanitize.pipe';
 import { migrations } from './migrations';
 import { MigrationRunner } from './migrations/migration-runner';
 
@@ -108,6 +109,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       transform: true,
     }),
+    new SanitizePipe(), // XSS prevention - sanitizes all string inputs
   );
   setupSwagger(app);
 

@@ -17,13 +17,51 @@ function getSiteOrigin(): string {
   return "http://localhost:3000";
 }
 
+/**
+ * Validates CSRF token before making any backend request.
+ * This prevents CSRF attacks by ensuring the request originates from a legitimate session.
+ * 
+ * Security checks:
+ * 1. CSRF token must exist in cookies
+ * 2. In production, token must be at least 32 characters (minimum entropy requirement)
+ * 
+ * @throws Error if CSRF validation fails
+ */
+async function validateCsrfToken(): Promise<string> {
+  const cookieStore = await cookies();
+  const csrfToken = cookieStore.get(CSRF_TOKEN_COOKIE)?.value;
+  
+  if (!csrfToken) {
+    throw new Error("CSRF token missing - please refresh the page and try again");
+  }
+  
+  // In production, enforce stricter validation
+  if (process.env.NODE_ENV === "production") {
+    // Check minimum length for security
+    if (csrfToken.length < 32) {
+      console.error("[SECURITY] Invalid CSRF token length detected");
+      throw new Error("Invalid CSRF token - please refresh the page and try again");
+    }
+    
+    // Check for suspicious patterns (e.g., all same characters)
+    if (/^(.)\1+$/.test(csrfToken)) {
+      console.error("[SECURITY] Suspicious CSRF token pattern detected");
+      throw new Error("Invalid CSRF token - please refresh the page and try again");
+    }
+  }
+  
+  return csrfToken;
+}
+
 export async function backendFetch<T>(
   path: string,
   init: RequestInit & { idempotencyKey?: string } = {},
 ): Promise<T> {
+  // Validate CSRF token before making any request
+  const csrfToken = await validateCsrfToken();
+  
   const cookieStore = await cookies();
   const headerStore = await headers();
-  const csrfToken = cookieStore.get(CSRF_TOKEN_COOKIE)?.value;
   const cookieHeader = cookieStore
     .getAll()
     .map((cookie) => `${cookie.name}=${encodeURIComponent(cookie.value)}`)

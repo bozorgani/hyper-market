@@ -158,9 +158,30 @@ export class ProductsRepository {
     if (search) {
       filter.name = { $regex: escapeRegExp(search), $options: "i" };
     }
+    
+    // Projection: only fetch fields needed for product listing
+    const projection = {
+      name: 1,
+      description: 1,
+      price: 1,
+      discountPrice: 1,
+      stock: 1,
+      images: 1,
+      categoryId: 1,
+      isActive: 1,
+      brand: 1,
+      sku: 1,
+      unit: 1,
+      weight: 1,
+      tags: 1,
+      createdAt: 1,
+      updatedAt: 1,
+    };
+    
     const [items, total] = await Promise.all([
       this.productModel
         .find(filter)
+        .select(projection)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -188,9 +209,30 @@ export class ProductsRepository {
     if (search) {
       filter.name = { $regex: escapeRegExp(search), $options: "i" };
     }
+    
+    // Projection: only fetch fields needed for product listing
+    const projection = {
+      name: 1,
+      description: 1,
+      price: 1,
+      discountPrice: 1,
+      stock: 1,
+      images: 1,
+      categoryId: 1,
+      isActive: 1,
+      brand: 1,
+      sku: 1,
+      unit: 1,
+      weight: 1,
+      tags: 1,
+      createdAt: 1,
+      updatedAt: 1,
+    };
+    
     const [items, total] = await Promise.all([
       this.productModel
         .find(filter)
+        .select(projection)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)

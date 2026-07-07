@@ -125,8 +125,18 @@ export class SearchIndexer implements OnModuleInit {
 
     for (let i = 0; i < products.length; i += batchSize) {
       const batch = products.slice(i, i + batchSize);
+      
+      // Batch-load all categories for this batch to avoid N+1 queries
+      const categoryIds = [...new Set(batch.map(p => getEntityId(p.categoryId)))];
+      const categories = await Promise.all(
+        categoryIds.map(id => this.categoriesService.getCategoryById(id))
+      );
+      const categoryMap = new Map(
+        categoryIds.map((id, index) => [id, categories[index]])
+      );
+
       const documents = await Promise.all(
-        batch.map((product) => this.toProductDocument(product)),
+        batch.map((product) => this.toProductDocument(product, categoryMap)),
       );
 
       try {
@@ -167,9 +177,17 @@ export class SearchIndexer implements OnModuleInit {
     });
   }
 
-  private async toProductDocument(product: Product): Promise<ProductSearchDocument> {
+  private async toProductDocument(
+    product: Product,
+    categoryMap?: Map<string, any>
+  ): Promise<ProductSearchDocument> {
     const categoryId = getEntityId(product.categoryId);
-    const category = await this.categoriesService.getCategoryById(categoryId);
+    
+    // Use category map if available (batch mode), otherwise fetch individually
+    const category = categoryMap
+      ? categoryMap.get(categoryId)
+      : await this.categoriesService.getCategoryById(categoryId);
+    
     const productWithTimestamps = product as ProductWithTimestamps;
 
     const discountPercentage =
