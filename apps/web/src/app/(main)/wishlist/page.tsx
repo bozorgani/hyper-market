@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useWishlist, useRemoveFromWishlist, useClearWishlist } from "@/hooks/use-wishlist";
+import { useWishlist, useClearWishlist, type WishlistProduct } from "@/hooks/use-wishlist";
 import { WishlistButton } from "@/components/wishlist-button";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
@@ -11,18 +11,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Heart, Trash2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useToast } from "@/components/ui/toast";
 
 export default function WishlistPage() {
   const [page, setPage] = useState(1);
   const limit = 12;
-  const router = useRouter();
   const { showToast } = useToast();
 
-  const { data, isLoading, error } = useWishlist(page, limit);
-  const removeMutation = useRemoveFromWishlist();
+  const { data, isLoading } = useWishlist(page, limit);
   const clearMutation = useClearWishlist();
   const addToCartMutation = useAddToCart();
 
@@ -36,7 +33,7 @@ export default function WishlistPage() {
         type: "success",
         title: "به سبد خرید اضافه شد",
       });
-    } catch (error) {
+    } catch {
       // Error is handled by the mutation
     }
   };
@@ -91,17 +88,8 @@ export default function WishlistPage() {
           </div>
         )}
 
-        {/* Error State */}
-        {error && (
-          <Card className="p-8 text-center">
-            <p className="text-red-600">
-              خطا در بارگذاری علاقه‌مندی‌ها. لطفاً دوباره تلاش کنید.
-            </p>
-          </Card>
-        )}
-
         {/* Empty State */}
-        {!isLoading && !error && products.length === 0 && (
+        {!isLoading && products.length === 0 && (
           <EmptyState
             icon={Heart}
             title="علاقه‌مندی‌های شما خالی است"
@@ -118,10 +106,10 @@ export default function WishlistPage() {
         )}
 
         {/* Products Grid */}
-        {!isLoading && !error && products.length > 0 && (
+        {!isLoading && products.length > 0 && (
           <>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {products.map((product: any) => (
+              {products.map((product: WishlistProduct) => (
                 <div key={product._id} className="relative">
                   <ProductCard product={product} />
                   

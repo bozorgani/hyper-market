@@ -254,8 +254,8 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => {
                 const [newSortBy, newSortOrder] = e.target.value.split("-");
-                setSortBy(newSortBy as any);
-                setSortOrder(newSortOrder as any);
+                setSortBy(newSortBy as "createdAt" | "rating" | "helpfulCount");
+                setSortOrder(newSortOrder as "asc" | "desc");
               }}
               className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-emerald-400"
             >

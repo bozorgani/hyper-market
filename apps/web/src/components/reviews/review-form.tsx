@@ -106,7 +106,7 @@ export function ReviewForm({
         type: "success",
         title: "تصاویر با موفقیت آپلود شدند",
       });
-    } catch (error) {
+    } catch {
       showToast({
         type: "error",
         title: "آپلود تصاویر ناموفق بود",

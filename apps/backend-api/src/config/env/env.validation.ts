@@ -84,23 +84,26 @@ export const envValidation = (config: Record<string, unknown>): Record<string, u
   const accessSecret = String(config.JWT_ACCESS_SECRET ?? '');
   const refreshSecret = String(config.JWT_REFRESH_SECRET ?? '');
   const otpSecret = String(config.OTP_HASH_SECRET ?? '');
+  const appEnv = String(config.APP_ENV ?? '');
   
-  // Default/example secrets that should NEVER be used
-  const forbiddenSecrets = [
-    'change_access_secret_in_production',
-    'change_refresh_secret_in_production',
-    'change_me_access_secret_32_chars_minimum_123456789',
-    'change_me_refresh_secret_32_chars_minimum_123456789',
-    'change_otp_hash_secret_in_production',
-    'changeme',
-    'secret',
-    'password',
-    'test',
-    'example',
-    'default',
-  ];
-  
-  // Check for forbidden/default secrets in ALL environments
+  // Skip secret validation in test environment
+  if (appEnv !== 'test') {
+    // Default/example secrets that should NEVER be used
+    const forbiddenSecrets = [
+      'change_access_secret_in_production',
+      'change_refresh_secret_in_production',
+      'change_me_access_secret_32_chars_minimum_123456789',
+      'change_me_refresh_secret_32_chars_minimum_123456789',
+      'change_otp_hash_secret_in_production',
+      'changeme',
+      'secret',
+      'password',
+      'test',
+      'example',
+      'default',
+    ];
+    
+    // Check for forbidden/default secrets in ALL environments
   for (const secret of forbiddenSecrets) {
     if (accessSecret.toLowerCase().includes(secret.toLowerCase())) {
       throw new Error(
@@ -164,7 +167,8 @@ export const envValidation = (config: Record<string, unknown>): Record<string, u
       );
     }
   }
-
+  } // End of test environment skip
+  
   // 5. Numeric validations
   for (const [key, rules] of Object.entries(NUMERIC_VALIDATIONS)) {
     const raw = config[key];

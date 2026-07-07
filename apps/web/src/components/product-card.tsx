@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useAuthStore } from "@/store/auth-store";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import { getProductImageUrl } from "@/lib/image-utils";
 import type { Product } from "@/types/domain";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -55,7 +56,7 @@ export function ProductCard({ product }: { product: Product }) {
       >
         {product.images?.[0] ? (
           <Image
-            src={product.images[0]}
+            src={getProductImageUrl(product.images[0])}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

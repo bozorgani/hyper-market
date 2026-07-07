@@ -4,18 +4,22 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { useToast } from "@/components/ui/toast";
 
-interface WishlistProduct {
+export interface WishlistProduct {
   _id: string;
   name: string;
+  description: string;
   price: number;
-  discountPrice?: number;
+  discountPrice?: number | null;
+  discountPercentage?: number;
   images: string[];
   stock: number;
+  categoryId: string;
   isActive: boolean;
-  categoryId?: {
-    _id: string;
-    name: string;
-  };
+  brand?: string | null;
+  sku?: string | null;
+  unit?: string | null;
+  weight?: number | null;
+  tags?: string[];
 }
 
 interface WishlistResponse {
@@ -72,7 +76,7 @@ export function useAddToWishlist() {
       const response = await api.post("/wishlist/add", { productId });
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
       queryClient.invalidateQueries({ queryKey: ["wishlist-count"] });
       showToast({
@@ -80,11 +84,14 @@ export function useAddToWishlist() {
         title: "به علاقه‌مندی‌ها اضافه شد",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const message = error instanceof Error && 'response' in error 
+        ? (error as any).response?.data?.message 
+        : "لطفاً دوباره تلاش کنید";
       showToast({
         type: "error",
         title: "افزودن به علاقه‌مندی‌ها ناموفق بود",
-        description: error?.response?.data?.message || "لطفاً دوباره تلاش کنید",
+        description: message,
       });
     },
   });
@@ -109,11 +116,11 @@ export function useRemoveFromWishlist() {
         title: "از علاقه‌مندی‌ها حذف شد",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       showToast({
         type: "error",
         title: "حذف از علاقه‌مندی‌ها ناموفق بود",
-        description: error?.response?.data?.message || "لطفاً دوباره تلاش کنید",
+        description: error instanceof Error && 'response' in error ? (error as any).response?.data?.message : "لطفاً دوباره تلاش کنید",
       });
     },
   });
@@ -141,11 +148,11 @@ export function useToggleWishlist() {
           : "از علاقه‌مندی‌ها حذف شد",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       showToast({
         type: "error",
         title: "عملیات ناموفق بود",
-        description: error?.response?.data?.message || "لطفاً دوباره تلاش کنید",
+        description: error instanceof Error && 'response' in error ? (error as any).response?.data?.message : "لطفاً دوباره تلاش کنید",
       });
     },
   });
@@ -168,11 +175,11 @@ export function useClearWishlist() {
         title: "علاقه‌مندی‌ها پاک شد",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       showToast({
         type: "error",
         title: "پاک کردن علاقه‌مندی‌ها ناموفق بود",
-        description: error?.response?.data?.message || "لطفاً دوباره تلاش کنید",
+        description: error instanceof Error && 'response' in error ? (error as any).response?.data?.message : "لطفاً دوباره تلاش کنید",
       });
     },
   });

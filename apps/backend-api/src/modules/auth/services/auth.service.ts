@@ -499,7 +499,14 @@ export class AuthService {
    */
   async refreshToken(rawRefreshToken: string, context: AuthContext = {}): Promise<AuthTokens> {
     // Signature/structure check only — cheap, no shared state.
-    const payload = this.tokenService.verifyRefreshToken(rawRefreshToken);
+    let payload: JwtPayload;
+    try {
+      payload = this.tokenService.verifyRefreshToken(rawRefreshToken);
+    } catch (error) {
+      // Convert JWT verification errors to UnauthorizedException
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+    
     const refreshTokenHash = this.tokenHashService.hashToken(rawRefreshToken);
 
     // Serialize rotation for the same token to prevent a race where two
