@@ -51,7 +51,12 @@ export abstract class BaseService<T extends Document> {
    * @returns The created document
    */
   async create(data: Partial<T>, session?: ClientSession): Promise<T> {
-    const [doc] = await this.model.create([data], { session });
+    const doc = new this.model(data);
+    if (session) {
+      await doc.save({ session });
+    } else {
+      await doc.save();
+    }
     return doc;
   }
 

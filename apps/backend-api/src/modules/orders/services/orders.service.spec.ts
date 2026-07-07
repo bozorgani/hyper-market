@@ -21,6 +21,7 @@ describe('OrdersService — cancellation idempotency (#4)', () => {
     transitionStatus: jest.Mock;
     create: jest.Mock;
     findByUserId: jest.Mock;
+    findRecentPendingByUserId: jest.Mock;
   };
   let productsService: {
     getProductById: jest.Mock;
@@ -34,6 +35,7 @@ describe('OrdersService — cancellation idempotency (#4)', () => {
   };
   let couponsService: {
     validateCoupon: jest.Mock;
+    recordUsage: jest.Mock;
   };
   let shippingService: {
     getQuote: jest.Mock;
@@ -65,6 +67,7 @@ describe('OrdersService — cancellation idempotency (#4)', () => {
       transitionStatus: jest.fn(),
       create: jest.fn(),
       findByUserId: jest.fn(),
+      findRecentPendingByUserId: jest.fn().mockResolvedValue(null),
     };
     productsService = {
       getProductById: jest.fn(),
@@ -78,6 +81,7 @@ describe('OrdersService — cancellation idempotency (#4)', () => {
     };
     couponsService = {
       validateCoupon: jest.fn(),
+      recordUsage: jest.fn(),
     };
     shippingService = {
       getQuote: jest.fn(),
@@ -215,6 +219,8 @@ describe('OrdersService — createOrder', () => {
       create: jest.fn(),
       findByUserId: jest.fn(),
       findById: jest.fn(),
+      findRecentPendingByUserId: jest.fn().mockResolvedValue(null),
+      countActiveByDeliveryWindow: jest.fn().mockResolvedValue(0),
     };
     productsService = {
       getProductById: jest.fn(),
@@ -227,6 +233,7 @@ describe('OrdersService — createOrder', () => {
     };
     couponsService = {
       validateCoupon: jest.fn(),
+      recordUsage: jest.fn(),
     };
     shippingService = {
       getQuote: jest.fn(),
@@ -259,21 +266,21 @@ describe('OrdersService — createOrder', () => {
   it('should create order successfully with valid cart', async () => {
     const mockCart = {
       items: [
-        { productId: { _id: 'product-1' }, quantity: 2 },
-        { productId: { _id: 'product-2' }, quantity: 1 },
+        { productId: { _id: '507f1f77bcf86cd799439011' }, quantity: 2 },
+        { productId: { _id: '507f1f77bcf86cd799439012' }, quantity: 1 },
       ],
     };
 
     const mockProducts = [
       {
-        _id: 'product-1',
+        _id: '507f1f77bcf86cd799439011',
         name: 'Product 1',
         price: 50000,
         stock: 10,
         isActive: true,
       },
       {
-        _id: 'product-2',
+        _id: '507f1f77bcf86cd799439012',
         name: 'Product 2',
         price: 30000,
         stock: 5,
@@ -302,9 +309,10 @@ describe('OrdersService — createOrder', () => {
       capacity: 50,
     });
     ordersRepository.create.mockResolvedValue(mockOrder);
+    ordersRepository.countActiveByDeliveryWindow.mockResolvedValue(0);
     cartService.clearCart.mockResolvedValue({});
 
-    const result = await service.createOrder('user-1', {
+    const result = await service.createOrder('507f1f77bcf86cd799439013', {
       deliveryAddress: {
         recipientName: 'Test User',
         phoneNumber: '09123456789',
@@ -322,7 +330,7 @@ describe('OrdersService — createOrder', () => {
     expect(result).toBeDefined();
     expect(ordersRepository.create).toHaveBeenCalled();
     expect(productsService.reduceStock).toHaveBeenCalledTimes(2);
-    expect(cartService.clearCart).toHaveBeenCalledWith('user-1', undefined);
+    expect(cartService.clearCart).toHaveBeenCalledWith('507f1f77bcf86cd799439013', undefined);
   });
 
   it('should throw BadRequestException when cart is empty', async () => {
@@ -413,11 +421,11 @@ describe('OrdersService — createOrder', () => {
 
   it('should apply coupon discount when valid coupon is provided', async () => {
     const mockCart = {
-      items: [{ productId: { _id: 'product-1' }, quantity: 2 }],
+      items: [{ productId: { _id: '507f1f77bcf86cd799439011' }, quantity: 2 }],
     };
 
     const mockProduct = {
-      _id: 'product-1',
+      _id: '507f1f77bcf86cd799439011',
       name: 'Product 1',
       price: 50000,
       stock: 10,
@@ -446,10 +454,17 @@ describe('OrdersService — createOrder', () => {
       _id: ORDER_ID,
       status: OrderStatus.PENDING,
       totalPrice: 120000,
+      items: [{ productId: '507f1f77bcf86cd799439011', quantity: 2 }],
+      couponCode: 'SAVE10',
+      discountAmount: 10000,
+      subtotalPrice: 100000,
+      deliveryFee: 30000,
+      shippingMethod: 'standard',
     });
+    ordersRepository.countActiveByDeliveryWindow.mockResolvedValue(0);
     cartService.clearCart.mockResolvedValue({});
 
-    await service.createOrder('user-1', {
+    await service.createOrder('507f1f77bcf86cd799439013', {
       deliveryAddress: {
         recipientName: 'Test User',
         phoneNumber: '09123456789',
@@ -557,7 +572,7 @@ describe('OrdersService — getMyOrders and getOrderById', () => {
 
     ordersRepository.findById.mockResolvedValue(mockOrder);
 
-    const result = await service.getOrderById(ORDER_ID, 'user-1', 'ADMIN');
+    const result = await service.getOrderById(ORDER_ID, 'user-1', 'admin');
 
     expect(result).toEqual(mockOrder);
   });

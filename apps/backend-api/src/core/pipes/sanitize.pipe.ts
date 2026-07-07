@@ -4,7 +4,8 @@ import {
   ArgumentMetadata,
   Logger,
 } from '@nestjs/common';
-import { createDOMPurify, JSDOM } from 'jsdom';
+import createDOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 
 /**
  * SanitizePipe - Global input sanitization pipe for XSS prevention

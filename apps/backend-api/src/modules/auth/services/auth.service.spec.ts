@@ -15,6 +15,7 @@ import { OtpRepository } from '../repositories/otp.repository';
 import { EventBusService } from '../../../core/events/event-bus.service';
 import { UserRole } from '../../users/enums/user-role.enum';
 import { AccountStatus } from '../../users/enums/account-status.enum';
+import { OtpType } from '../enums/otp-type.enum';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 
 describe('AuthService', () => {
@@ -32,6 +33,10 @@ describe('AuthService', () => {
     getUserById: jest.fn(),
     resetLoginSecurity: jest.fn(),
     incrementFailedLoginAttempts: jest.fn(),
+    lockAccount: jest.fn(),
+    updatePasswordAndIncrementTokenVersion: jest.fn(),
+    verifyEmail: jest.fn(),
+    verifyPhone: jest.fn(),
   };
 
   const mockOtpService = {
@@ -49,6 +54,7 @@ describe('AuthService', () => {
     generateAccessToken: jest.fn(),
     generateRefreshToken: jest.fn(),
     verifyRefreshToken: jest.fn(),
+    decodeToken: jest.fn(),
   };
 
   const mockTokenHashService = {
@@ -57,8 +63,11 @@ describe('AuthService', () => {
 
   const mockSessionService = {
     createSession: jest.fn(),
+    create: jest.fn(),
     findActiveSession: jest.fn(),
+    findByUserAndDevice: jest.fn(),
     revokeSession: jest.fn(),
+    revokeAllUserSessions: jest.fn(),
     updateLastActive: jest.fn(),
   };
 
@@ -68,6 +77,7 @@ describe('AuthService', () => {
     findByTokenHash: jest.fn(),
     create: jest.fn(),
     revokeToken: jest.fn(),
+    revokeAllUserTokens: jest.fn(),
   };
 
   const mockAuditLogRepository = {
@@ -219,10 +229,11 @@ describe('AuthService', () => {
       mockUsersService.getUserByEmailWithPassword.mockResolvedValue(mockUser);
       mockPasswordService.comparePassword.mockResolvedValue(true);
       mockUsersService.resetLoginSecurity.mockResolvedValue(undefined);
-      mockSessionService.createSession.mockResolvedValue({ _id: 'session-123' });
+      mockSessionService.create.mockResolvedValue({ _id: '507f1f77bcf86cd799439012' });
       mockTokenService.generateAccessToken.mockReturnValue('access-token-123');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh-token-123');
-      mockRefreshTokenService.createRefreshToken.mockResolvedValue({ _id: 'rt-123' });
+      mockTokenService.verifyRefreshToken.mockReturnValue({ jti: 'jti-123' });
+      mockRefreshTokenService.create.mockResolvedValue({ _id: 'rt-123' });
 
       const result = await service.login({
         email: 'test@example.com',
@@ -232,8 +243,8 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('accessToken', 'access-token-123');
       expect(result).toHaveProperty('refreshToken', 'refresh-token-123');
-      expect(mockSessionService.createSession).toHaveBeenCalled();
-      expect(mockRefreshTokenService.createRefreshToken).toHaveBeenCalled();
+      expect(mockSessionService.create).toHaveBeenCalled();
+      expect(mockRefreshTokenService.create).toHaveBeenCalled();
     });
 
     it('should lock account after max failed attempts', async () => {
@@ -290,7 +301,7 @@ describe('AuthService', () => {
 
       const result = await service.resetPassword({
         email: 'test@example.com',
-        otp: '123456',
+        code: '123456',
         newPassword: 'NewStrongPass123!',
       });
 
@@ -305,7 +316,7 @@ describe('AuthService', () => {
       await expect(
         service.resetPassword({
           email: 'test@example.com',
-          otp: '000000',
+          code: '000000',
           newPassword: 'NewStrongPass123!',
         }),
       ).rejects.toThrow();
@@ -330,6 +341,9 @@ describe('AuthService', () => {
         tokenFamilyId: 'family-123',
       });
       mockRefreshTokenService.revokeToken.mockResolvedValue(undefined);
+      mockSessionService.findByUserAndDevice.mockResolvedValue({
+        _id: 'session-123',
+      });
       mockSessionService.revokeSession.mockResolvedValue(undefined);
 
       const result = await service.logout('valid-refresh-token', {
@@ -361,14 +375,14 @@ describe('AuthService', () => {
 
       const result = await service.verifyOtp({
         target: 'test@example.com',
-        type: 'EMAIL_VERIFY',
+        type: OtpType.EMAIL_VERIFY,
         code: '123456',
       });
 
       expect(result).toHaveProperty('message', 'otp verified');
       expect(mockOtpService.verifyOtpCode).toHaveBeenCalledWith(
         'test@example.com',
-        'EMAIL_VERIFY',
+        OtpType.EMAIL_VERIFY,
         '123456',
         {},
       );
@@ -380,7 +394,7 @@ describe('AuthService', () => {
       await expect(
         service.verifyOtp({
           target: 'test@example.com',
-          type: 'EMAIL_VERIFY',
+          type: OtpType.EMAIL_VERIFY,
           code: '000000',
         }),
       ).rejects.toThrow();

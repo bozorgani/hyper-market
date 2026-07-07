@@ -45,7 +45,7 @@ export function parsePaginationParams(
   limit?: string | number | null,
 ): PaginationParams {
   // Parse page
-  let parsedPage = PAGINATION_LIMITS.DEFAULT_PAGE;
+  let parsedPage: number = PAGINATION_LIMITS.DEFAULT_PAGE;
   if (page !== null && page !== undefined && page !== '') {
     const pageNum = typeof page === 'string' ? parseInt(page, 10) : page;
     if (Number.isInteger(pageNum) && pageNum >= PAGINATION_LIMITS.MIN_PAGE) {
@@ -54,7 +54,7 @@ export function parsePaginationParams(
   }
 
   // Parse limit with max boundary
-  let parsedLimit = PAGINATION_LIMITS.DEFAULT_LIMIT;
+  let parsedLimit: number = PAGINATION_LIMITS.DEFAULT_LIMIT;
   if (limit !== null && limit !== undefined && limit !== '') {
     const limitNum = typeof limit === 'string' ? parseInt(limit, 10) : limit;
     if (Number.isInteger(limitNum)) {
@@ -148,5 +148,35 @@ export function createPaginationMetadata(
     totalPages,
     hasNext: page < totalPages,
     hasPrevious: page > 1,
+  };
+}
+
+/**
+ * Creates a paginated result object for API responses.
+ * 
+ * @param items - Array of items for the current page
+ * @param total - Total number of items across all pages
+ * @param page - Current page number
+ * @param limit - Items per page
+ * @returns Paginated result object
+ */
+export function paginatedResult<T>(
+  items: T[],
+  total: number,
+  page: number,
+  limit: number,
+) {
+  const totalPages = calculateTotalPages(total, limit);
+  
+  return {
+    items,
+    total,
+    page,
+    limit,
+    meta: {
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
   };
 }
