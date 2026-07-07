@@ -479,7 +479,7 @@ describe('OrdersService — createOrder', () => {
       couponCode: 'SAVE10',
     });
 
-    expect(couponsService.validateCoupon).toHaveBeenCalledWith('SAVE10', 100000, 'user-1');
+    expect(couponsService.validateCoupon).toHaveBeenCalledWith('SAVE10', 100000, '507f1f77bcf86cd799439013');
     expect(ordersRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         discountAmount: 10000,

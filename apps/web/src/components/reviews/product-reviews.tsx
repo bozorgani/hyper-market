@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api } from "@/services/api";
 import { ReviewCard } from "./review-card";
 import { ReviewForm } from "./review-form";
 import { RatingDisplay } from "./star-rating";

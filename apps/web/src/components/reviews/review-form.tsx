@@ -5,7 +5,7 @@ import { StarRating } from "./star-rating";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
-import { api } from "@/lib/api";
+import { api } from "@/services/api";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
 

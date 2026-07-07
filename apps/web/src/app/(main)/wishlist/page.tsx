@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ProtectedRoute } from "@/components/protected-route";
+import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Heart, Trash2, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -106,7 +106,7 @@ export default function WishlistPage() {
             icon={Heart}
             title="علاقه‌مندی‌های شما خالی است"
             description="محصولات مورد علاقه خود را با کلیک روی آیکون قلب به این لیست اضافه کنید."
-            action={
+            actions={
               <Link href="/products">
                 <Button>
                   <ShoppingBag className="ml-2 h-4 w-4" />
