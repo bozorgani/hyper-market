@@ -4,6 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { useToast } from "@/components/ui/toast";
 
+interface AxiosErrorResponse {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 export interface WishlistProduct {
   _id: string;
   name: string;
@@ -85,9 +93,8 @@ export function useAddToWishlist() {
       });
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error && 'response' in error 
-        ? (error as any).response?.data?.message 
-        : "لطفاً دوباره تلاش کنید";
+      const axiosError = error as AxiosErrorResponse;
+      const message = axiosError.response?.data?.message || "لطفاً دوباره تلاش کنید";
       showToast({
         type: "error",
         title: "افزودن به علاقه‌مندی‌ها ناموفق بود",
@@ -117,10 +124,11 @@ export function useRemoveFromWishlist() {
       });
     },
     onError: (error: unknown) => {
+      const axiosError = error as AxiosErrorResponse;
       showToast({
         type: "error",
         title: "حذف از علاقه‌مندی‌ها ناموفق بود",
-        description: error instanceof Error && 'response' in error ? (error as any).response?.data?.message : "لطفاً دوباره تلاش کنید",
+        description: axiosError.response?.data?.message || "لطفاً دوباره تلاش کنید",
       });
     },
   });
@@ -149,10 +157,11 @@ export function useToggleWishlist() {
       });
     },
     onError: (error: unknown) => {
+      const axiosError = error as AxiosErrorResponse;
       showToast({
         type: "error",
         title: "عملیات ناموفق بود",
-        description: error instanceof Error && 'response' in error ? (error as any).response?.data?.message : "لطفاً دوباره تلاش کنید",
+        description: axiosError.response?.data?.message || "لطفاً دوباره تلاش کنید",
       });
     },
   });
@@ -176,10 +185,11 @@ export function useClearWishlist() {
       });
     },
     onError: (error: unknown) => {
+      const axiosError = error as AxiosErrorResponse;
       showToast({
         type: "error",
         title: "پاک کردن علاقه‌مندی‌ها ناموفق بود",
-        description: error instanceof Error && 'response' in error ? (error as any).response?.data?.message : "لطفاً دوباره تلاش کنید",
+        description: axiosError.response?.data?.message || "لطفاً دوباره تلاش کنید",
       });
     },
   });
