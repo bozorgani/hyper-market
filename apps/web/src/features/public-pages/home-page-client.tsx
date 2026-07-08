@@ -10,12 +10,25 @@ import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts, useCategories } from "@/hooks/use-products";
 import { useAuthStore } from "@/store/auth-store";
+import type { Category, ProductListResponse } from "@/types/domain";
 
 const features = [
   { icon: <Truck className="h-5 w-5" />, label: "ارسال سریع", desc: "در کمتر از ۲ ساعت", color: "text-emerald-600 bg-emerald-100" },
   { icon: <ShieldCheck className="h-5 w-5" />, label: "تضمین اصالت", desc: "۱۰۰٪ اورجینال", color: "text-blue-600 bg-blue-100" },
   { icon: <RotateCcw className="h-5 w-5" />, label: "بازگشت آسان", desc: "۷ روز ضمانت", color: "text-violet-600 bg-violet-100" },
   { icon: <Headphones className="h-5 w-5" />, label: "پشتیبانی ۲۴/۷", desc: "همیشه در دسترس", color: "text-amber-600 bg-amber-100" },
+];
+
+
+const fallbackCategories = [
+  { _id: "fallback-dairy", name: "لبنیات", icon: "🥛", href: "/products?search=لبنیات" },
+  { _id: "fallback-protein", name: "پروتئین", icon: "🥩", href: "/products?search=گوشت" },
+  { _id: "fallback-drinks", name: "نوشیدنی", icon: "🥤", href: "/products?search=نوشیدنی" },
+  { _id: "fallback-snacks", name: "تنقلات", icon: "🍿", href: "/products?search=تنقلات" },
+  { _id: "fallback-fruits", name: "میوه", icon: "🍎", href: "/products?search=میوه" },
+  { _id: "fallback-bakery", name: "نان", icon: "🥖", href: "/products?search=نان" },
+  { _id: "fallback-cleaning", name: "شوینده", icon: "🧼", href: "/products?search=شوینده" },
+  { _id: "fallback-canned", name: "کنسرو", icon: "🥫", href: "/products?search=کنسرو" },
 ];
 
 const promoBanners = [
@@ -33,13 +46,23 @@ const promoBanners = [
   },
 ];
 
-export function HomePageClient() {
-  const products = useProducts(1);
-  const categories = useCategories();
+export function HomePageClient({
+  initialProducts,
+  initialCategories,
+}: {
+  initialProducts?: ProductListResponse;
+  initialCategories?: Category[];
+}) {
+  const products = useProducts(1, undefined, undefined, initialProducts);
+  const categories = useCategories(initialCategories);
   const user = useAuthStore((s) => s.user);
 
   const items = products.data?.items ?? [];
   const categoryList = categories.data ?? [];
+  const shouldShowCategorySkeleton = categories.isLoading && categoryList.length === 0;
+  const visibleCategories = categoryList.length > 0
+    ? categoryList.slice(0, 12).map((cat) => ({ ...cat, href: `/products?category=${cat._id}` }))
+    : fallbackCategories;
 
   // همیشه داده داشته باشیم
   const bestSellers = items.length > 0 ? items.slice(0, 8) : [];
@@ -125,11 +148,18 @@ export function HomePageClient() {
         </div>
 
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
-          {categoryList.length > 0 ? (
-            categoryList.slice(0, 12).map((cat: { _id: string; name: string; icon?: string | null }) => (
+          {shouldShowCategorySkeleton ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-3xl border p-4">
+                <Skeleton className="mx-auto h-14 w-14 rounded-2xl" />
+                <Skeleton className="mx-auto mt-3 h-4 w-16" />
+              </div>
+            ))
+          ) : (
+            visibleCategories.map((cat) => (
               <Link
                 key={cat._id}
-                href={`/products?category=${cat._id}`}
+                href={cat.href}
                 className="group flex flex-col items-center rounded-3xl border border-slate-200 bg-white p-4 text-center transition hover:border-emerald-200 hover:shadow-md"
               >
                 <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-3xl transition group-hover:scale-110">
@@ -140,15 +170,11 @@ export function HomePageClient() {
                 </span>
               </Link>
             ))
-          ) : (
-            Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="rounded-3xl border p-4">
-                <Skeleton className="mx-auto h-14 w-14 rounded-2xl" />
-                <Skeleton className="mx-auto mt-3 h-4 w-16" />
-              </div>
-            ))
           )}
         </div>
+        {categories.isError ? (
+          <p className="mt-3 text-xs text-amber-600">دسته‌بندی‌ها موقتاً از داده‌های پیشنهادی نمایش داده شده‌اند.</p>
+        ) : null}
       </section>
 
       {/* ==================== PROMO BANNERS ==================== */}

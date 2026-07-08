@@ -17,7 +17,7 @@ const CATEGORY_ITEM_CACHE_TTL = 300;
 
 @Injectable()
 export class CategoriesService {
-  private readonly LIST_CACHE_KEY = 'categories:list';
+  private readonly LIST_CACHE_KEY = 'categories:list:public:v2';
 
   constructor(
     private readonly categoriesRepository: CategoriesRepository,
@@ -122,7 +122,9 @@ export class CategoriesService {
 
     const categories = await this.categoriesRepository.findAllPublic();
 
-    void this.redisService.set(this.LIST_CACHE_KEY, categories, CATEGORY_LIST_CACHE_TTL).catch(() => undefined);
+    if (categories.length > 0) {
+      void this.redisService.set(this.LIST_CACHE_KEY, categories, CATEGORY_LIST_CACHE_TTL).catch(() => undefined);
+    }
 
     return categories;
   }
