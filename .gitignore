@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables / secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+secrets/
+*.age
+*.sops.*
+*.pem
+
+# Build outputs
+.next/
+**/.next/
+dist/
+**/dist/
+build/
+out/
+coverage/
+**/coverage/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime / cache
+.tmp/
+temp/
+.cache/
+**/.cache/
+.turbo/
+**/.turbo/
+
+# Test artifacts
+apps/web/test-results/
+playwright-report/
+**/playwright-report/
+
+# IDE / OS
+.DS_Store
+**/.DS_Store
+.vscode/
+.idea/
+*.swp
