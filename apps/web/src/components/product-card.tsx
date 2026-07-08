@@ -47,7 +47,7 @@ export function ProductCard({ product }: { product: Product }) {
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.985 }}
       transition={{ type: "spring", stiffness: 260, damping: 25 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:shadow-lg focus-within:ring-2 focus-within:ring-emerald-200 focus-within:ring-offset-2"
+      className="group relative flex h-full min-h-[310px] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:shadow-lg focus-within:ring-2 focus-within:ring-emerald-200 focus-within:ring-offset-2 sm:min-h-[340px]"
     >
       <Link 
         href={`/products/${product._id}`} 
@@ -89,17 +89,15 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
 
       <div className="flex flex-1 flex-col p-3.5 sm:p-4">
-        <Link href={`/products/${product._id}`} className="line-clamp-2 text-sm font-bold leading-tight text-slate-900 transition-colors group-hover:text-emerald-700">
+        <Link href={`/products/${product._id}`} className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5 text-slate-900 transition-colors group-hover:text-emerald-700">
           {product.name}
         </Link>
 
-        {(product.brand || product.unit) && (
-          <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400">
-            {product.brand && <span className="font-medium">{product.brand}</span>}
-            {product.brand && product.unit && <span className="text-slate-300">·</span>}
-            {product.unit && <span>{product.unit}</span>}
-          </div>
-        )}
+        <div className="mt-1 flex min-h-4 items-center gap-1 text-[10px] text-slate-400">
+          {product.brand && <span className="truncate font-medium">{product.brand}</span>}
+          {product.brand && product.unit && <span className="shrink-0 text-slate-300">·</span>}
+          {product.unit && <span className="shrink-0">{product.unit}</span>}
+        </div>
 
         <div className="mt-auto pt-3 flex items-baseline justify-between gap-2">
           <div>

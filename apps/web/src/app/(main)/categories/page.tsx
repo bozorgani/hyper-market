@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getCategoryProductsHref } from "@/lib/category-utils";
 import { fetchCategoriesForSSR } from "@/lib/server-api";
 
 export const metadata: Metadata = {
@@ -35,7 +36,7 @@ export default async function CategoriesPage() {
       ) : (
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
-            <Link key={category._id} href={`/products?category=${category._id}`}>
+            <Link key={category._id} href={getCategoryProductsHref(category)}>
               <Card className="flex h-full items-center gap-4 p-5 transition hover:border-emerald-200 hover:shadow-md">
                 <span className="text-3xl">{category.icon || "📦"}</span>
                 <div>
