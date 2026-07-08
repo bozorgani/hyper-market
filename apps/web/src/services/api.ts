@@ -171,7 +171,13 @@ api.interceptors.response.use(
   async (error: AxiosError<{ message?: string | string[]; error?: string }>) => {
     const originalRequest = error.config as RetriableRequestConfig | undefined;
 
-    if (typeof window !== "undefined" && error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    if (
+      typeof window !== "undefined" &&
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !originalRequest._skipAuthRedirect
+    ) {
       originalRequest._retry = true;
 
       if (isRefreshing) {

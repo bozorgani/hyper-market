@@ -11,18 +11,47 @@ import {
 import { AuthShell } from "@/components/auth/auth-shell";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
-import { firstValidationError, normalizePhoneNumber, normalizeOtpCode, verifyOtpSchema } from "@/lib/validation/auth";
+import { emailSchema, firstValidationError, normalizePhoneNumber, normalizeOtpCode, phoneNumberSchema, verifyOtpSchema } from "@/lib/validation/auth";
 import { api } from "@/services/api";
 import { cn } from "@/lib/utils";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
 
+type OtpVerificationType = "phone_verify" | "email_verify" | "password_reset";
+
+function detectTargetVerificationType(target: string): OtpVerificationType | null {
+  const trimmedTarget = target.trim();
+
+  if (!trimmedTarget) {
+    return null;
+  }
+
+  if (emailSchema.safeParse(trimmedTarget).success) {
+    return "email_verify";
+  }
+
+  if (phoneNumberSchema.safeParse(trimmedTarget).success) {
+    return "phone_verify";
+  }
+
+  return null;
+}
+
+function resolveInitialVerificationType(target: string, requestedType: string | null): OtpVerificationType {
+  if (requestedType === "password_reset") {
+    return "password_reset";
+  }
+
+  return detectTargetVerificationType(target) ?? "phone_verify";
+}
+
 function VerifyOtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTarget = useMemo(() => searchParams.get("target") ?? "", [searchParams]);
-  const initialType = useMemo(() => searchParams.get("type") ?? "phone_verify", [searchParams]);
+  const requestedType = useMemo(() => searchParams.get("type"), [searchParams]);
+  const initialType = useMemo(() => resolveInitialVerificationType(initialTarget, requestedType), [initialTarget, requestedType]);
   
   const { showToast } = useToast();
   
@@ -171,10 +200,13 @@ function VerifyOtpContent() {
     }
   }
 
+  const detectedTargetType = detectTargetVerificationType(target);
   const isPhone = type === "phone_verify" || (!target.includes("@") && type === "password_reset");
   const isComplete = code.length === OTP_LENGTH;
   const displayTarget = initialTarget || target;
   const formattedTarget = isPhone && displayTarget ? displayTarget.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3") : displayTarget;
+  const deliveryLabel = isPhone ? "شماره موبایل" : "ایمیل";
+  const otpHint = isPhone ? "کد ارسال‌شده از طریق پیامک را وارد کنید" : "کد ارسال‌شده به ایمیل را وارد کنید";
 
   return (
     <AuthShell
@@ -190,7 +222,13 @@ function VerifyOtpContent() {
           </div>
           <h1 className="text-2xl font-black text-slate-900">تأیید هویت</h1>
           <p className="mt-1.5 text-sm text-slate-500">
-            کد ۶ رقمی به <span className="font-semibold text-slate-700">{displayTarget ? formattedTarget : "شماره یا ایمیل شما"}</span> ارسال شد
+            کد ۶ رقمی به {displayTarget ? deliveryLabel : "شماره یا ایمیل شما"}{" "}
+            {displayTarget ? (
+              <bdi dir="ltr" className="inline-block font-semibold text-slate-700">
+                {formattedTarget}
+              </bdi>
+            ) : null}{" "}
+            ارسال شد
           </p>
         </div>
 
@@ -207,10 +245,18 @@ function VerifyOtpContent() {
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => { setType(opt.value); setCode(""); setError(""); setTimeout(() => inputRefs.current[0]?.focus(), 50); }}
+                disabled={Boolean(detectedTargetType) && opt.value !== detectedTargetType && opt.value !== "password_reset"}
+                onClick={() => {
+                  if (detectedTargetType && opt.value !== detectedTargetType && opt.value !== "password_reset") return;
+                  setType(opt.value as OtpVerificationType);
+                  setCode("");
+                  setError("");
+                  setTimeout(() => inputRefs.current[0]?.focus(), 50);
+                }}
                 className={cn(
                   "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 font-medium transition-all",
-                  active ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  active ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500 hover:text-slate-700",
+                  Boolean(detectedTargetType) && opt.value !== detectedTargetType && opt.value !== "password_reset" ? "cursor-not-allowed opacity-40 hover:text-slate-500" : ""
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -263,7 +309,7 @@ function VerifyOtpContent() {
               );
             })}
           </div>
-          <p className="mt-3 text-center text-[13px] text-slate-400">کد را از پیامک یا ایمیل وارد کنید</p>
+          <p className="mt-3 text-center text-[13px] text-slate-400">{otpHint}</p>
         </div>
 
         {/* Feedback */}

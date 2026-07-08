@@ -30,6 +30,7 @@ const imageSources = [
   siteOrigin,
   "https://*.tile.openstreetmap.org",
   "https://tile.openstreetmap.org",
+  "https://placehold.co",
 ].filter(Boolean);
 
 const cspDirectives = [
@@ -116,6 +117,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.hypermarket.ir",
         pathname: "/api/v1/products/images/**",
+      },
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+        pathname: "/**",
       },
       // Add production domain when deployed
       // {
