@@ -1,194 +1,266 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowLeft, ChevronLeft, Truck, ShieldCheck, RotateCcw, Headphones, Zap, Percent } from "lucide-react";
 import Link from "next/link";
+import { 
+  Truck, ShieldCheck, RotateCcw, Headphones, Zap, ArrowLeft, 
+  Clock, Percent, Star 
+} from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts, useCategories } from "@/hooks/use-products";
 import { useAuthStore } from "@/store/auth-store";
 
-const categoryIcons: Record<string, string> = {
-  default: "📦",
-};
-
 const features = [
-  { icon: <Truck className="h-5 w-5" />, label: "ارسال سریع", color: "text-emerald-600 bg-emerald-50" },
-  { icon: <ShieldCheck className="h-5 w-5" />, label: "تضمین اصالت", color: "text-blue-600 bg-blue-50" },
-  { icon: <RotateCcw className="h-5 w-5" />, label: "بازگشت آسان", color: "text-violet-600 bg-violet-50" },
-  { icon: <Headphones className="h-5 w-5" />, label: "پشتیبانی ۲۴/۷", color: "text-amber-600 bg-amber-50" },
+  { icon: <Truck className="h-5 w-5" />, label: "ارسال سریع", desc: "در کمتر از ۲ ساعت", color: "text-emerald-600 bg-emerald-100" },
+  { icon: <ShieldCheck className="h-5 w-5" />, label: "تضمین اصالت", desc: "۱۰۰٪ اورجینال", color: "text-blue-600 bg-blue-100" },
+  { icon: <RotateCcw className="h-5 w-5" />, label: "بازگشت آسان", desc: "۷ روز ضمانت", color: "text-violet-600 bg-violet-100" },
+  { icon: <Headphones className="h-5 w-5" />, label: "پشتیبانی ۲۴/۷", desc: "همیشه در دسترس", color: "text-amber-600 bg-amber-100" },
+];
+
+const promoBanners = [
+  {
+    title: "تخفیف تا ۵۰٪",
+    subtitle: "محصولات لبنی و پروتئینی",
+    color: "from-emerald-600 to-emerald-700",
+    href: "/products?discount=true",
+  },
+  {
+    title: "ارسال رایگان",
+    subtitle: "سفارش بالای ۳۰۰ هزار تومان",
+    color: "from-blue-600 to-blue-700",
+    href: "/products",
+  },
 ];
 
 export function HomePageClient() {
   const products = useProducts(1);
   const categories = useCategories();
   const user = useAuthStore((s) => s.user);
+
   const items = products.data?.items ?? [];
   const categoryList = categories.data ?? [];
 
-  return (
-    <main className="pb-20 lg:pb-8">
-      {/* Hero Banner */}
-      <section className="relative overflow-hidden bg-gradient-to-bl from-emerald-600 via-emerald-500 to-teal-500">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '28px 28px' }} />
-        <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute right-10 top-10 h-40 w-40 rounded-full bg-teal-400/20 blur-3xl" />
+  // همیشه داده داشته باشیم
+  const bestSellers = items.length > 0 ? items.slice(0, 8) : [];
+  const newArrivals = items.length > 0 ? [...items].reverse().slice(0, 6) : [];
+  const discounted = items.length > 0 
+    ? items.filter((p) => p.discountPrice != null).slice(0, 6) 
+    : items.slice(0, 4); // fallback
 
-        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:py-12">
-          <div className="max-w-lg">
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-bold text-white/90 backdrop-blur">
-                <Zap className="h-3.5 w-3.5" />
-                پیشنهاد ویژه امروز
+  return (
+    <main className="pb-20 lg:pb-10 bg-slate-50">
+      {/* ==================== HERO ==================== */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-blue-700 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] bg-[length:4px_4px]" />
+        
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:py-16 lg:py-20">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-sm font-medium backdrop-blur">
+              <Zap className="h-4 w-4" />
+              پیشنهاد ویژه امروز
+            </div>
+
+            <h1 className="mt-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+              خرید سریع و<br />ارزان از اسنپ‌مارکت
+            </h1>
+            
+            <p className="mt-4 max-w-md text-lg text-white/90">
+              هزاران محصول تازه با ارسال در کمتر از ۲ ساعت
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link href="/products">
+                <button className="flex items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-lg font-bold text-emerald-700 shadow-xl transition hover:bg-emerald-50 active:scale-[0.985]">
+                  شروع خرید
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              </Link>
+              <Link href="#categories">
+                <button className="flex items-center justify-center gap-2 rounded-2xl border border-white/40 bg-white/10 px-6 py-4 text-lg font-semibold backdrop-blur transition hover:bg-white/20">
+                  مشاهده دسته‌بندی‌ها
+                </button>
+              </Link>
+            </div>
+
+            <div className="mt-8 flex items-center gap-6 text-sm text-white/80">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-yellow-400" /> ۴.۸ امتیاز
               </div>
-              <h1 className="mt-4 text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
-                تازه‌ترین محصولات
-                <br />
-                <span className="text-emerald-100">با بهترین قیمت</span>
-              </h1>
-              <p className="mt-4 max-w-md text-sm leading-7 text-white/80 sm:text-base">
-                هزاران محصول با تضمین اصالت، ارسال سریع و تخفیف‌های باورنکردنی. همین حالا سفارش بدید!
-              </p>
-              <div className="mt-6 flex gap-3">
-                <Link href="/products">
-                  <button className="flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-emerald-700 shadow-lg shadow-emerald-900/20 transition hover:bg-emerald-50">
-                    مشاهده همه محصولات
-                    <ArrowLeft className="h-4 w-4" />
-                  </button>
-                </Link>
-              </div>
-            </motion.div>
+              <div>+۱۲۰٬۰۰۰ سفارش موفق</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Bar */}
-      <section className="border-b border-slate-100 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-4">
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide">
-            {features.map((feat) => (
-              <div key={feat.label} className="flex shrink-0 items-center gap-2.5 rounded-2xl px-4 py-2.5 transition hover:bg-slate-50">
-                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${feat.color}`}>
-                  {feat.icon}
+      {/* ==================== FEATURES ==================== */}
+      <section className="border-b bg-white">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="grid grid-cols-2 gap-px bg-slate-100 sm:grid-cols-4">
+            {features.map((feature, index) => (
+              <div key={index} className="flex items-center gap-4 bg-white px-5 py-5">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${feature.color}`}>
+                  {feature.icon}
                 </div>
-                <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{feat.label}</span>
+                <div>
+                  <div className="font-bold text-slate-900">{feature.label}</div>
+                  <div className="text-xs text-slate-500">{feature.desc}</div>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4">
-        {/* Categories */}
-        {!categories.isLoading && categoryList.length > 0 && (
-          <section className="mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-slate-900">دسته‌بندی‌ها</h2>
-              <Link href="/products" className="flex items-center gap-1 text-xs font-bold text-emerald-600 transition hover:text-emerald-700">
-                مشاهده همه
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {categoryList.slice(0, 10).map((cat, idx) => (
-                <motion.div
-                  key={cat._id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                >
-                  <Link
-                    href={`/products?category=${cat._id}`}
-                    className="flex flex-col items-center gap-2 rounded-2xl border border-slate-100 bg-white px-5 py-4 transition hover:border-emerald-200 hover:shadow-md min-w-[80px]"
-                  >
-                    <span className="text-2xl">{cat.icon || (categoryIcons[cat.slug] ?? categoryIcons.default)}</span>
-                    <span className="text-[11px] font-semibold text-slate-700 whitespace-nowrap text-center">{cat.name}</span>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Products Grid */}
-        <section className="mt-8">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50">
-                <Percent className="h-4 w-4 text-emerald-600" />
-              </div>
-              <h2 className="text-lg font-black text-slate-900">محصولات پرفروش</h2>
-            </div>
-            <Link href="/products" className="flex items-center gap-1 text-xs font-bold text-emerald-600 transition hover:text-emerald-700">
-              همه محصولات
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Link>
+      {/* ==================== CATEGORIES ==================== */}
+      <section id="categories" className="mx-auto max-w-7xl px-4 pt-10">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-black text-slate-900">دسته‌بندی‌ها</h2>
+            <p className="text-sm text-slate-500">آنچه نیاز دارید را سریع پیدا کنید</p>
           </div>
+          <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+            همه دسته‌ها →
+          </Link>
+        </div>
 
-          {products.isLoading ? (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
-                  <Skeleton className="aspect-square w-full rounded-none" />
-                  <div className="p-4 space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                    <Skeleton className="h-5 w-1/2 mt-3" />
-                    <Skeleton className="h-10 w-full rounded-xl" />
-                  </div>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+          {categoryList.length > 0 ? (
+            categoryList.slice(0, 12).map((cat: { _id: string; name: string; icon?: string | null }) => (
+              <Link
+                key={cat._id}
+                href={`/products?category=${cat._id}`}
+                className="group flex flex-col items-center rounded-3xl border border-slate-200 bg-white p-4 text-center transition hover:border-emerald-200 hover:shadow-md"
+              >
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-3xl transition group-hover:scale-110">
+                  {cat.icon || "🛒"}
                 </div>
-              ))}
-            </div>
-          ) : null}
-
-          {!products.isLoading && items.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {items.slice(0, 10).map((product, idx) => (
-                <motion.div
-                  key={product._id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(idx * 0.04, 0.3) }}
-                >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {!products.isLoading && items.length === 0 && !products.isError && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="text-5xl mb-4">🛒</div>
-              <p className="font-bold text-slate-700">محصولی هنوز ثبت نشده</p>
-              <p className="mt-1 text-sm text-slate-400">از پنل مدیریت محصولات اضافه کنید</p>
-              <Link href="/products" className="mt-4 rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-600">
-                صفحه محصولات
+                <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-700">
+                  {cat.name}
+                </span>
               </Link>
-            </div>
+            ))
+          ) : (
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-3xl border p-4">
+                <Skeleton className="mx-auto h-14 w-14 rounded-2xl" />
+                <Skeleton className="mx-auto mt-3 h-4 w-16" />
+              </div>
+            ))
           )}
-        </section>
+        </div>
+      </section>
 
-        {/* CTA Banner */}
-        <section className="mt-8 rounded-2xl bg-gradient-to-l from-slate-900 to-slate-800 p-6 sm:p-8">
-          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-right">
-            <div className="flex-1">
-              <h3 className="text-lg font-black text-white">
-                {user ? "سفارش‌های شما در انتظار است" : "از تخفیف‌های ویژه باخبر شوید"}
-              </h3>
-              <p className="mt-1.5 text-sm text-slate-400">
-                {user
-                  ? "وضعیت سفارش‌های اخیر و تخفیف‌های اختصاصی خود را ببینید."
-                  : "ایمیل یا شماره موبایل خود را ثبت کنید تا از جدیدترین تخفیف‌ها و محصولات باخبر شوید."}
-              </p>
+      {/* ==================== PROMO BANNERS ==================== */}
+      <section className="mx-auto max-w-7xl px-4 pt-10">
+        <div className="grid gap-4 md:grid-cols-2">
+          {promoBanners.map((banner, index) => (
+            <Link key={index} href={banner.href}>
+              <div className={`group relative overflow-hidden rounded-3xl bg-gradient-to-l ${banner.color} p-8 text-white transition active:scale-[0.985]`}>
+                <div className="relative z-10">
+                  <div className="text-3xl font-black">{banner.title}</div>
+                  <div className="mt-1 text-lg text-white/90">{banner.subtitle}</div>
+                </div>
+                <div className="absolute -bottom-4 -left-4 h-24 w-24 rounded-full bg-white/10" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ==================== BEST SELLERS ==================== */}
+      <section className="mx-auto max-w-7xl px-4 pt-12">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
+              <Star className="h-5 w-5 text-emerald-600" />
             </div>
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">پرفروش‌ترین‌ها</h2>
+              <p className="text-sm text-slate-500">محبوب‌ترین محصولات هفته</p>
+            </div>
+          </div>
+          <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">مشاهده همه</Link>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {products.isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-3xl border bg-white p-3"><Skeleton className="aspect-square w-full rounded-2xl" /></div>
+            ))
+          ) : bestSellers.length > 0 ? (
+            bestSellers.map((product) => (
+              <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
+                <ProductCard product={product} />
+              </motion.div>
+            ))
+          ) : null}
+        </div>
+      </section>
+
+      {/* ==================== FLASH SALE (همیشه نمایش داده می‌شود) ==================== */}
+      <section className="mx-auto max-w-7xl px-4 pt-12">
+        <div className="mb-6 flex items-center justify-between rounded-3xl bg-gradient-to-l from-red-500 to-orange-500 px-6 py-4 text-white">
+          <div className="flex items-center gap-3">
+            <Percent className="h-6 w-6" />
+            <div>
+              <div className="font-black text-xl">فروش ویژه</div>
+              <div className="text-sm text-white/90">تا ۷۰٪ تخفیف — محدود</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Clock className="h-4 w-4" /> ۱۲ ساعت باقی‌مانده
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {(discounted.length > 0 ? discounted : items.slice(0, 6)).map((product) => (
+            <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.04 }}>
+              <ProductCard product={product} />
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ==================== NEW ARRIVALS ==================== */}
+      <section className="mx-auto max-w-7xl px-4 pt-12 pb-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-black text-slate-900">جدیدترین محصولات</h2>
+            <p className="text-sm text-slate-500">تازه به فروشگاه اضافه شده‌اند</p>
+          </div>
+          <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">همه محصولات جدید</Link>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {newArrivals.length > 0 ? newArrivals.map((product) => (
+            <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
+              <ProductCard product={product} />
+            </motion.div>
+          )) : (
+            items.slice(0, 6).map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))
+          )}
+        </div>
+      </section>
+
+      {/* ==================== FINAL CTA ==================== */}
+      <section className="mx-auto max-w-7xl px-4 pb-10">
+        <div className="rounded-3xl bg-slate-900 px-8 py-10 text-center text-white">
+          <div className="mx-auto max-w-md">
+            <h3 className="text-3xl font-black">هر روز، تازه‌تر</h3>
+            <p className="mt-3 text-slate-300">
+              {user ? "سفارش‌های خود را دنبال کنید" : "همین حالا ثبت‌نام کنید و از تخفیف‌های اختصاصی بهره‌مند شوید"}
+            </p>
             <Link href={user ? "/orders" : "/register"}>
-              <button className="shrink-0 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-900/30 transition hover:bg-emerald-600">
-                {user ? "مشاهده سفارش‌ها" : "ثبت‌نام کنید"}
+              <button className="mt-6 rounded-2xl bg-emerald-500 px-8 py-3.5 font-bold text-white shadow-lg transition hover:bg-emerald-600">
+                {user ? "مشاهده سفارش‌ها" : "ثبت‌نام رایگان"}
               </button>
             </Link>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }

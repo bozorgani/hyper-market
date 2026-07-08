@@ -80,18 +80,95 @@ export const envValidation = (config: Record<string, unknown>): Record<string, u
     throw new Error('CORS_ORIGINS cannot contain wildcard (*) in production');
   }
 
-  // 4. JWT secret strength (production)
-  if (isProduction) {
-    const accessSecret = String(config.JWT_ACCESS_SECRET ?? '');
-    const refreshSecret = String(config.JWT_REFRESH_SECRET ?? '');
-    if (accessSecret.length < 32) {
-      throw new Error('JWT_ACCESS_SECRET must be at least 32 characters in production');
+  // 4. JWT secret strength (all environments, stricter in production)
+  const accessSecret = String(config.JWT_ACCESS_SECRET ?? '');
+  const refreshSecret = String(config.JWT_REFRESH_SECRET ?? '');
+  const otpSecret = String(config.OTP_HASH_SECRET ?? '');
+  const appEnv = String(config.APP_ENV ?? '');
+  
+  // Skip secret validation in test environment
+  if (appEnv !== 'test') {
+    // Default/example secrets that should NEVER be used
+    const forbiddenSecrets = [
+      'change_access_secret_in_production',
+      'change_refresh_secret_in_production',
+      'change_me_access_secret_32_chars_minimum_123456789',
+      'change_me_refresh_secret_32_chars_minimum_123456789',
+      'change_otp_hash_secret_in_production',
+      'changeme',
+      'secret',
+      'password',
+      'test',
+      'example',
+      'default',
+    ];
+    
+    // Check for forbidden/default secrets in ALL environments
+  for (const secret of forbiddenSecrets) {
+    if (accessSecret.toLowerCase().includes(secret.toLowerCase())) {
+      throw new Error(
+        `JWT_ACCESS_SECRET contains a forbidden/default pattern ("${secret}"). ` +
+        'Generate a unique, secure secret using: openssl rand -base64 48'
+      );
     }
-    if (refreshSecret.length < 32) {
-      throw new Error('JWT_REFRESH_SECRET must be at least 32 characters in production');
+    if (refreshSecret.toLowerCase().includes(secret.toLowerCase())) {
+      throw new Error(
+        `JWT_REFRESH_SECRET contains a forbidden/default pattern ("${secret}"). ` +
+        'Generate a unique, secure secret using: openssl rand -base64 48'
+      );
+    }
+    if (otpSecret && otpSecret.toLowerCase().includes(secret.toLowerCase())) {
+      throw new Error(
+        `OTP_HASH_SECRET contains a forbidden/default pattern ("${secret}"). ` +
+        'Generate a unique, secure secret using: openssl rand -base64 48'
+      );
     }
   }
-
+  
+  // Minimum length validation
+  if (accessSecret.length < 32) {
+    throw new Error(
+      `JWT_ACCESS_SECRET must be at least 32 characters, got ${accessSecret.length}. ` +
+      'Generate a secure secret using: openssl rand -base64 48'
+    );
+  }
+  if (refreshSecret.length < 32) {
+    throw new Error(
+      `JWT_REFRESH_SECRET must be at least 32 characters, got ${refreshSecret.length}. ` +
+      'Generate a secure secret using: openssl rand -base64 48'
+    );
+  }
+  if (otpSecret && otpSecret.length < 32) {
+    throw new Error(
+      `OTP_HASH_SECRET must be at least 32 characters, got ${otpSecret.length}. ` +
+      'Generate a secure secret using: openssl rand -base64 48'
+    );
+  }
+  
+  // Access and refresh secrets must be different
+  if (accessSecret === refreshSecret) {
+    throw new Error(
+      'JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different secrets'
+    );
+  }
+  
+  // Stricter validation in production
+  if (isProduction) {
+    if (!hasSufficientEntropy(accessSecret)) {
+      console.warn(
+        '[SECURITY WARNING] JWT_ACCESS_SECRET has low entropy. ' +
+        'Use a cryptographically random secret: openssl rand -base64 48'
+      );
+    }
+    if (!hasSufficientEntropy(refreshSecret)) {
+      console.warn(
+        '[SECURITY WARNING] JWT_REFRESH_SECRET has low entropy. ' +
+        'Use a cryptographically random secret: openssl rand -base64 48'
+      );
+    }
+  }
+  } // End of test environment skip
+  
   // 5. Numeric validations
   for (const [key, rules] of Object.entries(NUMERIC_VALIDATIONS)) {
     const raw = config[key];
@@ -142,3 +219,36 @@ export const envValidation = (config: Record<string, unknown>): Record<string, u
 
   return config;
 };
+
+/**
+ * Checks if a secret has sufficient entropy (randomness).
+ * A good secret should contain a mix of character types.
+ * 
+ * @param secret - The secret to check
+ * @returns true if the secret has sufficient entropy
+ */
+function hasSufficientEntropy(secret: string): boolean {
+  const hasLower = /[a-z]/.test(secret);
+  const hasUpper = /[A-Z]/.test(secret);
+  const hasDigit = /\d/.test(secret);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(secret);
+  
+  // Count how many character types are present
+  const varietyCount = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length;
+  
+  // Require at least 3 different character types
+  if (varietyCount < 3) {
+    return false;
+  }
+  
+  // Check for repeated patterns (e.g., "aaaa", "1234")
+  const uniqueChars = new Set(secret).size;
+  const uniqueRatio = uniqueChars / secret.length;
+  
+  // If less than 50% of characters are unique, entropy is too low
+  if (uniqueRatio < 0.5) {
+    return false;
+  }
+  
+  return true;
+}

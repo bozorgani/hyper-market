@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
@@ -23,6 +24,7 @@ export class SearchController {
 
   @Get('products')
   @Public()
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
   searchProducts(
     @Query('q') query = '',
     @Query('categoryId') categoryId?: string,
@@ -48,6 +50,7 @@ export class SearchController {
 
   @Get('suggest')
   @Public()
+  @Throttle({ default: { limit: 120, ttl: 60000 } })
   suggestProducts(@Query('q') query = '') {
     return this.searchService.suggestProducts(query);
   }

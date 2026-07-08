@@ -135,21 +135,43 @@ export class CartService {
 
   async removeProduct(userId: string, productId: string): Promise<CartSummary> {
     this.ensureValidObjectId(productId, 'Invalid product id');
-    await this.getOrCreateCart(userId);
-    await this.cartRepository.removeItem(userId, productId);
+    
+    await this.withCartMutationLock(userId, async () => {
+      await this.getOrCreateCart(userId);
+      await this.cartRepository.removeItem(userId, productId);
+    });
 
     return this.getCartSummary(userId);
   }
 
   async clearCart(userId: string, session?: ClientSession): Promise<Cart> {
-    await this.getOrCreateCart(userId);
-    const cart = await this.cartRepository.clearCart(userId, session);
+    // If we're in a transaction (session provided), don't use Redis lock
+    // because the transaction itself provides isolation
+    if (session) {
+      await this.getOrCreateCart(userId, session);
+      const cart = await this.cartRepository.clearCart(userId, session);
 
-    if (!cart) {
-      throw new BadRequestException('Unable to clear cart');
+      if (!cart) {
+        throw new BadRequestException('Unable to clear cart');
+      }
+
+      return cart;
     }
 
-    return cart;
+    // Otherwise, use Redis lock for consistency
+    let result: Cart | undefined;
+    await this.withCartMutationLock(userId, async () => {
+      await this.getOrCreateCart(userId);
+      const cart = await this.cartRepository.clearCart(userId);
+
+      if (!cart) {
+        throw new BadRequestException('Unable to clear cart');
+      }
+
+      result = cart;
+    });
+
+    return result!;
   }
 
   async calculateCartTotal(cart: Cart): Promise<number> {

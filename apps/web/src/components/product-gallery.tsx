@@ -4,13 +4,14 @@ import Image from "next/image";
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { getProductImageUrl } from "@/lib/image-utils";
 
 export function ProductGallery({ images, productName }: { images?: string[]; productName: string }) {
   const safeImages = (images ?? []).filter(Boolean);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  const selectedImage = safeImages[selectedIndex] ?? safeImages[0];
+  const selectedImage = safeImages[selectedIndex] ? getProductImageUrl(safeImages[selectedIndex]) : undefined;
 
   if (!selectedImage) {
     return (
@@ -88,7 +89,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
               aria-label={`نمایش تصویر ${index + 1} از ${safeImages.length}`}
             >
               <Image
-                src={image}
+                src={getProductImageUrl(image)}
                 alt={`${productName} - ${index + 1}`}
                 fill
                 sizes="20vw"

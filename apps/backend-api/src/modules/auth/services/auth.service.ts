@@ -56,6 +56,25 @@ type AuthTokens = {
 // still apply the runtime pepper before bcrypt verification.
 const DUMMY_PASSWORD_HASH = '$2b$12$CwTycUXWue0Thq9StjUM0uJ8BzzhLQjCjULVxYHK4QBVpLw3C6l9W';
 
+/**
+ * Authentication Service
+ * 
+ * Handles all authentication-related operations including:
+ * - User registration and verification
+ * - Login and logout
+ * - Password management (forgot/reset)
+ * - Token management (access/refresh tokens)
+ * - OTP (One-Time Password) operations
+ * - Session management
+ * 
+ * Security Features:
+ * - Password hashing with pepper
+ * - JWT token rotation
+ * - Refresh token family tracking
+ * - Account lockout after failed attempts
+ * - Timing attack prevention
+ * - Audit logging for security events
+ */
 @Injectable()
 export class AuthService {
   private readonly maxLoginAttempts = 5;
@@ -80,6 +99,26 @@ export class AuthService {
     private readonly eventBusService: EventBusService,
   ) {}
 
+  /**
+   * Register a new user account
+   * 
+   * Creates a new user with PENDING status and sends verification OTP codes
+   * to the provided email and/or phone number. If a user already exists with
+   * the same email/phone but is unverified, resends verification codes.
+   * 
+   * @param dto - Registration data including email, phone, and password
+   * @returns Object containing user ID, contact info, and success message
+   * @throws ConflictException if email/phone already belongs to a verified account
+   * 
+   * @example
+   * ```typescript
+   * const result = await authService.register({
+   *   email: 'user@example.com',
+   *   password: 'StrongPass123!'
+   * });
+   * // result: { id: '...', email: '...', message: 'verification otp sent' }
+   * ```
+   */
   async register(dto: RegisterDto) {
     const existingEmailUser = dto.email
       ? await this.usersService.getUserByEmail(dto.email)
@@ -180,6 +219,16 @@ export class AuthService {
     };
   }
 
+  /**
+   * Send verification OTP code
+   * 
+   * Generates and sends a new OTP code for email or phone verification.
+   * Used when user needs to resend the verification code.
+   * 
+   * @param dto - Contains email or phoneNumber to send OTP to
+   * @returns Success message
+   * @throws BadRequestException if user not found
+   */
   async sendVerificationOtp(dto: SendVerificationOtpDto) {
     const user = await this.findUserByTarget(dto.email, dto.phoneNumber);
 
@@ -200,6 +249,18 @@ export class AuthService {
     return { message: 'verification otp sent' };
   }
 
+  /**
+   * Verify email address with OTP code
+   * 
+   * Validates the OTP code and marks the user's email as verified.
+   * Updates account status to ACTIVE if all required verifications are complete.
+   * 
+   * @param dto - Contains email and OTP code
+   * @param context - Optional auth context (IP, user agent, device ID)
+   * @returns Success message
+   * @throws BadRequestException if verification request is invalid
+   * @throws UnauthorizedException if OTP code is invalid or expired
+   */
   async verifyEmail(dto: VerifyEmailDto, context: AuthContext = {}) {
     const user = await this.usersService.getUserByEmail(dto.email);
     if (!user) {
@@ -212,6 +273,18 @@ export class AuthService {
     return { message: 'email verified' };
   }
 
+  /**
+   * Verify phone number with OTP code
+   * 
+   * Validates the OTP code and marks the user's phone as verified.
+   * Updates account status to ACTIVE if all required verifications are complete.
+   * 
+   * @param dto - Contains phoneNumber and OTP code
+   * @param context - Optional auth context (IP, user agent, device ID)
+   * @returns Success message
+   * @throws BadRequestException if verification request is invalid
+   * @throws UnauthorizedException if OTP code is invalid or expired
+   */
   async verifyPhone(dto: VerifyPhoneDto, context: AuthContext = {}) {
     const user = await this.usersService.getUserByPhone(dto.phoneNumber);
     if (!user) {
@@ -224,6 +297,15 @@ export class AuthService {
     return { message: 'phone verified' };
   }
 
+  /**
+   * Initiate password reset process
+   * 
+   * Sends a password reset OTP code to the user's email or phone.
+   * Does not reveal whether the account exists (security measure).
+   * 
+   * @param dto - Contains email or phoneNumber
+   * @returns Generic success message (does not reveal if account exists)
+   */
   async forgotPassword(dto: ForgotPasswordDto) {
     const user = await this.findUserByTarget(dto.email, dto.phoneNumber);
 
@@ -240,6 +322,19 @@ export class AuthService {
     return { message: 'password reset otp sent if account exists' };
   }
 
+  /**
+   * Reset user password with OTP verification
+   * 
+   * Validates the OTP code and updates the user's password.
+   * Revokes all sessions and refresh tokens for security.
+   * Increments token version to invalidate all existing tokens.
+   * 
+   * @param dto - Contains email/phone, OTP code, and new password
+   * @param context - Optional auth context (IP, user agent, device ID)
+   * @returns Success message
+   * @throws BadRequestException if reset request is invalid
+   * @throws UnauthorizedException if OTP code is invalid or expired
+   */
   async resetPassword(dto: ResetPasswordDto, context: AuthContext = {}) {
     const user = await this.findUserByTarget(dto.email, dto.phoneNumber);
     const target = dto.email ?? dto.phoneNumber;
@@ -267,6 +362,33 @@ export class AuthService {
     return { message: 'password reset successful' };
   }
 
+  /**
+   * Authenticate user and issue tokens
+   * 
+   * Validates credentials and issues access/refresh token pair.
+   * Implements security measures:
+   * - Timing attack prevention with dummy password comparison
+   * - Account lockout after max failed attempts
+   * - Session tracking and device management
+   * - Audit logging for all login attempts
+   * - Revokes previous sessions for the same device
+   * 
+   * @param dto - Login credentials (email/phone + password + deviceId)
+   * @param context - Auth context (IP, user agent)
+   * @returns Object containing accessToken and refreshToken
+   * @throws UnauthorizedException if credentials are invalid
+   * @throws ForbiddenException if account is locked or not verified
+   * 
+   * @example
+   * ```typescript
+   * const tokens = await authService.login({
+   *   email: 'user@example.com',
+   *   password: 'StrongPass123!',
+   *   deviceId: 'device-123'
+   * }, { ipAddress: '127.0.0.1' });
+   * // tokens: { accessToken: '...', refreshToken: '...' }
+   * ```
+   */
   async login(dto: LoginDto, context: AuthContext = {}) {
     const user = await this.findLoginUser(dto);
 
@@ -353,9 +475,38 @@ export class AuthService {
     return tokens;
   }
 
+  /**
+   * Refresh access token using refresh token
+   * 
+   * Implements secure token rotation:
+   * - Validates refresh token signature and expiration
+   * - Detects and prevents token reuse attacks
+   * - Issues new access/refresh token pair
+   * - Revokes old refresh token
+   * - Maintains token family for security tracking
+   * - Uses distributed lock to prevent race conditions
+   * 
+   * Security Features:
+   * - Token family tracking (reuse detection)
+   * - Automatic session revocation on suspicious activity
+   * - Redis-based locking for concurrent requests
+   * 
+   * @param rawRefreshToken - The refresh token to rotate
+   * @param context - Optional auth context (IP, user agent, device ID)
+   * @returns New access and refresh token pair
+   * @throws UnauthorizedException if token is invalid, expired, or reused
+   * @throws ConflictException if rotation is already in progress
+   */
   async refreshToken(rawRefreshToken: string, context: AuthContext = {}): Promise<AuthTokens> {
     // Signature/structure check only — cheap, no shared state.
-    const payload = this.tokenService.verifyRefreshToken(rawRefreshToken);
+    let payload: JwtPayload;
+    try {
+      payload = this.tokenService.verifyRefreshToken(rawRefreshToken);
+    } catch (error) {
+      // Convert JWT verification errors to UnauthorizedException
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+    
     const refreshTokenHash = this.tokenHashService.hashToken(rawRefreshToken);
 
     // Serialize rotation for the same token to prevent a race where two
@@ -443,6 +594,18 @@ export class AuthService {
     }
   }
 
+  /**
+   * Logout user and revoke tokens
+   * 
+   * Revokes the refresh token and associated session.
+   * Handles both valid and expired tokens gracefully.
+   * Logs the logout event for audit purposes.
+   * 
+   * @param rawRefreshToken - The refresh token to revoke
+   * @param context - Optional auth context (IP, user agent, device ID)
+   * @returns Success message
+   * @throws UnauthorizedException if token cannot be decoded
+   */
   async logout(rawRefreshToken: string, context: AuthContext = {}) {
     let payload: JwtPayload | null = null;
 
@@ -484,12 +647,32 @@ export class AuthService {
     return { message: 'logout successful' };
   }
 
+  /**
+   * Verify OTP code
+   * 
+   * Generic OTP verification for various purposes (email, phone, password reset).
+   * 
+   * @param dto - Contains target (email/phone), OTP type, and code
+   * @param context - Optional auth context (IP, user agent, device ID)
+   * @returns Success message
+   * @throws UnauthorizedException if OTP is invalid or expired
+   */
   async verifyOtp(dto: VerifyOtpDto, context: AuthContext = {}) {
     await this.otpService.verifyOtpCode(dto.target, dto.type, dto.code, context);
     return { message: 'otp verified' };
   }
 
 
+  /**
+   * Get current authenticated user
+   * 
+   * Retrieves user information based on JWT payload.
+   * Used by the /auth/me endpoint to return current user data.
+   * 
+   * @param payload - JWT payload containing user ID and session info
+   * @returns User object with profile information and session details
+   * @throws UnauthorizedException if user not found
+   */
   async getCurrentUser(payload: JwtPayload) {
     const user = await this.usersService.getUserById(payload.sub);
 

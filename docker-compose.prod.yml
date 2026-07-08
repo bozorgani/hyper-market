@@ -1,77 +1,80 @@
-name: hyper-market-prod
+name: hyper-market-production
 
-# Production-oriented Compose example using Docker secrets.
-# Create secret files under ./secrets/ on the target server (never commit them):
-#   secrets/jwt_access_secret.txt
-#   secrets/jwt_refresh_secret.txt
-#   secrets/password_pepper.txt
-#   secrets/otp_hash_secret.txt
-#   secrets/meili_master_key.txt
-#   secrets/smtp_pass.txt
-#
-# Run:
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Production Docker Compose with Resource Limits
+# Use this file for production deployments:
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 services:
-  backend:
-    environment:
-      APP_ENV: production
-      NODE_ENV: production
-      JWT_ACCESS_SECRET_FILE: /run/secrets/jwt_access_secret
-      JWT_REFRESH_SECRET_FILE: /run/secrets/jwt_refresh_secret
-      PASSWORD_PEPPER_FILE: /run/secrets/password_pepper
-      OTP_HASH_SECRET_FILE: /run/secrets/otp_hash_secret
-      MEILI_API_KEY_FILE: /run/secrets/meili_master_key
-      SMTP_PASS_FILE: /run/secrets/smtp_pass
-      AUTH_LOG_OTP_CODES: "false"
-      SWAGGER_ENABLED: "false"
-      MONGODB_TRANSACTION_FALLBACK_ENABLED: "false"
-    secrets:
-      - jwt_access_secret
-      - jwt_refresh_secret
-      - password_pepper
-      - otp_hash_secret
-      - meili_master_key
-      - smtp_pass
+  mongo:
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
 
-  worker:
-    environment:
-      APP_ENV: production
-      NODE_ENV: production
-      JWT_ACCESS_SECRET_FILE: /run/secrets/jwt_access_secret
-      JWT_REFRESH_SECRET_FILE: /run/secrets/jwt_refresh_secret
-      PASSWORD_PEPPER_FILE: /run/secrets/password_pepper
-      OTP_HASH_SECRET_FILE: /run/secrets/otp_hash_secret
-      MEILI_API_KEY_FILE: /run/secrets/meili_master_key
-      SMTP_PASS_FILE: /run/secrets/smtp_pass
-      AUTH_LOG_OTP_CODES: "false"
-      MONGODB_TRANSACTION_FALLBACK_ENABLED: "false"
-    secrets:
-      - jwt_access_secret
-      - jwt_refresh_secret
-      - password_pepper
-      - otp_hash_secret
-      - meili_master_key
-      - smtp_pass
+  redis:
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
 
   meilisearch:
-    environment:
-      MEILI_ENV: production
-      MEILI_NO_ANALYTICS: "true"
-      # The official Meilisearch image expects MEILI_MASTER_KEY as an env var.
-      # Inject it from your secret manager at deploy time; do not commit it.
-      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?set_from_secret_manager}
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
 
-secrets:
-  jwt_access_secret:
-    file: ./secrets/jwt_access_secret.txt
-  jwt_refresh_secret:
-    file: ./secrets/jwt_refresh_secret.txt
-  password_pepper:
-    file: ./secrets/password_pepper.txt
-  otp_hash_secret:
-    file: ./secrets/otp_hash_secret.txt
-  meili_master_key:
-    file: ./secrets/meili_master_key.txt
-  smtp_pass:
-    file: ./secrets/smtp_pass.txt
+  backend:
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    environment:
+      APP_ENV: production
+      NODE_ENV: production
+      WORKERS_ENABLED: "false"
+      SWAGGER_ENABLED: "false"
+
+  worker:
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    environment:
+      APP_ENV: production
+      NODE_ENV: production
+      WORKERS_ENABLED: "true"
+      SKIP_MIGRATIONS: "true"
+
+  web:
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"

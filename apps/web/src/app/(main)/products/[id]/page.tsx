@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductDetailPageClient } from "@/features/public-pages/product-detail-page-client";
 import { fetchProductForMetadata } from "@/lib/server-api";
 import { formatPrice } from "@/lib/utils";
+import { getProductImageUrl } from "@/lib/image-utils";
 
 type ProductDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
 
   const price = product.discountPrice ?? product.price;
   const description = product.description || `${product.name} با قیمت ${formatPrice(price)} در هایپرمارکت`;
-  const image = product.images?.[0];
+  const image = product.images?.[0] ? getProductImageUrl(product.images[0]) : undefined;
 
   return {
     title: product.name,

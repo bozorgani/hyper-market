@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { MapPin, Navigation, Gift, Ticket, Percent, Loader2, X } from "lucide-react";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,11 @@ import { useCart } from "@/hooks/use-cart";
 import { useAvailableCoupons, useValidateCoupon, type CouponValidationResult } from "@/hooks/use-coupons";
 import { useCreateOrder, useCreatePayment } from "@/hooks/use-orders";
 import { useShippingQuote, type ShippingMethod } from "@/hooks/use-shipping";
+import { useAuthStore } from "@/store/auth-store";
+
+function isCustomerRole(role?: string) {
+  return role === "customer" || role === "CUSTOMER";
+}
 
 const MapPicker = lazy(() =>
   import("@/components/ui/map-picker").then((m) => ({ default: m.MapPicker }))
@@ -113,7 +118,10 @@ function getFieldErrors(address: DeliveryAddress, window: DeliveryWindow) {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const cart = useCart();
+  const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
+  const isCustomer = isCustomerRole(user?.role);
+  const cart = useCart(Boolean(hydrated && isCustomer));
   const savedAddresses = useMyAddresses();
   const createOrder = useCreateOrder();
   const createPayment = useCreatePayment();
@@ -170,6 +178,12 @@ export default function CheckoutPage() {
     if (!cart.error) return "";
     return cart.error instanceof Error ? cart.error.message : "دریافت اطلاعات سبد خرید ناموفق بود.";
   }, [cart.error]);
+
+  useEffect(() => {
+    if (hydrated && user && !isCustomer) {
+      router.replace("/admin");
+    }
+  }, [hydrated, isCustomer, router, user]);
 
   async function handleApplyDiscount() {
     const code = discountInput.trim();

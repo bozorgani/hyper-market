@@ -28,7 +28,9 @@ export function useCategories(initialData?: Category[]) {
   return useQuery({
     queryKey: ["categories"],
     queryFn: async () => (await api.get<Category[]>("/categories")).data,
-    retry: false,
+    retry: 3,                    // ۳ بار تلاش مجدد
+    retryDelay: 1000,            // هر ۱ ثانیه
+    staleTime: 1000 * 60 * 5,    // ۵ دقیقه کش
     initialData,
   });
 }
