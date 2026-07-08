@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts, useCategories } from "@/hooks/use-products";
 import { useAuthStore } from "@/store/auth-store";
+import { getCategoryProductsHref } from "@/lib/category-utils";
 import type { Category, ProductListResponse } from "@/types/domain";
 
 const features = [
@@ -61,7 +62,7 @@ export function HomePageClient({
   const categoryList = categories.data ?? [];
   const shouldShowCategorySkeleton = categories.isLoading && categoryList.length === 0;
   const visibleCategories = categoryList.length > 0
-    ? categoryList.slice(0, 12).map((cat) => ({ ...cat, href: `/products?category=${cat._id}` }))
+    ? categoryList.slice(0, 12).map((cat) => ({ ...cat, href: getCategoryProductsHref(cat) }))
     : fallbackCategories;
 
   // همیشه داده داشته باشیم
@@ -142,7 +143,7 @@ export function HomePageClient({
             <h2 className="text-2xl font-black text-slate-900">دسته‌بندی‌ها</h2>
             <p className="text-sm text-slate-500">آنچه نیاز دارید را سریع پیدا کنید</p>
           </div>
-          <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+          <Link href="/categories" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
             همه دسته‌ها →
           </Link>
         </div>
@@ -209,14 +210,14 @@ export function HomePageClient({
           <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">مشاهده همه</Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {products.isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-3xl border bg-white p-3"><Skeleton className="aspect-square w-full rounded-2xl" /></div>
+              <div key={i} className="h-full rounded-3xl border bg-white p-3"><Skeleton className="aspect-square w-full rounded-2xl" /></div>
             ))
           ) : bestSellers.length > 0 ? (
             bestSellers.map((product) => (
-              <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
+              <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="h-full">
                 <ProductCard product={product} />
               </motion.div>
             ))
@@ -239,9 +240,9 @@ export function HomePageClient({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {(discounted.length > 0 ? discounted : items.slice(0, 6)).map((product) => (
-            <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.04 }}>
+            <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.04 }} className="h-full">
               <ProductCard product={product} />
             </motion.div>
           ))}
@@ -258,9 +259,9 @@ export function HomePageClient({
           <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">همه محصولات جدید</Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {newArrivals.length > 0 ? newArrivals.map((product) => (
-            <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
+            <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="h-full">
               <ProductCard product={product} />
             </motion.div>
           )) : (

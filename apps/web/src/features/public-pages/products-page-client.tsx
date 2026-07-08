@@ -11,12 +11,13 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCategories, useProducts } from "@/hooks/use-products";
 import { useDebounce } from "@/hooks/use-debounce";
+import { getCategoryId } from "@/lib/category-utils";
 import { formatNumber } from "@/lib/utils";
 import type { Category, ProductListResponse } from "@/types/domain";
 
 function ProductCardSkeleton() {
   return (
-    <Card className="overflow-hidden">
+    <Card className="h-full overflow-hidden">
       <Skeleton className="aspect-square w-full rounded-none" />
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
@@ -94,11 +95,15 @@ export function ProductsPageClient({
             className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
           >
             <option value="">همه دسته‌بندی‌ها</option>
-            {(categories.data ?? []).map((category) => (
-              <option key={category._id} value={category._id}>
-                {category.name}
-              </option>
-            ))}
+            {(categories.data ?? []).map((category) => {
+              const optionValue = getCategoryId(category);
+              if (!optionValue) return null;
+              return (
+                <option key={optionValue} value={optionValue}>
+                  {category.name}
+                </option>
+              );
+            })}
           </select>
           <Button type="button" variant="outline" onClick={resetFilters}>
             پاک‌کردن فیلترها
@@ -108,7 +113,7 @@ export function ProductsPageClient({
       </div>
 
       {products.isLoading ? (
-        <section className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <section className="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {Array.from({ length: 8 }).map((_, index) => (
             <ProductCardSkeleton key={index} />
           ))}
@@ -145,7 +150,7 @@ export function ProductsPageClient({
       ) : null}
 
       {!products.isLoading && !products.isError && hasProducts ? (
-        <section className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <section className="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {items.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}
