@@ -10,7 +10,7 @@ import { ProductCard } from "@/components/product-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts, useCategories } from "@/hooks/use-products";
 import { useAuthStore } from "@/store/auth-store";
-import { getCategoryProductsHref } from "@/lib/category-utils";
+import { fallbackCategories, getCategoryProductsHref } from "@/lib/category-utils";
 import type { Category, ProductListResponse } from "@/types/domain";
 
 const features = [
@@ -20,17 +20,6 @@ const features = [
   { icon: <Headphones className="h-5 w-5" />, label: "پشتیبانی ۲۴/۷", desc: "همیشه در دسترس", color: "text-amber-600 bg-amber-100" },
 ];
 
-
-const fallbackCategories = [
-  { _id: "fallback-dairy", name: "لبنیات", icon: "🥛", href: "/products?search=لبنیات" },
-  { _id: "fallback-protein", name: "پروتئین", icon: "🥩", href: "/products?search=گوشت" },
-  { _id: "fallback-drinks", name: "نوشیدنی", icon: "🥤", href: "/products?search=نوشیدنی" },
-  { _id: "fallback-snacks", name: "تنقلات", icon: "🍿", href: "/products?search=تنقلات" },
-  { _id: "fallback-fruits", name: "میوه", icon: "🍎", href: "/products?search=میوه" },
-  { _id: "fallback-bakery", name: "نان", icon: "🥖", href: "/products?search=نان" },
-  { _id: "fallback-cleaning", name: "شوینده", icon: "🧼", href: "/products?search=شوینده" },
-  { _id: "fallback-canned", name: "کنسرو", icon: "🥫", href: "/products?search=کنسرو" },
-];
 
 const promoBanners = [
   {
