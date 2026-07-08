@@ -51,7 +51,7 @@ const cspDirectives = [
   `connect-src ${connectSources.join(" ")}`,
   `img-src ${imageSources.join(" ")}`,
   `media-src ${imageSources.join(" ")}`,
-  "upgrade-insecure-requests",
+  ...(cspMode === "enforce" ? ["upgrade-insecure-requests"] : []),
   `report-uri ${cspReportEndpoint}`,
 ].join("; ");
 
