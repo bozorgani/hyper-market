@@ -76,6 +76,7 @@ type DeliveryAddressSectionProps = {
     error?: Error | null;
     data?: ShippingQuote | null;
   };
+  selectedAddressId?: string;
   onApplySavedAddress: (addressId: string) => void;
   onMapLocationSelect: (result: { lat: number; lng: number; address: string; province: string; city: string }) => void;
 };
@@ -94,6 +95,7 @@ export function DeliveryAddressSection({
   setShowMap,
   mapLocation,
   shippingQuote,
+  selectedAddressId,
   onApplySavedAddress,
   onMapLocationSelect,
 }: DeliveryAddressSectionProps) {
@@ -120,7 +122,7 @@ export function DeliveryAddressSection({
           <select
             onChange={(event) => onApplySavedAddress(event.target.value)}
             disabled={isSubmitting}
-            defaultValue=""
+            value={selectedAddressId ?? ""}
             className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
           >
             <option value="" disabled>انتخاب آدرس</option>

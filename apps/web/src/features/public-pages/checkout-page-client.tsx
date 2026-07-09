@@ -128,6 +128,21 @@ export function CheckoutPageClient() {
   const deliveryFee = shippingQuote.data?.deliveryFee ?? 0;
   const finalPrice = merchandiseTotal + deliveryFee;
   const fieldErrors = useMemo(() => getFieldErrors(deliveryAddress, deliveryWindow), [deliveryAddress, deliveryWindow]);
+
+  // Find which saved address ID matches the current delivery address (if any)
+  const selectedAddressId = useMemo(() => {
+    const addrList = savedAddresses.data ?? [];
+    if (addrList.length === 0) return undefined;
+    const match = addrList.find(
+      (a) =>
+        a.recipientName === deliveryAddress.recipientName &&
+        a.phoneNumber === deliveryAddress.phoneNumber &&
+        a.province === deliveryAddress.province &&
+        a.city === deliveryAddress.city &&
+        a.addressLine === deliveryAddress.addressLine,
+    );
+    return match?._id;
+  }, [deliveryAddress, savedAddresses.data]);
   const cartErrorMessage = useMemo(() => {
     if (!cart.error) return "";
     return cart.error instanceof Error ? cart.error.message : "دریافت اطلاعات سبد خرید ناموفق بود.";
@@ -138,6 +153,27 @@ export function CheckoutPageClient() {
       router.replace("/admin");
     }
   }, [hydrated, isCustomer, router, user]);
+
+  // Auto-select default address when saved addresses load
+  useEffect(() => {
+    if (!savedAddresses.data || savedAddresses.data.length === 0) return;
+    // Only auto-select if address is still empty (not manually changed)
+    if (deliveryAddress.recipientName || deliveryAddress.province || deliveryAddress.city || deliveryAddress.addressLine) return;
+    
+    const defaultAddr = savedAddresses.data.find((a) => a.isDefault) ?? savedAddresses.data[0];
+    if (defaultAddr) {
+      setDeliveryAddress({
+        recipientName: defaultAddr.recipientName,
+        phoneNumber: defaultAddr.phoneNumber,
+        province: defaultAddr.province,
+        city: defaultAddr.city,
+        addressLine: defaultAddr.addressLine,
+        plate: defaultAddr.plate ?? "",
+        unit: defaultAddr.unit ?? "",
+        postalCode: defaultAddr.postalCode ?? "",
+      });
+    }
+  }, [savedAddresses.data]);
 
   function applySavedAddress(addressId: string) {
     const address = (savedAddresses.data ?? []).find((item) => item._id === addressId);
@@ -293,6 +329,7 @@ export function CheckoutPageClient() {
               mapLocation={mapLocation}
               setMapLocation={setMapLocation}
               shippingQuote={shippingQuote}
+              selectedAddressId={selectedAddressId}
               onApplySavedAddress={applySavedAddress}
               onMapLocationSelect={handleMapLocationSelect}
             />
