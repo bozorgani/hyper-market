@@ -35,6 +35,13 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
       type: "website",
       images: category?.image ? [{ url: category.image, alt: category.name }] : undefined,
     },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      site: "@hypermarket",
+      images: category?.image ? [category.image] : undefined,
+    },
   };
 }
 

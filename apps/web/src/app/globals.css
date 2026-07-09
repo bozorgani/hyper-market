@@ -153,25 +153,6 @@ select:focus {
   border-color: #007a38;
 }
 
-/* Cards */
-.card {
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-}
-
-/* Buttons */
-.btn {
-  transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-.btn:active {
-  transform: scale(0.985);
-}
-
 /* Tables */
 table {
   border-collapse: separate;

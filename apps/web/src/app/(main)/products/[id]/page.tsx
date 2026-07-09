@@ -41,6 +41,7 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
       title: product.name,
       description,
       images: image ? [image] : undefined,
+      site: "@hypermarket",
     },
   };
 }
