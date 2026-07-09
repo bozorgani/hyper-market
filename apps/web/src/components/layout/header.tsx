@@ -16,6 +16,8 @@ import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/utils";
 import { getProductImageUrl } from "@/lib/image-utils";
 import { useAuthStore } from "@/store/auth-store";
+// i18n – Issue #24 progressive migration
+import { t, tf } from "@/i18n";
 
 function isCustomerRole(role?: string) {
   return role === "customer" || role === "CUSTOMER";
@@ -160,12 +162,12 @@ export function Header() {
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-100">
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex h-16 items-center gap-3">
-          {/* Logo */}
+          {/* Logo – i18n Issue #24 */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md text-white font-black text-base">H</div>
             <div className="hidden sm:block">
-              <p className="text-sm font-black text-slate-900 leading-none">هایپرمارکت</p>
-              <p className="text-[10px] text-emerald-600 font-medium tracking-wide">همه چیز برای همه</p>
+              <p className="text-sm font-black text-slate-900 leading-none">{t('common.appName')}</p>
+              <p className="text-[10px] text-emerald-600 font-medium tracking-wide">{t('common.tagline')}</p>
             </div>
           </Link>
 
@@ -179,13 +181,13 @@ export function Header() {
               onFocus={() => { if (query.trim().length >= 2) setIsSuggestOpen(true); }}
               onKeyDown={handleSearchKeyDown}
               role="combobox"
-              aria-label="جستجو در محصولات"
+              aria-label={t('header.searchAriaLabel')}
               aria-expanded={showSuggestPanel}
               aria-controls={listboxId}
               aria-autocomplete="list"
               aria-haspopup="listbox"
               aria-activedescendant={activeOptionId}
-              placeholder="جستجو در محصولات..."
+              placeholder={t('header.searchPlaceholder')}
               autoComplete="off"
               className="h-10 bg-slate-50 pr-11 rounded-2xl border-slate-200 focus:bg-white"
             />
@@ -194,10 +196,10 @@ export function Header() {
 
           <div className="flex-1 md:hidden" />
 
-          {/* Desktop Nav */}
+          {/* Desktop Nav – i18n migrated Issue #24 */}
           <nav className="hidden lg:flex items-center gap-1 text-sm">
-            <Link href="/products" className="px-4 py-2 font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition">محصولات</Link>
-            {user && <Link href="/orders" className="px-4 py-2 font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition">سفارش‌ها</Link>}
+            <Link href="/products" className="px-4 py-2 font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition">{t('nav.products')}</Link>
+            {user && <Link href="/orders" className="px-4 py-2 font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition">{t('nav.orders')}</Link>}
           </nav>
 
           {/* Actions */}
@@ -213,16 +215,16 @@ export function Header() {
             <Link 
               href="/cart" 
               className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-50 transition" 
-              aria-label={cartCount > 0 ? `سبد خرید، ${cartCount} عدد کالا` : "سبد خرید"}
+              aria-label={cartCount > 0 ? tf('header.cartCountAriaLabel_full', { count: cartCount }) : t('header.cartAriaLabel')}
             >
               <ShoppingCart className="h-5 w-5" aria-hidden="true" />
               {cartCount > 0 && (
                 <span 
                   className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow ring-1 ring-white px-1"
-                  aria-label={`${cartCount} مورد در سبد خرید`}
+                  aria-label={tf('header.cartCountAriaLabel', { count: cartCount })}
                   aria-live="polite"
                 >
-                  {cartCount > 9 ? "۹+" : cartCount.toLocaleString("fa-IR")}
+                  {cartCount > 9 ? t('cart.itemsCount_9plus').replace(' کالا','') : cartCount.toLocaleString("fa-IR")}
                 </span>
               )}
             </Link>

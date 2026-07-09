@@ -1,0 +1,196 @@
+{
+  "$schema": "./fa.schema.json",
+  "_meta": {
+    "locale": "fa-IR",
+    "dir": "rtl",
+    "version": "1.0.0",
+    "description": "HyperMarket Persian UI dictionary – Issue #24 i18n baseline"
+  },
+  "common": {
+    "appName": "هایپرمارکت",
+    "tagline": "همه چیز برای همه",
+    "loading": "در حال بارگذاری...",
+    "search": "جستجو",
+    "save": "ذخیره",
+    "cancel": "لغو",
+    "confirm": "تأیید",
+    "delete": "حذف",
+    "edit": "ویرایش",
+    "close": "بستن",
+    "back": "بازگشت",
+    "next": "بعدی",
+    "previous": "قبلی",
+    "viewAll": "مشاهده همه",
+    "currency": "تومان",
+    "free": "رایگان",
+    "inStock": "موجود",
+    "outOfStock": "ناموجود",
+    "lowStock": "تنها {count} عدد باقی مانده",
+    "addedToCart": "به سبد خرید اضافه شد",
+    "addToCartFailed": "افزودن ناموفق",
+    "addToCart": "افزودن به سبد",
+    "adding": "در حال افزودن...",
+    "unavailable": "ناموجود",
+    "unknown": "نامشخص"
+  },
+  "nav": {
+    "home": "خانه",
+    "products": "محصولات",
+    "categories": "دسته‌بندی‌ها",
+    "search": "جستجو",
+    "cart": "سبد",
+    "cart_full": "سبد خرید",
+    "orders": "سفارش‌ها",
+    "profile": "حساب",
+    "profile_full": "پروفایل",
+    "wishlist": "علاقه‌مندی‌ها",
+    "login": "ورود",
+    "register": "ثبت‌نام",
+    "logout": "خروج",
+    "admin": "مدیریت",
+    "dashboard": "داشبورد"
+  },
+  "header": {
+    "searchPlaceholder": "جستجو در محصولات...",
+    "searchAriaLabel": "جستجو در محصولات",
+    "cartAriaLabel": "سبد خرید",
+    "cartCountAriaLabel": "{count} مورد در سبد خرید",
+    "cartCountAriaLabel_full": "سبد خرید، {count} عدد کالا",
+    "profileAriaLabel": "پروفایل",
+    "menuAriaLabel": "منو",
+    "searchButtonAria": "جستجو",
+    "shippingTo": "ارسال به آدرس شما",
+    "loginRegister": "ورود / ثبت‌نام"
+  },
+  "auth": {
+    "login": {
+      "eyebrow": "ورود سریع و امن",
+      "title": "به حساب خود برگردید",
+      "description": "وارد حساب کاربری شوید و به تمام سفارش‌ها، لیست علاقه‌مندی‌ها و تخفیف‌های اختصاصی خود دسترسی پیدا کنید.",
+      "formTitle": "ورود به حساب",
+      "identifierLabel": "ایمیل یا شماره موبایل",
+      "identifierPlaceholder": "example@email.com یا 0912...",
+      "passwordLabel": "رمز عبور",
+      "passwordPlaceholder": "رمز عبور خود را وارد کنید",
+      "forgotPassword": "فراموشی رمز عبور",
+      "showPassword": "نمایش رمز عبور",
+      "hidePassword": "مخفی کردن رمز عبور",
+      "submit": "ورود به حساب",
+      "submitting": "در حال ورود...",
+      "noAccount": "حساب ندارید؟",
+      "registerCta": "ثبت‌نام کنید",
+      "otpCta": "تأیید کد پیامکی / ایمیلی",
+      "invalidCredentials": "اطلاعات ورود معتبر نیست",
+      "loginFailed": "ورود ناموفق بود",
+      "loginFailedDesc": "ورود ناموفق بود. دوباره تلاش کنید.",
+      "loginSuccess": "با موفقیت وارد شدید"
+    },
+    "register": {
+      "title": "ثبت‌نام",
+      "haveAccount": "حساب دارید؟",
+      "loginCta": "وارد شوید"
+    },
+    "logoutSuccess": "از حساب کاربری خارج شدید",
+    "customerOnlyCart": "سبد خرید فقط برای حساب مشتری فعال است",
+    "loginRequiredCart": "برای افزودن به سبد خرید ابتدا وارد شوید"
+  },
+  "product": {
+    "detailAriaLabel": "مشاهده جزئیات {name}",
+    "addToCartAriaLabel": "افزودن {name} به سبد خرید",
+    "discount": "{percent}% تخفیف",
+    "outOfStock": "ناموجود",
+    "lowStock": "فقط {count} باقی",
+    "brand": "برند",
+    "notFound": {
+      "title": "محصول یافت نشد",
+      "description": "محصول مورد نظر در هایپرمارکت یافت نشد یا در حال حاضر فعال نیست."
+    },
+    "price": {
+      "from": "از {price}",
+      "currency": "تومان"
+    }
+  },
+  "cart": {
+    "itemsCount": "{count} کالا",
+    "itemsCount_9plus": "۹+ کالا",
+    "empty": "سبد خرید خالی است",
+    "total": "جمع کل",
+    "checkout": "تسویه حساب"
+  },
+  "a11y": {
+    "skipToContent": "پرش به محتوا",
+    "closeDialog": "بستن",
+    "openMenu": "باز کردن منو",
+    "closeMenu": "بستن منو",
+    "nextImage": "تصویر بعدی",
+    "previousImage": "تصویر قبلی",
+    "zoomIn": "بزرگنمایی",
+    "searchSuggestions": "پیشنهادهای جستجو",
+    "searching": "در حال جستجو...",
+    "noResults": "نتیجه‌ای یافت نشد.",
+    "viewAllResults": "مشاهده همه نتایج"
+  },
+  "errors": {
+    "generic": "خطایی رخ داد",
+    "network": "خطا در ارتباط با سرور",
+    "notFound": "یافت نشد",
+    "unauthorized": "دسترسی غیرمجاز",
+    "forbidden": "اجازه دسترسی ندارید",
+    "validation": "اطلاعات وارد شده معتبر نیست"
+  },
+  "admin": {
+    "dashboard": "داشبورد مدیریت",
+    "dashboardSubtitle": "نمای کلی فروش، سفارش‌ها و موجودی فروشگاه",
+    "orders": "سفارش‌ها",
+    "products": "محصولات",
+    "users": "کاربران",
+    "analytics": "آنالیتیکس",
+    "categories": "دسته‌بندی‌ها",
+    "coupons": "کوپن‌ها",
+    "payments": "پرداخت‌ها",
+    "roles": "نقش‌ها"
+  },
+  "home": {
+    "heroBadge": "پیشنهاد ویژه امروز",
+    "heroTitle": "خرید سریع و\\nارزان از اسنپ‌مارکت",
+    "heroSubtitle": "هزاران محصول تازه با ارسال در کمتر از ۲ ساعت",
+    "startShopping": "شروع خرید",
+    "viewCategories": "مشاهده دسته‌بندی‌ها",
+    "rating": "۴.۸ امتیاز",
+    "ordersSuccess": "+۱۲۰٬۰۰۰ سفارش موفق",
+    "categoriesTitle": "دسته‌بندی‌ها",
+    "categoriesSubtitle": "آنچه نیاز دارید را سریع پیدا کنید",
+    "allCategories": "همه دسته‌ها →",
+    "bestSellers": "پرفروش‌ترین‌ها",
+    "bestSellersSubtitle": "محبوب‌ترین محصولات هفته",
+    "flashSale": "فروش ویژه",
+    "flashSaleSubtitle": "تا ۷۰٪ تخفیف — محدود",
+    "timeLeft": "۱۲ ساعت باقی‌مانده",
+    "newArrivals": "جدیدترین محصولات",
+    "newArrivalsSubtitle": "تازه به فروشگاه اضافه شده‌اند",
+    "viewAllNew": "همه محصولات جدید",
+    "finalCtaTitle": "هر روز، تازه‌تر",
+    "finalCtaLoggedIn": "سفارش‌های خود را دنبال کنید",
+    "finalCtaGuest": "همین حالا ثبت‌نام کنید و از تخفیف‌های اختصاصی بهره‌مند شوید",
+    "viewOrders": "مشاهده سفارش‌ها",
+    "freeRegister": "ثبت‌نام رایگان"
+  },
+  "features": {
+    "fastShipping": {
+      "label": "ارسال سریع",
+      "desc": "در کمتر از ۲ ساعت"
+    },
+    "authenticity": {
+      "label": "تضمین اصالت",
+      "desc": "۱۰۰٪ اورجینال"
+    },
+    "easyReturn": {
+      "label": "بازگشت آسان",
+      "desc": "۷ روز ضمانت"
+    },
+    "support247": {
+      "label": "پشتیبانی ۲۴/۷",
+      "desc": "همیشه در دسترس"
+    }
+  }
+}

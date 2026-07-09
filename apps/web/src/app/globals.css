@@ -49,6 +49,45 @@
   --color-primary-text: #007a38;
   --color-link: #007a38;
   --color-link-hover: #00662f;
+
+  /* ── Design System Tokens — Issue #25 ────────────────────────── */
+  /* Border radius scale – normalize: sm=8px, md=12px, lg=16px, xl=20px, 2xl=24px */
+  --radius-sm: 0.5rem;    /* 8px */
+  --radius-md: 0.75rem;   /* 12px */
+  --radius-lg: 1rem;      /* 16px */
+  --radius-xl: 1.25rem;   /* 20px */
+  --radius-2xl: 1.5rem;   /* 24px */
+  /* Legacy 3xl mapped to 2xl for consistency */
+  --radius-3xl: var(--radius-2xl);
+
+  /* Spacing scale – 4px base */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+
+  /* Card / component heights – replaces magic min-h-[310px] */
+  --card-product-min-h: 20rem;       /* 320px – was 310px */
+  --card-product-min-h-sm: 22rem;    /* 352px – was 340px */
+
+  /* Touch target – WCAG 2.5.5 */
+  --touch-target-min: 44px;
+
+  /* Shadow tokens */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Z-index scale */
+  --z-dropdown: 40;
+  --z-sticky: 50;
+  --z-modal-backdrop: 60;
+  --z-modal: 70;
+  --z-toast: 90;
 }
 
 * {

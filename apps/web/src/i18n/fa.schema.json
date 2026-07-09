@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HyperMarket Persian i18n dictionary",
+  "type": "object",
+  "description": "Central Persian copy – Issue #24",
+  "additionalProperties": true
+}

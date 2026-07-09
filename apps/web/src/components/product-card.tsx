@@ -10,6 +10,10 @@ import { useAuthStore } from "@/store/auth-store";
 import { formatNumber, formatPrice } from "@/lib/utils";
 import { getProductImageUrl } from "@/lib/image-utils";
 import type { Product } from "@/types/domain";
+// i18n – Issue #24
+import { t, tf } from "@/i18n";
+// design tokens – Issue #25 – CSS variables used in JSX, TS tokens available via:
+// import { card as cardTokens, tw } from "@/lib/design-tokens";
 
 export function ProductCard({
   product,
@@ -33,30 +37,35 @@ export function ProductCard({
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      showToast({ type: "info", title: "برای افزودن به سبد خرید ابتدا وارد شوید" });
+      showToast({ type: "info", title: t('auth.loginRequiredCart') });
       router.push("/login");
       return;
     }
     if (user.role !== "customer" && user.role !== "CUSTOMER") {
-      showToast({ type: "error", title: "سبد خرید فقط برای حساب مشتری فعال است" });
+      showToast({ type: "error", title: t('auth.customerOnlyCart') });
       return;
     }
     try {
       await addToCart.mutateAsync({ productId: product._id, quantity: 1 });
-      showToast({ type: "success", title: "به سبد خرید اضافه شد" });
+      showToast({ type: "success", title: t('common.addedToCart') });
     } catch (error) {
-      showToast({ type: "error", title: "افزودن ناموفق", description: error instanceof Error ? error.message : undefined });
+      showToast({ type: "error", title: t('common.addToCartFailed'), description: error instanceof Error ? error.message : undefined });
     }
   }
 
   return (
     <div
-      className="group relative flex h-full min-h-[310px] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-[3px] hover:shadow-lg active:scale-[0.985] focus-within:ring-2 focus-within:ring-emerald-200 focus-within:ring-offset-2 sm:min-h-[340px]"
+      className="group product-card relative flex h-full min-h-[var(--card-product-min-h)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-[3px] hover:shadow-lg active:scale-[0.985] focus-within:ring-2 focus-visible:outline-none sm:min-h-[var(--card-product-min-h-sm)]"
+      style={{
+        // Design tokens – Issue #25 centralized
+        // min-height via CSS variables instead of magic 310px/340px
+        borderRadius: "var(--radius-2xl)",
+      }}
     >
       <Link 
         href={`/products/${product._id}`} 
         className="relative block aspect-square bg-slate-50 overflow-hidden"
-        aria-label={`مشاهده جزئیات ${product.name}`}
+        aria-label={tf('product.detailAriaLabel', { name: product.name })}
       >
         {product.images?.[0] ? (
           <Image
@@ -86,12 +95,14 @@ export function ProductCard({
 
         {product.stock < 1 && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <span className="rounded-2xl bg-white/95 px-4 py-1.5 text-xs font-bold text-red-600 shadow">ناموجود</span>
+            <span className="rounded-2xl bg-white/95 px-4 py-1.5 text-xs font-bold text-red-600 shadow">{t('common.outOfStock')}</span>
           </div>
         )}
 
         {product.stock > 0 && product.stock < 6 && (
-          <div className="absolute bottom-3 right-3 rounded-xl bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">فقط {formatNumber(product.stock)} باقی</div>
+          <div className="absolute bottom-3 right-3 rounded-xl bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+            {tf('common.lowStock', { count: product.stock })}
+          </div>
         )}
       </Link>
 
@@ -113,17 +124,21 @@ export function ProductCard({
             )}
             <p className="text-[15px] font-black text-slate-900">{formatPrice(price)}</p>
           </div>
-          <span className="text-[10px] font-medium text-slate-400">تومان</span>
+          <span className="text-[10px] font-medium text-slate-400">{t('common.currency')}</span>
         </div>
 
         <button
           onClick={handleAddToCart}
           disabled={product.stock < 1 || addToCart.isPending}
-          aria-label={`افزودن ${product.name} به سبد خرید`}
+          aria-label={tf('product.addToCartAriaLabel', { name: product.name })}
           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-emerald-50 py-[9px] text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-100 active:bg-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            borderRadius: "var(--radius-xl)",
+            minHeight: "var(--touch-target-min)",
+          }}
         >
-          <ShoppingCart className="h-3.5 w-3.5" />
-          {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد"}
+          <ShoppingCart className="h-3.5 w-3.5" aria-hidden="true" />
+          {addToCart.isPending ? t('common.adding') : t('common.addToCart')}
         </button>
       </div>
     </div>
