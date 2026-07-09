@@ -8,10 +8,10 @@ import { translateOrderStatus, translatePaymentStatus } from "@/lib/utils";
 export function OrderStatusBadge({ status }: { status: string }) {
   const classes: Record<string, string> = {
     pending: "bg-amber-50 text-amber-700",
-    paid: "bg-sky-50 text-sky-700",
+    paid: "bg-green-50 text-green-700",
     processing: "bg-violet-50 text-violet-700",
     shipped: "bg-indigo-50 text-indigo-700",
-    delivered: "bg-emerald-50 text-emerald-700",
+    delivered: "bg-green-50 text-green-700",
     cancelled: "bg-red-50 text-red-700",
   };
 
@@ -21,7 +21,7 @@ export function OrderStatusBadge({ status }: { status: string }) {
 export function PaymentStatusBadge({ status }: { status?: string }) {
   const classes: Record<string, string> = {
     pending: "bg-amber-50 text-amber-700",
-    paid: "bg-emerald-50 text-emerald-700",
+    paid: "bg-green-50 text-green-700",
     failed: "bg-red-50 text-red-700",
     cancelled: "bg-slate-100 text-slate-700",
   };

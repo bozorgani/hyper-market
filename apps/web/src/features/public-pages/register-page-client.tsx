@@ -76,7 +76,7 @@ export function RegisterPageClient() {
     if (/[^A-Za-z0-9]/.test(password)) score++;
     if (score <= 2) return { level: 1, label: "ضعیف", color: "bg-red-400" };
     if (score <= 3) return { level: 2, label: "متوسط", color: "bg-amber-400" };
-    return { level: 3, label: "قوی", color: "bg-emerald-500" };
+    return { level: 3, label: "قوی", color: "bg-green-500" };
   }, [password]);
 
   return (

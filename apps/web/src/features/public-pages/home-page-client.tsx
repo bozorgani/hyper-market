@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useMemo } from "react";
 import { 
   Truck, ShieldCheck, RotateCcw, Headphones, Zap, ArrowLeft, 
   Clock, Percent, Star 
@@ -47,7 +48,16 @@ export function HomePageClient({
   const categories = useCategories(initialCategories);
   const user = useAuthStore((s) => s.user);
 
-  const items = products.data?.items ?? [];
+  // Deduplicate products by _id to prevent duplicates across sections
+  const uniqueItems = useMemo(() => {
+    const seen = new Set<string>();
+    const source = products.data?.items ?? [];
+    return source.filter((item) => {
+      if (seen.has(item._id)) return false;
+      seen.add(item._id);
+      return true;
+    });
+  }, [products.data?.items]);
   const categoryList = categories.data ?? [];
   const shouldShowCategorySkeleton = categories.isLoading && categoryList.length === 0;
   const visibleCategories = categoryList.length > 0
@@ -55,11 +65,11 @@ export function HomePageClient({
     : fallbackCategories;
 
   // همیشه داده داشته باشیم
-  const bestSellers = items.length > 0 ? items.slice(0, 8) : [];
-  const newArrivals = items.length > 0 ? [...items].reverse().slice(0, 6) : [];
-  const discounted = items.length > 0 
-    ? items.filter((p) => p.discountPrice != null).slice(0, 6) 
-    : items.slice(0, 4); // fallback
+  const bestSellers = uniqueItems.length > 0 ? uniqueItems.slice(0, 8) : [];
+  const newArrivals = uniqueItems.length > 0 ? [...uniqueItems].reverse().slice(0, 6) : [];
+  const discounted = uniqueItems.length > 0 
+    ? uniqueItems.filter((p) => p.discountPrice != null).slice(0, 6) 
+    : uniqueItems.slice(0, 4); // fallback
 
   return (
     <main className="pb-20 lg:pb-10 bg-slate-50">
@@ -230,7 +240,7 @@ export function HomePageClient({
         </div>
 
         <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {(discounted.length > 0 ? discounted : items.slice(0, 6)).map((product, index) => (
+          {(discounted.length > 0 ? discounted : uniqueItems.slice(0, 6)).map((product, index) => (
             <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.04 }} className="h-full">
               <ProductCard product={product} priority={index < 2} />
             </motion.div>
@@ -254,7 +264,7 @@ export function HomePageClient({
               <ProductCard product={product} priority={false} />
             </motion.div>
           )) : (
-            items.slice(0, 6).map((product, index) => (
+            uniqueItems.slice(0, 6).map((product, index) => (
               <ProductCard key={product._id} product={product} priority={index < 2} />
             ))
           )}

@@ -17,6 +17,15 @@ import { useCategories } from "@/hooks/use-products";
 import { useProductSearch, type SearchResponse } from "@/hooks/use-search";
 import { formatNumber, formatPrice } from "@/lib/utils";
 
+function deduplicateById<T extends { id: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
+
 function SearchResultsSkeleton() {
   return (
     <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
@@ -170,7 +179,7 @@ function SearchContent({ initialSearch }: { initialSearch?: SearchResponse }) {
 
       {!search.isLoading && !search.isError && hasResults ? (
         <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {(search.data?.items ?? []).map((product) => (
+          {deduplicateById(search.data?.items ?? []).map((product) => (
             <Card key={product.id} className="overflow-hidden text-right">
               <Link href={`/products/${product.id}`} className="block aspect-square bg-slate-100">
                 <div className="flex h-full items-center justify-center text-4xl">🛍️</div>

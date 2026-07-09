@@ -53,29 +53,43 @@ export function OrderSummaryCard({
 }: OrderSummaryCardProps) {
   return (
     <Card className="p-6 h-fit lg:sticky lg:top-20">
-      <p className="text-sm text-slate-500">مبلغ قابل پرداخت</p>
-      <div className="flex items-center gap-2 mt-2">
-        <p className="text-3xl font-black text-rose-600">{formatPrice(finalPrice)}</p>
-        {discountAmount > 0 && (
-          <span className="text-sm text-slate-400 line-through">{formatPrice(totalPrice)}</span>
-        )}
-      </div>
-      {discountAmount > 0 && (
-        <p className="mt-1 text-xs text-emerald-600 font-medium flex items-center gap-1">
-          <span>✨</span>
-          {formatNumber(appliedDiscount?.percent ?? 0)}٪ تخفیف = {formatPrice(discountAmount)} تومان
-        </p>
-      )}
+      <p className="text-sm text-slate-500">صورتحساب</p>
 
-      <div className="mt-4 flex items-center justify-between text-sm">
-        <span className="text-slate-500">هزینه ارسال</span>
-        <span className="font-bold text-slate-800">
-          {shippingQuote.isLoading ? "در حال محاسبه..." : deliveryFee === 0 ? "رایگان" : formatPrice(deliveryFee)}
-        </span>
+      {/* Price breakdown */}
+      <div className="mt-4 space-y-3">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-500">قیمت کالاها</span>
+          <span className="font-semibold text-slate-800">{formatPrice(totalPrice)}</span>
+        </div>
+
+        {discountAmount > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="flex items-center gap-1 text-emerald-600">
+              <span>✨</span>
+              تخفیف ({formatNumber(appliedDiscount?.percent ?? 0)}٪)
+            </span>
+            <span className="font-semibold text-emerald-600">-{formatPrice(discountAmount)}</span>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-500">هزینه ارسال</span>
+          <span className="font-semibold text-slate-800">
+            {shippingQuote.isLoading ? "در حال محاسبه..." : deliveryFee === 0 ? "رایگان" : formatPrice(deliveryFee)}
+          </span>
+        </div>
+        {shippingQuote.data?.freeShippingApplied ? (
+          <p className="text-xs text-emerald-600">ارسال رایگان برای این سفارش اعمال شد.</p>
+        ) : null}
+
+        {/* Total divider */}
+        <div className="border-t border-slate-200 pt-3">
+          <div className="flex items-center justify-between">
+            <span className="text-base font-black text-slate-900">مبلغ قابل پرداخت</span>
+            <p className="text-2xl font-black text-rose-600">{formatPrice(finalPrice)}</p>
+          </div>
+        </div>
       </div>
-      {shippingQuote.data?.freeShippingApplied ? (
-        <p className="mt-2 text-xs text-emerald-600">ارسال رایگان برای این سفارش اعمال شد.</p>
-      ) : null}
 
       <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
         <div className="flex items-center gap-2">
@@ -102,15 +116,15 @@ export function OrderSummaryCard({
 
             return (
               <div key={step.key} className="flex gap-3">
-                <span
-                  className={cn(
-                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black",
-                    isDone
-                      ? "bg-emerald-500 text-white"
-                      : isActive
-                        ? "bg-rose-600 text-white shadow-sm shadow-rose-200"
-                        : "bg-white text-slate-400 ring-1 ring-slate-200"
-                  )}
+                        <span
+                          className={cn(
+                            "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black",
+                            isDone
+                              ? "bg-green-500 text-white"
+                              : isActive
+                                ? "bg-rose-600 text-white shadow-sm shadow-rose-200"
+                                : "bg-white text-slate-400 ring-1 ring-slate-200"
+                          )}
                 >
                   {isDone ? "✓" : index + 1}
                 </span>

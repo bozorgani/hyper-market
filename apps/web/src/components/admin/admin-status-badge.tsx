@@ -7,10 +7,10 @@ export { OrderStatusBadge, PaymentStatusBadge } from "@/components/order/status-
 
 const orderStyles: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50",
-  paid: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
+  paid: "bg-green-50 text-green-700 ring-1 ring-green-200/50",
   processing: "bg-blue-50 text-blue-700 ring-1 ring-blue-200/50",
   shipped: "bg-violet-50 text-violet-700 ring-1 ring-violet-200/50",
-  delivered: "bg-slate-100 text-slate-600 ring-1 ring-slate-200/50",
+  delivered: "bg-green-50 text-green-700 ring-1 ring-green-200/50",
   cancelled: "bg-red-50 text-red-600 ring-1 ring-red-200/50",
 };
 

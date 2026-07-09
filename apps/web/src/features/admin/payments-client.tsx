@@ -162,7 +162,7 @@ function PaymentStatusBadgeInline({ status }: { status?: string }) {
   const labels: Record<string, string> = { pending: "در انتظار", paid: "موفق", failed: "ناموفق", cancelled: "لغوشده" };
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${styles[status ?? ""] ?? "bg-slate-100 text-slate-500"}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${status === "paid" ? "bg-emerald-500" : status === "failed" ? "bg-red-500" : status === "pending" ? "bg-amber-500" : "bg-slate-400"}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${status === "paid" ? "bg-green-500" : status === "failed" ? "bg-red-500" : status === "pending" ? "bg-amber-500" : "bg-slate-400"}`} />
       {labels[status ?? ""] ?? "نامشخص"}
     </span>
   );

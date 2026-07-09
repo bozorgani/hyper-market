@@ -62,7 +62,7 @@ export function OrderCard({
               <div key={status} className="flex items-center gap-2 sm:flex-col sm:items-start">
                 <span
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                    isDone ? "bg-emerald-500 text-white" : isActive ? "bg-rose-600 text-white" : "bg-white text-slate-400 ring-1 ring-slate-200"
+                    isDone ? "bg-green-500 text-white" : isActive ? "bg-rose-600 text-white" : "bg-white text-slate-400 ring-1 ring-slate-200"
                   }`}
                 >
                   {isDone ? "✓" : index + 1}

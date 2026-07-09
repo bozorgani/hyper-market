@@ -36,21 +36,43 @@ export function DeliveryAddressSection({
           <p className="text-lg font-black text-slate-900">آدرس تحویل</p>
         </div>
 
-        <label className="mt-4 block space-y-2">
+        <div className="mt-4 space-y-3">
           <span className="text-sm font-semibold text-slate-600">انتخاب آدرس</span>
-          <select
-            onChange={(event) => onApplySavedAddress(event.target.value)}
-            value={selectedAddressId ?? ""}
-            className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
-          >
-            <option value="" disabled>انتخاب آدرس</option>
-            {addresses.map((address) => (
-              <option key={address._id} value={address._id}>
-                {address.isDefault ? "پیش‌فرض — " : ""}{address.label || address.recipientName}، {address.city}
-              </option>
-            ))}
-          </select>
-        </label>
+          {addresses.map((address) => {
+            const isSelected = selectedAddressId === address._id;
+            return (
+              <button
+                key={address._id}
+                type="button"
+                onClick={() => onApplySavedAddress(address._id)}
+                className={`w-full text-right rounded-2xl border p-4 transition ${
+                  isSelected
+                    ? "border-rose-300 bg-rose-50 ring-2 ring-rose-200"
+                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                    isSelected ? "border-rose-500 bg-rose-500" : "border-slate-300"
+                  }`}>
+                    {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-slate-900">{address.label || address.recipientName}</p>
+                      {address.isDefault && (
+                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">پیش‌فرض</span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-sm text-slate-600">{address.province}، {address.city}</p>
+                    <p className="text-sm text-slate-500">{address.addressLine}</p>
+                    <p className="mt-0.5 text-xs text-slate-400">{address.recipientName} — {address.phoneNumber}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
 
         {/* Selected address preview */}
         {deliveryAddress.recipientName && (

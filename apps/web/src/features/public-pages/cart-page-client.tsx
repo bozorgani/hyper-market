@@ -185,7 +185,8 @@ export function CartPageClient() {
                         ) : null}
                       </div>
                       <p className="text-sm text-slate-500">موجودی: {formatNumber(item.stock)}</p>
-                      <p className="text-sm font-bold text-rose-600">{formatPrice(item.lineTotal)}</p>
+                      <p className="text-xs text-slate-400">قیمت واحد: {formatPrice(item.discountPrice ?? item.price)}</p>
+                      <p className="text-sm font-bold text-rose-600">جمع: {formatPrice(item.lineTotal)}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between gap-3 sm:justify-end">
