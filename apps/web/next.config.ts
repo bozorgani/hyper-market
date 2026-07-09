@@ -55,24 +55,23 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "localhost",
         port: "3001",
-        pathname: "/api/v1/products/images/**",
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "**.hypermarket.ir",
-        pathname: "/api/v1/products/images/**",
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "placehold.co",
         pathname: "/**",
       },
-      // Add production domain when deployed
-      // {
-      //   protocol: "https",
-      //   hostname: "api.yourdomain.com",
-      //   pathname: "/api/v1/products/images/**",
-      // },
+      {
+        protocol: "https",
+        hostname: "**.up.railway.app",
+        pathname: "/**",
+      },
     ],
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],

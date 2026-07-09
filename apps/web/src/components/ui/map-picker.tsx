@@ -26,8 +26,16 @@ function createCustomIcon() {
   });
 }
 
+type MapLocationResult = {
+  lat: number;
+  lng: number;
+  address: string;
+  province: string;
+  city: string;
+};
+
 type MapPickerProps = {
-  onLocationSelect: (lat: number, lng: number, address: string) => void;
+  onLocationSelect: (result: MapLocationResult) => void;
   onClose: () => void;
   initialLat?: number;
   initialLng?: number;
@@ -46,6 +54,8 @@ export function MapPicker({
   const [isMapReady, setIsMapReady] = useState(false);
   const [mapError, setMapError] = useState("");
   const [selectedAddr, setSelectedAddr] = useState("");
+  const [selectedProvince, setSelectedProvince] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
   const [selectedLoc, setSelectedLoc] = useState<{
     lat: number;
     lng: number;
@@ -55,19 +65,26 @@ export function MapPicker({
   const startLng = initialLng ?? TEHRAN_CENTER[1];
 
   const reverseGeocode = useCallback(
-    async (lat: number, lng: number): Promise<string> => {
+    async (lat: number, lng: number): Promise<{ address: string; province: string; city: string }> => {
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=fa`,
         );
         const data = await res.json();
+        if (data.address) {
+          const province = data.address.state || "";
+          const city = data.address.city || data.address.county || data.address.town || data.address.village || "";
+          const shortAddr = [province, city, data.address.road || ""].filter(Boolean).join("، ");
+          return { address: shortAddr || data.display_name, province, city };
+        }
         if (data.display_name) {
-          return data.display_name.split(",").slice(0, 3).join(",").trim();
+          const parts = data.display_name.split(",");
+          return { address: parts.slice(0, 3).join(",").trim(), province: parts[0]?.trim() || "", city: parts[1]?.trim() || "" };
         }
       } catch {
         /* fallback */
       }
-      return `عرض: ${lat.toFixed(4)}، طول: ${lng.toFixed(4)}`;
+      return { address: `عرض: ${lat.toFixed(4)}، طول: ${lng.toFixed(4)}`, province: "", city: "" };
     },
     [],
   );
@@ -125,15 +142,19 @@ export function MapPicker({
     marker.on("dragend", async () => {
       const pos = marker.getLatLng();
       setSelectedLoc({ lat: pos.lat, lng: pos.lng });
-      const addr = await reverseGeocode(pos.lat, pos.lng);
-      setSelectedAddr(addr);
+      const result = await reverseGeocode(pos.lat, pos.lng);
+      setSelectedAddr(result.address);
+      setSelectedProvince(result.province);
+      setSelectedCity(result.city);
     });
 
     map.on("click", async (e: L.LeafletMouseEvent) => {
       marker.setLatLng(e.latlng);
       setSelectedLoc({ lat: e.latlng.lat, lng: e.latlng.lng });
-      const addr = await reverseGeocode(e.latlng.lat, e.latlng.lng);
-      setSelectedAddr(addr);
+      const result = await reverseGeocode(e.latlng.lat, e.latlng.lng);
+      setSelectedAddr(result.address);
+      setSelectedProvince(result.province);
+      setSelectedCity(result.city);
     });
 
     L.control.zoom({ position: "bottomleft" }).addTo(map);
@@ -178,9 +199,11 @@ export function MapPicker({
         mapInstanceRef.current?.setView([latitude, longitude], 16);
         markerRef.current?.setLatLng([latitude, longitude]);
         setSelectedLoc({ lat: latitude, lng: longitude });
-        reverseGeocode(latitude, longitude).then((addr) =>
-          setSelectedAddr(addr),
-        );
+        reverseGeocode(latitude, longitude).then((result) => {
+          setSelectedAddr(result.address);
+          setSelectedProvince(result.province);
+          setSelectedCity(result.city);
+        });
         setIsLocating(false);
       },
       () => setIsLocating(false),
@@ -188,12 +211,7 @@ export function MapPicker({
     );
   };
 
-  const handleConfirm = () => {
-    if (!selectedLoc) return;
-    onLocationSelect(selectedLoc.lat, selectedLoc.lng, selectedAddr);
-    onClose();
-  };
-
+  // handleConfirm inlined in button onClick — keeping only return statement
   return (
     <div className="fixed inset-0 z-[200] bg-white flex flex-col">
       {/* Header */}
@@ -255,11 +273,26 @@ export function MapPicker({
             <p className="text-sm font-medium text-slate-900 leading-6">
               {selectedAddr || "نقشه را لمس کنید یا مارکر را جابجا کنید..."}
             </p>
+            {(selectedProvince || selectedCity) ? (
+              <p className="text-xs text-emerald-600 font-semibold mt-1">
+                {selectedProvince && selectedCity ? `${selectedProvince}، ${selectedCity}` : selectedProvince || selectedCity}
+              </p>
+            ) : null}
           </div>
         </div>
 
         <button
-          onClick={handleConfirm}
+          onClick={() => {
+            if (!selectedLoc) return;
+            onLocationSelect({
+              lat: selectedLoc.lat,
+              lng: selectedLoc.lng,
+              address: selectedAddr,
+              province: selectedProvince,
+              city: selectedCity,
+            });
+            onClose();
+          }}
           disabled={!selectedLoc || !selectedAddr}
           className={cn(
             "w-full h-12 rounded-xl text-sm font-bold transition-all",

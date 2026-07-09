@@ -154,13 +154,16 @@ export function CheckoutPageClient() {
     });
   }
 
-  function handleMapLocationSelect(lat: number, lng: number, addr: string) {
-    setMapLocation({ lat, lng });
+  function handleMapLocationSelect(result: { lat: number; lng: number; address: string; province: string; city: string }) {
+    setMapLocation({ lat: result.lat, lng: result.lng });
     setDeliveryAddress((prev) => ({
       ...prev,
-      addressLine: addr.length > 8 ? addr : prev.addressLine,
+      addressLine: result.address.length > 8 ? result.address : prev.addressLine,
+      province: result.province || prev.province,
+      city: result.city || prev.city,
     }));
-    showToast({ type: "success", title: "آدرس از نقشه انتخاب شد" });
+    const extra = [result.province, result.city].filter(Boolean).join("، ");
+    showToast({ type: "success", title: "آدرس از نقشه انتخاب شد", description: extra || undefined });
   }
 
   async function checkout() {

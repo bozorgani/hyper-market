@@ -78,9 +78,19 @@ export function Header() {
               <Search className="h-5 w-5" />
             </button>
 
-            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 bg-slate-50 rounded-xl">
-              <MapPin className="h-3.5 w-3.5 text-emerald-500" /> ارسال به آدرس شما
-            </div>
+            {user ? (
+              <Link
+                href="/profile/addresses"
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 bg-slate-50 rounded-xl hover:bg-slate-100 hover:text-slate-700 transition"
+                aria-label="مدیریت آدرس‌ها"
+              >
+                <MapPin className="h-3.5 w-3.5 text-emerald-500" /> آدرس‌های من
+              </Link>
+            ) : (
+              <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 bg-slate-50 rounded-xl">
+                <MapPin className="h-3.5 w-3.5 text-emerald-500" /> ارسال به آدرس شما
+              </div>
+            )}
 
             <Link
               href="/cart"

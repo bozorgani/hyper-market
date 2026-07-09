@@ -77,7 +77,7 @@ type DeliveryAddressSectionProps = {
     data?: ShippingQuote | null;
   };
   onApplySavedAddress: (addressId: string) => void;
-  onMapLocationSelect: (lat: number, lng: number, address: string) => void;
+  onMapLocationSelect: (result: { lat: number; lng: number; address: string; province: string; city: string }) => void;
 };
 
 export function DeliveryAddressSection({
