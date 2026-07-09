@@ -142,7 +142,12 @@ export class ReviewService {
       throw new ForbiddenException('You can only update your own reviews');
     }
 
-    const updated = await this.reviewRepository.update(reviewId, dto);
+    const updated = await this.reviewRepository.update(reviewId, {
+      ...dto,
+      isApproved: false,
+      approvedAt: null,
+      approvedBy: null,
+    });
 
     return {
       message: 'Review updated successfully',

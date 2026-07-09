@@ -3,15 +3,10 @@
  * Seed initial SUPER_ADMIN user.
  *
  * Creates a bootstrap admin account if none exists.
- * Default credentials (change immediately in production!):
- *   Email: admin@hypermarket.local
- *   Phone: 09120000000
- *   Password: Admin@123456
+ * ADMIN_PASSWORD and PASSWORD_PEPPER MUST be set via environment variables.
+ * ADMIN_EMAIL and ADMIN_PHONE are optional (defaults provided for dev).
  *
- * You can override via env:
- *   ADMIN_EMAIL, ADMIN_PHONE, ADMIN_PASSWORD
- *
- * Usage: npm run seed:admin
+ * Usage: ADMIN_PASSWORD=... PASSWORD_PEPPER=... npm run seed:admin
  */
 
 const fs = require('fs');
@@ -45,7 +40,11 @@ const UserSchema = new mongoose.Schema({}, { collection: 'users', strict: false 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 async function hashPassword(password) {
-  const pepper = process.env.PASSWORD_PEPPER || '';
+  const pepper = process.env.PASSWORD_PEPPER;
+  if (!pepper) {
+    console.error('PASSWORD_PEPPER env var is required. Set it in .env or export it.');
+    process.exit(1);
+  }
   const saltRounds = 12;
   return bcrypt.hash(password + pepper, saltRounds);
 }
@@ -54,12 +53,20 @@ async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error('DATABASE_URL is not set');
 
-  await mongoose.connect(databaseUrl);
-  console.log('Connected to MongoDB.');
+  // ── Require ADMIN_PASSWORD ──────────────────────────────────────────
+  const plainPassword = process.env.ADMIN_PASSWORD;
+  if (!plainPassword) {
+    console.error('ADMIN_PASSWORD env var is required. Set it in .env or export it.');
+    console.error('Example: ADMIN_PASSWORD="YourStr0ng!Pass" npm run seed:admin');
+    process.exit(1);
+  }
 
+  // ── Optional overrides with safe defaults for development ───────────
   const email = process.env.ADMIN_EMAIL || 'admin@hypermarket.local';
   const phoneNumber = process.env.ADMIN_PHONE || '09133241104';
-  const plainPassword = process.env.ADMIN_PASSWORD || 'N@ima6.61';
+
+  await mongoose.connect(databaseUrl);
+  console.log('Connected to MongoDB.');
 
   // Check if any super_admin already exists
   const existingAdmin = await User.findOne({ role: { $in: ['super_admin', 'admin'] } }).lean();
@@ -108,7 +115,6 @@ async function main() {
   console.log(`  Role    : super_admin`);
   console.log(`  ID      : ${admin._id}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('\n⚠️  CHANGE THIS PASSWORD IMMEDIATELY IN PRODUCTION!\n');
 
   await mongoose.disconnect();
   process.exit(0);
