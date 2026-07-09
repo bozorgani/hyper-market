@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updateOrderStatusAction } from "@/app/actions/checkout";
+import {
+  revalidateCategories,
+  revalidateCategory,
+  revalidateProduct,
+  revalidateProducts,
+} from "@/app/actions/revalidate";
 import { api } from "@/services/api";
 import type { Category, Coupon, Order, PaginatedResponse, Payment, Product, ProductListResponse, User } from "@/types/domain";
 
@@ -46,7 +52,13 @@ export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: ProductFormInput) => (await api.post<Product>("/admin/products", input)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "products"] }),
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+      // Next.js cache tag invalidation – Issue #18
+      try {
+        await revalidateProducts();
+      } catch {}
+    },
   });
 }
 
@@ -54,9 +66,13 @@ export function useUpdateProduct(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: Partial<ProductFormInput>) => (await api.put<Product>(`/admin/products/${id}`, input)).data,
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "product", id] });
+      // Revalidate Next.js cache tags
+      try {
+        await revalidateProduct(id);
+      } catch {}
     },
   });
 }
@@ -76,7 +92,13 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => (await api.delete<Product>(`/admin/products/${id}`)).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "products"] }),
+    onSuccess: async (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+      try {
+        await revalidateProduct(id);
+        await revalidateProducts();
+      } catch {}
+    },
   });
 }
 
@@ -109,9 +131,12 @@ export function useCreateCategory() {
   return useMutation({
     mutationFn: async (input: CategoryFormInput) =>
       (await api.post<Category>("/admin/categories", input)).data,
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      try {
+        await revalidateCategories();
+      } catch {}
     },
   });
 }
@@ -121,9 +146,13 @@ export function useUpdateCategory() {
   return useMutation({
     mutationFn: async ({ id, input }: { id: string; input: CategoryFormInput }) =>
       (await api.put<Category>(`/admin/categories/${id}`, input)).data,
-    onSuccess: () => {
+    onSuccess: async (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      try {
+        await revalidateCategory(variables.id);
+        await revalidateCategories();
+      } catch {}
     },
   });
 }
@@ -133,9 +162,13 @@ export function useDeleteCategory() {
   return useMutation({
     mutationFn: async (id: string) =>
       (await api.delete<Category>(`/admin/categories/${id}`)).data,
-    onSuccess: () => {
+    onSuccess: async (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "categories"] });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      try {
+        await revalidateCategory(id);
+        await revalidateCategories();
+      } catch {}
     },
   });
 }

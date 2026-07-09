@@ -1,11 +1,11 @@
 "use client";
 
-import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { ToastProvider, useToast } from "@/components/ui/toast";
+import { ToastProvider } from "@/components/ui/toast";
 import { useAuthStore } from "@/store/auth-store";
 
-function createQueryClient(showToast?: ReturnType<typeof useToast>["showToast"]) {
+function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
@@ -18,27 +18,20 @@ function createQueryClient(showToast?: ReturnType<typeof useToast>["showToast"])
         },
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
+        // Error handling is now per-component – no global toast to avoid duplicate UX noise (Issue #19)
       },
       mutations: {
         retry: 0,
       },
     },
-    queryCache: new QueryCache({
-      onError: (error) => {
-        if (!showToast) return;
-        showToast({
-          type: "error",
-          title: "دریافت اطلاعات ناموفق بود",
-          description: error instanceof Error ? error.message : undefined,
-        });
-      },
-    }),
+    // QueryCache onError toast removed – Issue #19
+    // Prevents duplicate toasts, stale closure, and noisy global error handling.
+    // Components should handle errors with useQuery({ ... , meta }) or UI-level ErrorState.
   });
 }
 
 function AppProviders({ children }: { children: React.ReactNode }) {
-  const { showToast } = useToast();
-  const [queryClient] = useState(() => createQueryClient(showToast));
+  const [queryClient] = useState(() => createQueryClient());
   const hydrate = useAuthStore((state) => state.hydrate);
 
   useEffect(() => {
