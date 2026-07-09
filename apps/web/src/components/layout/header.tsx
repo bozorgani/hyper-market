@@ -7,7 +7,6 @@ import {
   Search, ShoppingCart, UserRound, MapPin, Menu,
 } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
-import { useToast } from "@/components/ui/toast";
 import { isCustomerRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
 import { DesktopSearch } from "./desktop-search";
@@ -17,8 +16,6 @@ import { MobileMenu } from "./mobile-menu";
 export function Header() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const { showToast } = useToast();
   const isCustomer = isCustomerRole(user?.role);
   const cart = useCart(isCustomer);
   const cartItems = cart.data?.items ?? [];
@@ -49,12 +46,6 @@ export function Header() {
     const normalizedQuery = query.trim();
     router.push(normalizedQuery ? `/search?q=${encodeURIComponent(normalizedQuery)}` : "/search");
     setQuery("");
-  }
-
-  function handleLogout() {
-    void logout();
-    showToast({ type: "info", title: "از حساب کاربری خارج شدید" });
-    setMobileMenuOpen(false);
   }
 
   return (

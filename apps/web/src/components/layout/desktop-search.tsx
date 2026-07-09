@@ -21,6 +21,20 @@ export function DesktopSearch() {
   const suggestions = useSearchSuggest(debouncedQuery);
   const suggestionItems = suggestions.data ?? [];
 
+  // Define handler functions before useEffect to avoid TDZ lint error
+  function handlePointerDown(event: MouseEvent) {
+    if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      setIsSuggestOpen(false);
+    }
+  }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      setIsSuggestOpen(false);
+      setQuery("");
+    }
+  }
+
   // Attach global listeners for outside-click and Escape on search suggestions
   useEffect(() => {
     document.addEventListener("mousedown", handlePointerDown);
@@ -38,19 +52,6 @@ export function DesktopSearch() {
     activeSuggestionIndex >= 0
       ? `header-search-option-${activeSuggestionIndex}`
       : undefined;
-
-  function handlePointerDown(event: MouseEvent) {
-    if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-      setIsSuggestOpen(false);
-    }
-  }
-
-  function handleKeyDown(event: KeyboardEvent) {
-    if (event.key === "Escape") {
-      setIsSuggestOpen(false);
-      setQuery("");
-    }
-  }
 
   function handleSearchKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
     if (!showSuggestPanel || suggestionItems.length === 0) return;

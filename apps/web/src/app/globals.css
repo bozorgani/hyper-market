@@ -321,3 +321,13 @@ tr:hover td {
     scroll-behavior: auto !important;
   }
 }
+
+/* Page transition animation – used by (main)/layout.tsx */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}

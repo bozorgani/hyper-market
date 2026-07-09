@@ -24,6 +24,13 @@ function getBaseUrl(): string {
   }
 }
 
+/**
+ * Maximum URLs per sitemap (Google allows up to 50,000).
+ * Keeping well under limit for performance.
+ */
+const MAX_PRODUCTS = 1000;
+const PRODUCTS_PER_PAGE = 200;
+
 export const revalidate = 3600; // 1h
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -58,15 +65,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Dynamic product URLs
+  // Dynamic product URLs — fetch across multiple pages for full catalog coverage
   let productUrls: MetadataRoute.Sitemap = [];
   try {
-    // Fetch first 200 products – sitemap chunking can be added later
-    const productList = await fetchProductListForSSR({ page: 1, limit: 200 });
-    const products = (productList?.items ?? []) as SitemapProduct[];
-    // Support both shapes: {items: Product[]} or ProductListResponse
-    const list = Array.isArray(products) ? products : [];
-    productUrls = list
+    const allProducts: SitemapProduct[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && allProducts.length < MAX_PRODUCTS) {
+      const productList = await fetchProductListForSSR({
+        page,
+        limit: PRODUCTS_PER_PAGE,
+      });
+      const items = (productList?.items ?? []) as SitemapProduct[];
+      const list = Array.isArray(items) ? items : [];
+
+      allProducts.push(...list);
+
+      // Stop if this page returned fewer items than requested (last page)
+      if (list.length < PRODUCTS_PER_PAGE || !productList?.meta?.hasNextPage) {
+        hasMore = false;
+      }
+
+      page += 1;
+    }
+
+    productUrls = allProducts
       .filter((p) => p && (p._id || p.id) && p.isActive !== false)
       .map((p) => ({
         url: `${baseUrl}/products/${p._id ?? p.id}`,
@@ -75,7 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       }));
   } catch {
-    // fail silent – sitemap will still serve static routes
+    // fail silent — sitemap will still serve static routes
   }
 
   // Category URLs
@@ -93,7 +117,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           changeFrequency: "weekly" as const,
           priority: 0.6,
         }));
-      // Also add /products?categoryId=… search-friendly variants are covered by /products
     }
   } catch {
     // ignore

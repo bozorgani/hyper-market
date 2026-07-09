@@ -10,7 +10,6 @@ import { useToast } from "@/components/ui/toast";
 type MobileMenuProps = {
   open: boolean;
   onClose: () => void;
-  onLogout?: () => void;
 };
 
 const menuVariants = {
@@ -23,7 +22,7 @@ const overlayVariants = {
   open: { opacity: 1 },
 };
 
-function MobileMenuContent({ open, onClose, onLogout }: MobileMenuProps) {
+function MobileMenuContent({ open, onClose }: MobileMenuProps) {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const { showToast } = useToast();

@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn, formatNumber, formatPrice } from "@/lib/utils";
 import type { CouponValidationResult } from "@/hooks/use-coupons";
-import type { ShippingQuote } from "@/hooks/use-shipping";
 
 type CheckoutStep = "idle" | "creating_order" | "confirming_payment" | "redirecting";
 
@@ -14,10 +13,6 @@ const checkoutSteps: { key: Exclude<CheckoutStep, "idle">; title: string; descri
   { key: "confirming_payment", title: "تأیید پرداخت در محل", description: "ثبت پرداخت در محل و تأیید سفارش" },
   { key: "redirecting", title: "انتقال", description: "هدایت به صفحه موفقیت سفارش" },
 ];
-
-function stepIndex(step: CheckoutStep) {
-  return checkoutSteps.findIndex((item) => item.key === step);
-}
 
 type OrderSummaryCardProps = {
   finalPrice: number;
@@ -36,8 +31,6 @@ type OrderSummaryCardProps = {
   activeStepIndex: number;
   isSubmitting: boolean;
   deliveryFormValid: boolean;
-  shippingQuoteLoading?: boolean;
-  shippingQuoteError?: boolean;
   onConfirm: () => void;
   onResetAttempt: () => void;
 };
