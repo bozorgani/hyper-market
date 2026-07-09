@@ -102,7 +102,7 @@ export function ProductImageManager({
           {images.map((image, index) => (
             <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <div className="relative aspect-square bg-slate-100">
-                <Image src={image} alt={`تصویر ${index + 1}`} fill unoptimized sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" />
+                <Image src={image} alt={`تصویر ${index + 1}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" unoptimized={image.startsWith('http') && !image.includes('localhost') && !image.includes('hypermarket') && !image.includes('placehold.co')} />
               </div>
               <div className="space-y-2 p-3">
                 <p className="truncate text-xs text-slate-500">{image}</p>
