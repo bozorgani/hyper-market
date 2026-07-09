@@ -42,7 +42,6 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
           priority
           sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-cover transition-all duration-500 group-hover:scale-[1.035]"
-          unoptimized
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/5 opacity-0 group-hover:opacity-100 transition" />
         
@@ -94,7 +93,6 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
                 fill
                 sizes="20vw"
                 className="object-cover"
-                unoptimized
               />
             </button>
           ))}
@@ -126,7 +124,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
                   alt={productName} 
                   fill 
                   className="object-contain" 
-                  unoptimized 
+                  sizes="100vw"
                 />
               </div>
 

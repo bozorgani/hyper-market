@@ -14,6 +14,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useSearchSuggest } from "@/hooks/use-search";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/utils";
+import { getProductImageUrl } from "@/lib/image-utils";
 import { useAuthStore } from "@/store/auth-store";
 
 function isCustomerRole(role?: string) {
@@ -120,7 +121,7 @@ export function Header() {
           className={`flex items-center gap-3 rounded-xl p-3 hover:bg-slate-50 ${activeSuggestionIndex === index ? "bg-emerald-50" : ""}`}
         >
           <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-            {item.images?.[0] ? <Image src={item.images[0]} alt="" width={36} height={36} className="h-full w-full object-cover" unoptimized /> : <span className="flex h-full items-center justify-center text-lg">🛍️</span>}
+            {item.images?.[0] ? <Image src={getProductImageUrl(item.images[0])} alt="" width={36} height={36} className="h-full w-full object-cover" /> : <span className="flex h-full items-center justify-center text-lg">🛍️</span>}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-bold text-slate-900">{item.name}</p>
