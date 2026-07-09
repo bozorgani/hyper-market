@@ -108,30 +108,47 @@ export function Header() {
   }
 
   const showSuggestPanel = isSuggestOpen && query.trim().length >= 2;
+  const listboxId = "header-search-listbox";
+  const inputId = "header-search-input";
+  const activeOptionId =
+    activeSuggestionIndex >= 0
+      ? `header-search-option-${activeSuggestionIndex}`
+      : undefined;
 
   const suggestContent = (
-    <div className="absolute right-0 top-full z-50 mt-1.5 w-full max-h-[340px] overflow-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl text-sm" role="listbox">
-      {suggestions.isLoading ? <p className="p-3 text-slate-500">در حال جستجو...</p> : null}
-      {!suggestions.isLoading && suggestionItems.map((item, index) => (
+    <div
+      id={listboxId}
+      className="absolute right-0 top-full z-50 mt-1.5 w-full max-h-[340px] overflow-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl text-sm"
+      role="listbox"
+      aria-label="پیشنهادهای جستجو"
+    >
+      {suggestions.isLoading ? <p className="p-3 text-slate-500" role="status" aria-live="polite">در حال جستجو...</p> : null}
+      {!suggestions.isLoading && suggestionItems.map((item, index) => {
+        const optionId = `header-search-option-${index}`;
+        const isActive = activeSuggestionIndex === index;
+        return (
         <Link
           key={item.id}
+          id={optionId}
+          role="option"
+          aria-selected={isActive}
           href={`/products/${item.id}`}
           onClick={() => { setQuery(""); setIsSuggestOpen(false); setMobileSearchOpen(false); }}
           onMouseEnter={() => setActiveSuggestionIndex(index)}
-          className={`flex items-center gap-3 rounded-xl p-3 hover:bg-slate-50 ${activeSuggestionIndex === index ? "bg-emerald-50" : ""}`}
+          className={`flex items-center gap-3 rounded-xl p-3 hover:bg-slate-50 ${isActive ? "bg-emerald-50 ring-1 ring-emerald-100" : ""}`}
         >
           <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-            {item.images?.[0] ? <Image src={getProductImageUrl(item.images[0])} alt="" width={36} height={36} className="h-full w-full object-cover" /> : <span className="flex h-full items-center justify-center text-lg">🛍️</span>}
+            {item.images?.[0] ? <Image src={getProductImageUrl(item.images[0])} alt="" width={36} height={36} className="h-full w-full object-cover" /> : <span className="flex h-full items-center justify-center text-lg" aria-hidden="true">🛍️</span>}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-bold text-slate-900">{item.name}</p>
             <p className="text-xs text-emerald-600 font-medium">{formatPrice(item.price)}</p>
           </div>
         </Link>
-      ))}
-      {!suggestions.isLoading && suggestionItems.length === 0 && <p className="p-3 text-xs text-slate-500">نتیجه‌ای یافت نشد.</p>}
-      <button type="submit" onClick={() => {}} className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200">
-        مشاهده همه نتایج <ChevronLeft className="h-3.5 w-3.5" />
+      )})}
+      {!suggestions.isLoading && suggestionItems.length === 0 && <p className="p-3 text-xs text-slate-500" role="status">نتیجه‌ای یافت نشد.</p>}
+      <button type="submit" className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200">
+        مشاهده همه نتایج <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
     </div>
   );
@@ -153,6 +170,7 @@ export function Header() {
           <form ref={searchRef} onSubmit={submitSearch} className="relative hidden flex-1 md:block max-w-lg">
             <Search className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
+              id={inputId}
               value={query}
               onChange={(e) => { setQuery(e.target.value); setIsSuggestOpen(e.target.value.trim().length >= 2); setActiveSuggestionIndex(-1); }}
               onFocus={() => { if (query.trim().length >= 2) setIsSuggestOpen(true); }}
@@ -160,7 +178,12 @@ export function Header() {
               role="combobox"
               aria-label="جستجو در محصولات"
               aria-expanded={showSuggestPanel}
+              aria-controls={listboxId}
+              aria-autocomplete="list"
+              aria-haspopup="listbox"
+              aria-activedescendant={activeOptionId}
               placeholder="جستجو در محصولات..."
+              autoComplete="off"
               className="h-10 bg-slate-50 pr-11 rounded-2xl border-slate-200 focus:bg-white"
             />
             {showSuggestPanel && suggestContent}
