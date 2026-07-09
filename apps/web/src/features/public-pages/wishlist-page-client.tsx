@@ -109,9 +109,9 @@ export function WishlistPageClient() {
         {!isLoading && products.length > 0 && (
           <>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {products.map((product: WishlistProduct) => (
+              {products.map((product: WishlistProduct, index: number) => (
                 <div key={product._id} className="relative">
-                  <ProductCard product={product} />
+                  <ProductCard product={product} priority={page === 1 && index < 4} />
                   
                   {/* Wishlist Button Overlay */}
                   <div className="absolute right-3 top-3 z-10">

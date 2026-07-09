@@ -151,8 +151,8 @@ export function ProductsPageClient({
 
       {!products.isLoading && !products.isError && hasProducts ? (
         <section className="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {items.map((product) => (
-            <ProductCard key={product._id} product={product} />
+          {items.map((product, index) => (
+            <ProductCard key={product._id} product={product} priority={page === 1 && index < 6} fetchPriority={page === 1 && index < 4 ? "high" : "auto"} />
           ))}
         </section>
       ) : null}

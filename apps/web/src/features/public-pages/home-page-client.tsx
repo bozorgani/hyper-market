@@ -205,9 +205,9 @@ export function HomePageClient({
               <div key={i} className="h-full rounded-3xl border bg-white p-3"><Skeleton className="aspect-square w-full rounded-2xl" /></div>
             ))
           ) : bestSellers.length > 0 ? (
-            bestSellers.map((product) => (
+            bestSellers.map((product, index) => (
               <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="h-full">
-                <ProductCard product={product} />
+                <ProductCard product={product} priority={index < 6} fetchPriority={index < 4 ? "high" : "auto"} />
               </motion.div>
             ))
           ) : null}
@@ -230,9 +230,9 @@ export function HomePageClient({
         </div>
 
         <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {(discounted.length > 0 ? discounted : items.slice(0, 6)).map((product) => (
+          {(discounted.length > 0 ? discounted : items.slice(0, 6)).map((product, index) => (
             <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.04 }} className="h-full">
-              <ProductCard product={product} />
+              <ProductCard product={product} priority={index < 2} />
             </motion.div>
           ))}
         </div>
@@ -251,11 +251,11 @@ export function HomePageClient({
         <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {newArrivals.length > 0 ? newArrivals.map((product) => (
             <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="h-full">
-              <ProductCard product={product} />
+              <ProductCard product={product} priority={false} />
             </motion.div>
           )) : (
-            items.slice(0, 6).map((product) => (
-              <ProductCard key={product._id} product={product} />
+            items.slice(0, 6).map((product, index) => (
+              <ProductCard key={product._id} product={product} priority={index < 2} />
             ))
           )}
         </div>
