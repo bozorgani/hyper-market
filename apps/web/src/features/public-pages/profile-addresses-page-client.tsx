@@ -76,6 +76,7 @@ export function ProfileAddressesPageClient() {
   const [deleteTarget, setDeleteTarget] = useState<Address | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [addressFromMap, setAddressFromMap] = useState(false);
 
   const isSubmitting = createAddress.isPending || updateAddress.isPending;
   const fieldErrors = getAddressErrors(form);
@@ -101,6 +102,7 @@ export function ProfileAddressesPageClient() {
     setEditing(null);
     setForm(emptyAddress);
     setMapLocation(null);
+    setAddressFromMap(false);
   }
 
   function handleMapLocationSelect(result: { lat: number; lng: number; address: string; province: string; city: string }) {
@@ -111,6 +113,7 @@ export function ProfileAddressesPageClient() {
       province: result.province || prev.province,
       city: result.city || prev.city,
     }));
+    setAddressFromMap(true);
     showToast({ type: "success", title: "آدرس از نقشه انتخاب شد" });
   }
 
@@ -202,36 +205,50 @@ export function ProfileAddressesPageClient() {
               {fieldErrors.phoneNumber && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.phoneNumber}</p>}
             </div>
 
-            {/* Province Select */}
+            {/* Province Select — locked when from map */}
             <div>
-              <select
-                value={form.province}
-                onChange={(e) => setForm({ ...form, province: e.target.value, city: "" })}
-                disabled={isSubmitting}
-                required
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
-              >
-                <option value="">انتخاب استان</option>
-                {IRAN_PROVINCES.map((item) => (
-                  <option key={item.province} value={item.province}>{item.province}</option>
-                ))}
-              </select>
+              {addressFromMap ? (
+                <div className="flex h-12 items-center rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 text-sm font-semibold text-emerald-700">
+                  <MapPin className="ml-2 h-4 w-4" />
+                  {form.province || "ثبت شده از نقشه"}
+                </div>
+              ) : (
+                <select
+                  value={form.province}
+                  onChange={(e) => setForm({ ...form, province: e.target.value, city: "" })}
+                  disabled={isSubmitting}
+                  required
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
+                >
+                  <option value="">انتخاب استان</option>
+                  {IRAN_PROVINCES.map((item) => (
+                    <option key={item.province} value={item.province}>{item.province}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
-            {/* City Select */}
+            {/* City Select — locked when from map */}
             <div>
-              <select
-                value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-                disabled={isSubmitting || !form.province}
-                required
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
-              >
-                <option value="">انتخاب شهر</option>
-                {IRAN_PROVINCES.find((item) => item.province === form.province)?.cities.map((city) => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
+              {addressFromMap ? (
+                <div className="flex h-12 items-center rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 text-sm font-semibold text-emerald-700">
+                  <MapPin className="ml-2 h-4 w-4" />
+                  {form.city || "ثبت شده از نقشه"}
+                </div>
+              ) : (
+                <select
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  disabled={isSubmitting || !form.province}
+                  required
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
+                >
+                  <option value="">انتخاب شهر</option>
+                  {IRAN_PROVINCES.find((item) => item.province === form.province)?.cities.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="md:col-span-2">

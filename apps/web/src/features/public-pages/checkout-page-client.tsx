@@ -109,6 +109,7 @@ export function CheckoutPageClient() {
   const [discountInput, setDiscountInput] = useState("");
   const [discountError, setDiscountError] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<CouponValidationResult | null>(null);
+  const [addressFromMap, setAddressFromMap] = useState(false);
 
   const detailedItems = cart.data?.items ?? [];
   const totalPrice = cart.data?.totalPrice ?? 0;
@@ -188,6 +189,7 @@ export function CheckoutPageClient() {
       unit: address.unit ?? "",
       postalCode: address.postalCode ?? "",
     });
+    setAddressFromMap(false);
   }
 
   function handleMapLocationSelect(result: { lat: number; lng: number; address: string; province: string; city: string }) {
@@ -198,6 +200,7 @@ export function CheckoutPageClient() {
       province: result.province || prev.province,
       city: result.city || prev.city,
     }));
+    setAddressFromMap(true);
     const extra = [result.province, result.city].filter(Boolean).join("، ");
     showToast({ type: "success", title: "آدرس از نقشه انتخاب شد", description: extra || undefined });
   }
@@ -330,6 +333,7 @@ export function CheckoutPageClient() {
               setMapLocation={setMapLocation}
               shippingQuote={shippingQuote}
               selectedAddressId={selectedAddressId}
+              addressFromMap={addressFromMap}
               onApplySavedAddress={applySavedAddress}
               onMapLocationSelect={handleMapLocationSelect}
             />

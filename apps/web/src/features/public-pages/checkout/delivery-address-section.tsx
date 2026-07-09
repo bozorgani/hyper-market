@@ -77,6 +77,7 @@ type DeliveryAddressSectionProps = {
     data?: ShippingQuote | null;
   };
   selectedAddressId?: string;
+  addressFromMap: boolean;
   onApplySavedAddress: (addressId: string) => void;
   onMapLocationSelect: (result: { lat: number; lng: number; address: string; province: string; city: string }) => void;
 };
@@ -96,6 +97,7 @@ export function DeliveryAddressSection({
   mapLocation,
   shippingQuote,
   selectedAddressId,
+  addressFromMap,
   onApplySavedAddress,
   onMapLocationSelect,
 }: DeliveryAddressSectionProps) {
@@ -157,31 +159,45 @@ export function DeliveryAddressSection({
           {fieldErrors.phoneNumber && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.phoneNumber}</p>}
         </div>
         <div>
-          <select
-            value={deliveryAddress.province}
-            onChange={(e) => setDeliveryAddress({ ...deliveryAddress, province: e.target.value, city: "" })}
-            disabled={isSubmitting}
-            className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
-          >
-            <option value="">انتخاب استان</option>
-            {IRAN_PROVINCES.map((item) => (
-              <option key={item.province} value={item.province}>{item.province}</option>
-            ))}
-          </select>
+          {addressFromMap ? (
+            <div className="flex h-12 items-center rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 text-sm font-semibold text-emerald-700">
+              <MapPin className="ml-2 h-4 w-4" />
+              {deliveryAddress.province || "ثبت شده از نقشه"}
+            </div>
+          ) : (
+            <select
+              value={deliveryAddress.province}
+              onChange={(e) => setDeliveryAddress({ ...deliveryAddress, province: e.target.value, city: "" })}
+              disabled={isSubmitting}
+              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
+            >
+              <option value="">انتخاب استان</option>
+              {IRAN_PROVINCES.map((item) => (
+                <option key={item.province} value={item.province}>{item.province}</option>
+              ))}
+            </select>
+          )}
           {fieldErrors.province && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.province}</p>}
         </div>
         <div>
-          <select
-            value={deliveryAddress.city}
-            onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
-            disabled={isSubmitting || !deliveryAddress.province}
-            className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
-          >
-            <option value="">انتخاب شهر</option>
-            {IRAN_PROVINCES.find((item) => item.province === deliveryAddress.province)?.cities.map((city) => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </select>
+          {addressFromMap ? (
+            <div className="flex h-12 items-center rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 text-sm font-semibold text-emerald-700">
+              <MapPin className="ml-2 h-4 w-4" />
+              {deliveryAddress.city || "ثبت شده از نقشه"}
+            </div>
+          ) : (
+            <select
+              value={deliveryAddress.city}
+              onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
+              disabled={isSubmitting || !deliveryAddress.province}
+              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
+            >
+              <option value="">انتخاب شهر</option>
+              {IRAN_PROVINCES.find((item) => item.province === deliveryAddress.province)?.cities.map((city) => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          )}
           {fieldErrors.city && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.city}</p>}
         </div>
         <div className="md:col-span-2">
