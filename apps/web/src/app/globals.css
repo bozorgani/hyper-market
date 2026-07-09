@@ -89,17 +89,19 @@
   --z-toast: 90;
 }
 
-/* ── Dark Mode ──────────────────────────────────────────────── */
+/* ── Dark Mode (minimal) ────────────────────────────────────── */
+/* Like DigiKala / SnapMarket: background stays light even in dark mode.
+   Only interactive accent colors shift slightly for dark-mode comfort. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f172a;
-    --foreground: #f1f5f9;
-    --card: #1e293b;
-    --border: #334155;
-    --muted: #94a3b8;
-    --color-primary-text: #fb7185;
-    --color-link: #fb7185;
-    --color-link-hover: #fda4af;
+    --background: #f5f5f5;  /* keep light background */
+    --foreground: #020617;  /* keep dark text */
+    --card: #ffffff;        /* keep white cards */
+    --border: #e2e8f0;     /* keep light borders */
+    --muted: #64748b;
+    --color-primary-text: #e11d48;
+    --color-link: #e11d48;
+    --color-link-hover: #be123c;
   }
 }
 
