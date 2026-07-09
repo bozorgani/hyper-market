@@ -4,6 +4,11 @@ export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
   return (
     <div
       className={cn("animate-pulse rounded-xl bg-slate-200", className)}
+      role="progressbar"
+      aria-valuenow={0}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label="در حال بارگذاری"
       {...props}
     />
   );
