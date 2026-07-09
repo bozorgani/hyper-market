@@ -19,10 +19,19 @@ function toQuery(params: Record<string, string | number | undefined>): string {
   return serialized ? `?${serialized}` : "";
 }
 
-async function safeFetch<T>(path: string): Promise<T | null> {
+async function safeFetch<T>(
+  path: string,
+  options?: {
+    tags?: string[];
+    revalidate?: number;
+  }
+): Promise<T | null> {
   try {
     const response = await fetch(`${getServerApiBaseUrl()}${path}`, {
-      next: { revalidate: 300 },
+      next: {
+        revalidate: options?.revalidate ?? 300,
+        tags: options?.tags,
+      },
     });
     if (!response.ok) return null;
     return (await response.json()) as T;
@@ -32,7 +41,10 @@ async function safeFetch<T>(path: string): Promise<T | null> {
 }
 
 export async function fetchProductForMetadata(id: string): Promise<Product | null> {
-  return safeFetch<Product>(`/products/${encodeURIComponent(id)}`);
+  return safeFetch<Product>(`/products/${encodeURIComponent(id)}`, {
+    tags: ["products", `product:${id}`],
+    revalidate: 300,
+  });
 }
 
 export async function fetchProductListForSSR(params: {
@@ -41,11 +53,26 @@ export async function fetchProductListForSSR(params: {
   categoryId?: string;
   search?: string;
 }): Promise<ProductListResponse | null> {
-  return safeFetch<ProductListResponse>(`/products${toQuery({ page: params.page ?? 1, limit: params.limit ?? 12, categoryId: params.categoryId, search: params.search })}`);
+  const categoryTag = params.categoryId ? `category:${params.categoryId}` : undefined;
+  return safeFetch<ProductListResponse>(
+    `/products${toQuery({
+      page: params.page ?? 1,
+      limit: params.limit ?? 12,
+      categoryId: params.categoryId,
+      search: params.search,
+    })}`,
+    {
+      tags: ["products", ...(categoryTag ? [categoryTag] : [])],
+      revalidate: 120,
+    }
+  );
 }
 
 export async function fetchCategoriesForSSR(): Promise<Category[] | null> {
-  return safeFetch<Category[]>("/categories");
+  return safeFetch<Category[]>("/categories", {
+    tags: ["categories"],
+    revalidate: 600,
+  });
 }
 
 export async function fetchSearchForSSR(params: {
@@ -58,9 +85,27 @@ export async function fetchSearchForSSR(params: {
   minStock?: string;
   sort?: string;
 }): Promise<SearchResponse | null> {
-  return safeFetch<SearchResponse>(`/search/products${toQuery({ q: params.q, page: params.page ?? 1, limit: params.limit ?? 24, categoryId: params.categoryId, minPrice: params.minPrice, maxPrice: params.maxPrice, minStock: params.minStock, sort: params.sort })}`);
+  return safeFetch<SearchResponse>(
+    `/search/products${toQuery({
+      q: params.q,
+      page: params.page ?? 1,
+      limit: params.limit ?? 24,
+      categoryId: params.categoryId,
+      minPrice: params.minPrice,
+      maxPrice: params.maxPrice,
+      minStock: params.minStock,
+      sort: params.sort,
+    })}`,
+    {
+      tags: ["search", "products", ...(params.categoryId ? [`category:${params.categoryId}`] : [])],
+      revalidate: 60,
+    }
+  );
 }
 
 export async function fetchCategoryForMetadata(id: string): Promise<Category | null> {
-  return safeFetch<Category>(`/categories/${encodeURIComponent(id)}`);
+  return safeFetch<Category>(`/categories/${encodeURIComponent(id)}`, {
+    tags: ["categories", `category:${id}`],
+    revalidate: 600,
+  });
 }
