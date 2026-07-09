@@ -9,9 +9,25 @@
 @theme inline {
   --color-primary: #00a049;
   --color-primary-foreground: #ffffff;
+  --color-primary-text: #007a38;
+  --color-primary-dark: #00803a;
+  --color-primary-darker: #00662f;
   --color-background: #f8fafc;
   --color-foreground: #020617;
   --font-sans: var(--font-vazirmatn), "Vazirmatn", Tahoma, Arial, sans-serif;
+
+  /* Accessible Emerald Palette – WCAG AA 4.5:1 on white */
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #00b368;
+  --color-emerald-500: #007a38; /* was #10b981 – now 4.9:1 */
+  --color-emerald-600: #00662f; /* was #059669 – now 7.0:1 */
+  --color-emerald-700: #004d23; /* was #047857 – now 9.6:1 */
+  --color-emerald-800: #00331a;
+  --color-emerald-900: #001f10;
+  --color-emerald-950: #00140b;
 }
 
 :root {
@@ -19,12 +35,20 @@
   --foreground: #020617;
   --primary: #00a049;
   --primary-dark: #00803a;
+  --primary-text: #007a38;
+  --primary-darker: #00662f;
   --accent: #00c853;
   --danger: #e11d48;
-  --success: #00a049;
+  --success: #007a38;
+  --success-dark: #00662f;
   --muted: #64748b;
   --card: #ffffff;
   --border: #e2e8f0;
+
+  /* Accessible text tokens – WCAG AA */
+  --color-primary-text: #007a38;
+  --color-link: #007a38;
+  --color-link-hover: #00662f;
 }
 
 * {
@@ -44,6 +68,32 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Accessible link defaults – WCAG AA */
+a {
+  text-underline-offset: 2px;
+}
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Utility helpers – accessible color tokens */
+.text-primary { color: var(--color-primary-text); }
+.text-primary-dark { color: var(--primary-darker); }
+.bg-primary { background-color: var(--primary-text); }
+.bg-primary-dark { background-color: var(--primary-darker); }
+.border-primary { border-color: var(--primary-text); }
+.ring-primary { --tw-ring-color: var(--primary-text); }
+
+/* Link variant – ensures 4.5:1 contrast */
+.link-primary {
+  color: var(--color-link);
+  font-weight: 500;
+}
+.link-primary:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
 /* Touch friendly */
 button, 
 a, 
@@ -60,8 +110,8 @@ input:focus,
 textarea:focus, 
 select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 160, 73, 0.12);
-  border-color: #00a049;
+  box-shadow: 0 0 0 3px rgba(0, 122, 56, 0.15);
+  border-color: #007a38;
 }
 
 /* Cards */
@@ -162,9 +212,9 @@ table {
   }
 }
 
-/* Focus visible premium */
+/* Focus visible premium – accessible */
 *:focus-visible {
-  outline: 2px solid #00a049;
+  outline: 2px solid #007a38;
   outline-offset: 2px;
 }
 
@@ -222,7 +272,7 @@ tr:hover td {
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .otp-input:focus {
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 122, 56, 0.18);
 }
 
 /* Respect user motion preferences */

@@ -24,7 +24,10 @@ export function BottomNav() {
   const user = useAuthStore((s) => s.user);
   const isCustomer = isCustomerRole(user?.role);
   const cart = useCart(isCustomer);
-  const cartCount = isCustomer ? (cart.data?.items ?? []).length : 0;
+  const cartItems = cart.data?.items ?? [];
+  const cartCount = isCustomer
+    ? cartItems.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
+    : 0;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 backdrop-blur-xl md:hidden pb-safe">
@@ -42,10 +45,13 @@ export function BottomNav() {
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative">
-                <Icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" aria-hidden="true" />
                 {href === "/cart" && cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-black text-white ring-2 ring-white">
-                    {cartCount > 9 ? "۹+" : cartCount}
+                  <span 
+                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-black text-white ring-2 ring-white px-0.5"
+                    aria-label={`${cartCount} مورد در سبد خرید`}
+                  >
+                    {cartCount > 9 ? "۹+" : cartCount.toLocaleString("fa-IR")}
                   </span>
                 )}
               </div>
