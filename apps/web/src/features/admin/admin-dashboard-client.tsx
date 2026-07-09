@@ -16,12 +16,19 @@ import { OrderStatusBadge } from "@/components/order/status-badge";
 
 const persianDays = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 
+type RevenueDayPoint = {
+  _id?: string;
+  revenue?: number;
+  value?: number;
+  [key: string]: unknown;
+};
+
 type AnalyticsDashboard = {
   revenue?: {
     dailyRevenue?: number;
     weeklyRevenue?: number;
     monthlyRevenue?: number;
-    revenueByDay?: Array<{ _id: string; revenue: number }>;
+    revenueByDay?: RevenueDayPoint[];
   };
   funnel?: {
     checkoutStarts?: number;
@@ -53,7 +60,7 @@ export function AdminDashboardClient() {
     if (aRev) {
       // revenueByDay from analytics is [{_id: "2026-07-01", revenue: 12345}, ...]
       const valuesRaw = Array.isArray(aRev.revenueByDay) ? aRev.revenueByDay.slice(-7) : [];
-      const values = valuesRaw.map((d: any) => Number(d.revenue ?? d.value ?? 0));
+      const values = valuesRaw.map((d: RevenueDayPoint) => Number(d.revenue ?? d.value ?? 0));
       // pad to 7 days if needed
       while (values.length < 7) values.unshift(0);
       const max = Math.max(0, ...values);
