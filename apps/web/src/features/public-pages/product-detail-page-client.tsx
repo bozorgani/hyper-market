@@ -14,6 +14,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useRouter } from "next/navigation";
 import { useProduct } from "@/hooks/use-products";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import { ProductReviews } from "@/components/reviews/product-reviews";
 import type { Product } from "@/types/domain";
 
 export function ProductDetailPageClient({ productId, initialProduct }: { productId: string; initialProduct?: Product }) {
@@ -98,6 +99,7 @@ export function ProductDetailPageClient({ productId, initialProduct }: { product
     : 0;
 
   return (
+    <>
     <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-2 md:gap-8">
       <Card className="p-6">
         <ProductGallery images={item.images} productName={item.name} />
@@ -156,5 +158,10 @@ export function ProductDetailPageClient({ productId, initialProduct }: { product
         </div>
       </section>
     </main>
+    {/* Product Reviews Section */}
+    <div className="mx-auto max-w-6xl px-4 pb-12">
+      <ProductReviews productId={item._id} />
+    </div>
+    </>
   );
 }

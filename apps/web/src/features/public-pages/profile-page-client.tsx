@@ -12,6 +12,7 @@ import { cn, formatNumber, formatPrice, formatPersianDate } from "@/lib/utils";
 import { isAdminRole, isCustomerRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
 import { useMyOrders } from "@/hooks/use-orders";
+import { useWishlistCount } from "@/hooks/use-wishlist";
 import {
   User, Settings, Heart, MapPin, Bell, Shield,
   ChevronLeft, LogOut, Star, Package, Clock,
@@ -50,6 +51,7 @@ export function ProfilePageClient() {
   const { showToast } = useToast();
   const isCustomer = isCustomerRole(user?.role);
   const ordersQuery = useMyOrders(Boolean(hydrated && isCustomer));
+  const wishlistCountQuery = useWishlistCount();
   const recentOrders = useMemo(
     () => (ordersQuery.data ?? []).slice(0, 3),
     [ordersQuery.data],
@@ -121,7 +123,9 @@ export function ProfilePageClient() {
           </div>
           <div className="flex flex-col items-center gap-1">
             <Heart className="w-5 h-5 text-rose-600" />
-            <span className="font-black text-base text-slate-900">—</span>
+            <span className="font-black text-base text-slate-900">
+              {wishlistCountQuery.isLoading ? "—" : formatNumber(wishlistCountQuery.data?.count ?? 0)}
+            </span>
             <span className="text-[10px] text-slate-400">علاقه‌مندی</span>
           </div>
           <div className="flex flex-col items-center gap-1">
