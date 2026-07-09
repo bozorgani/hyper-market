@@ -4,10 +4,14 @@ import { create } from "zustand";
 import { api } from "@/services/api";
 import type { User } from "@/types/domain";
 
-const TOKEN_KEY = "hyper_market_access_token";
-const USER_KEY = "hyper_market_user";
 const DEVICE_KEY = "hyper_market_device_id";
-const REFRESH_TOKEN_KEY = "hyper_market_refresh_token";
+
+// Legacy keys – cleaned once on hydrate to remove XSS-able sessionStorage data
+const LEGACY_KEYS = [
+  "hyper_market_access_token",
+  "hyper_market_refresh_token",
+  "hyper_market_user",
+];
 
 type LoginInput = {
   email?: string;
@@ -17,90 +21,84 @@ type LoginInput = {
 
 type AuthState = {
   user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
   hydrated: boolean;
   hydrate: () => Promise<void>;
   login: (input: LoginInput) => Promise<void>;
   refreshSession: () => Promise<User | null>;
   logout: () => Promise<void>;
+  setUser: (user: User | null) => void;
 };
 
-function getDeviceId() {
-  let deviceId = window.localStorage.getItem(DEVICE_KEY);
-  if (!deviceId) {
-    deviceId = crypto.randomUUID();
-    window.localStorage.setItem(DEVICE_KEY, deviceId);
+function getDeviceId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    let deviceId = window.localStorage.getItem(DEVICE_KEY);
+    if (!deviceId) {
+      deviceId = crypto.randomUUID();
+      window.localStorage.setItem(DEVICE_KEY, deviceId);
+    }
+    return deviceId;
+  } catch {
+    // localStorage may be blocked (private mode) – continue without deviceId
+    return null;
   }
-  return deviceId;
 }
 
-function clearLegacyTokenStorage(): void {
-  window.sessionStorage.removeItem(TOKEN_KEY);
-  window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
-}
-
-function clearStoredSession(): void {
-  clearLegacyTokenStorage();
-  window.sessionStorage.removeItem(USER_KEY);
-}
-
-function persistUser(user: User): void {
-  clearLegacyTokenStorage();
-  window.sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+function clearLegacyAuthStorage(): void {
+  if (typeof window === "undefined") return;
+  try {
+    LEGACY_KEYS.forEach((key) => {
+      window.sessionStorage.removeItem(key);
+      window.localStorage.removeItem(key);
+    });
+  } catch {
+    // ignore storage access errors
+  }
 }
 
 async function fetchCurrentUser(): Promise<User> {
   const { data } = await api.get<User>("/auth/me", { _skipAuthRedirect: true });
-  persistUser(data);
   return data;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  accessToken: null,
-  refreshToken: null,
   hydrated: false,
 
+  setUser: (user) => set({ user }),
+
   hydrate: async () => {
-    clearLegacyTokenStorage();
+    // Prevent double hydrate in React StrictMode
+    if (get().hydrated) return;
+
+    clearLegacyAuthStorage();
 
     try {
       const user = await fetchCurrentUser();
-      set({ user, accessToken: null, refreshToken: null, hydrated: true });
-      return;
+      set({ user, hydrated: true });
     } catch {
-      clearStoredSession();
-      set({ user: null, accessToken: null, refreshToken: null, hydrated: true });
+      set({ user: null, hydrated: true });
     }
   },
 
   login: async (input: LoginInput) => {
     const deviceId = getDeviceId();
-    const payload = {
-      ...input,
-      deviceId,
-    };
+    const payload = deviceId ? { ...input, deviceId } : input;
 
     await api.post("/auth/login", payload);
     const user = await fetchCurrentUser();
 
-    set({
-      user,
-      accessToken: null,
-      refreshToken: null,
-    });
+    set({ user });
   },
 
   refreshSession: async () => {
     try {
       await api.post("/auth/refresh", {});
       const user = await fetchCurrentUser();
-      set({ user, accessToken: null, refreshToken: null });
+      set({ user });
       return user;
     } catch {
-      clearStoredSession();
-      set({ user: null, accessToken: null, refreshToken: null });
+      set({ user: null });
       return null;
     }
   },
@@ -109,11 +107,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await api.post("/auth/logout", {});
     } catch {
-      // Client cleanup must still happen even if server logout fails.
+      // ensure client cleanup even if server fails
+    } finally {
+      clearLegacyAuthStorage();
+      set({ user: null });
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
     }
-
-    clearStoredSession();
-    set({ user: null, accessToken: null, refreshToken: null });
-    window.location.href = "/login";
   },
 }));
+
+// Optional: expose a selector-stable helper for components that previously
+// read accessToken / refreshToken (now always null) – keeps backward compat
+// during migration. Remove in next major.
+export const useAuthToken = () => null;
