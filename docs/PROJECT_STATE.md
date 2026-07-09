@@ -60,8 +60,10 @@ bcrypt
 bullmq
 class-transformer
 class-validator
+dompurify
 helmet
 ioredis
+jsdom
 meilisearch
 mongoose
 nodemailer
@@ -102,32 +104,36 @@ payments
 permissions
 products
 queue
+reviews
 search
 shipping
 users
+wishlist
 ```
 
 Module implementation matrix:
 
 | Module | Module file | Controllers | Services | Repositories | Schemas | DTOs |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| addresses | yes | 1 | 1 | 1 | 1 | 1 |
-| analytics | yes | 1 | 1 | 1 | 1 | 1 |
+| addresses | yes | 1 | 1 | 1 | 1 | 0 |
+| analytics | yes | 1 | 1 | 1 | 1 | 0 |
 | audit | yes | 0 | 1 | 1 | 1 | 0 |
-| auth | yes | 1 | 4 | 3 | 3 | 10 |
-| cart | yes | 1 | 1 | 1 | 1 | 2 |
-| categories | yes | 1 | 1 | 1 | 1 | 2 |
-| coupons | yes | 1 | 1 | 1 | 2 | 2 |
+| auth | yes | 1 | 4 | 3 | 3 | 0 |
+| cart | yes | 1 | 1 | 1 | 1 | 0 |
+| categories | yes | 1 | 1 | 1 | 1 | 0 |
+| coupons | yes | 1 | 1 | 1 | 2 | 0 |
 | mail | yes | 0 | 3 | 0 | 0 | 0 |
-| orders | yes | 1 | 1 | 1 | 1 | 2 |
+| orders | yes | 1 | 1 | 1 | 1 | 0 |
 | outbox | yes | 0 | 1 | 1 | 1 | 0 |
-| payments | yes | 1 | 1 | 1 | 1 | 2 |
-| permissions | yes | 1 | 1 | 1 | 1 | 1 |
-| products | yes | 1 | 2 | 1 | 1 | 2 |
+| payments | yes | 1 | 1 | 1 | 1 | 0 |
+| permissions | yes | 1 | 1 | 1 | 1 | 0 |
+| products | yes | 1 | 2 | 1 | 1 | 0 |
 | queue | yes | 0 | 1 | 0 | 0 | 0 |
+| reviews | no | 1 | 1 | 1 | 1 | 0 |
 | search | yes | 1 | 2 | 0 | 0 | 0 |
-| shipping | yes | 1 | 1 | 0 | 0 | 1 |
+| shipping | yes | 1 | 1 | 0 | 0 | 0 |
 | users | yes | 1 | 1 | 1 | 1 | 0 |
+| wishlist | yes | 1 | 1 | 1 | 1 | 0 |
 
 Infrastructure/core detected:
 
@@ -250,6 +256,22 @@ GET    /products/:id    [Public()]
 GET    /products/images/:fileName    [Public()]
 ```
 
+### apps/backend-api/src/modules/reviews/review.controller.ts
+
+```text
+DELETE /admin/reviews/:id
+POST   /admin/reviews/:id/approve
+POST   /admin/reviews/:id/reject
+GET    /admin/reviews/pending    [Roles(UserRole.ADMIN)]
+POST   /reviews
+DELETE /reviews/:id
+PUT    /reviews/:id
+POST   /reviews/:id/helpful
+GET    /reviews/my-reviews
+GET    /reviews/product/:productId
+GET    /reviews/product/:productId/stats
+```
+
 ### apps/backend-api/src/modules/search/search.controller.ts
 
 ```text
@@ -352,6 +374,18 @@ GET    /users    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('user
 GET    /users/:id    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('users.read')]
 PATCH  /users/:id/block    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('users.ban')]
 PATCH  /users/:id/unblock    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('users.ban')]
+```
+
+### apps/backend-api/src/modules/wishlist/wishlist.controller.ts
+
+```text
+GET    /wishlist
+POST   /wishlist/add
+GET    /wishlist/check/:productId
+DELETE /wishlist/clear
+GET    /wishlist/count
+DELETE /wishlist/remove
+POST   /wishlist/toggle
 ```
 
 ## 5. Database Schema Overview

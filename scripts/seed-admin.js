@@ -58,8 +58,8 @@ async function main() {
   console.log('Connected to MongoDB.');
 
   const email = process.env.ADMIN_EMAIL || 'admin@hypermarket.local';
-  const phoneNumber = process.env.ADMIN_PHONE || '09120000000';
-  const plainPassword = process.env.ADMIN_PASSWORD || 'Admin@123456';
+  const phoneNumber = process.env.ADMIN_PHONE || '09133241104';
+  const plainPassword = process.env.ADMIN_PASSWORD || 'N@ima6.61';
 
   // Check if any super_admin already exists
   const existingAdmin = await User.findOne({ role: { $in: ['super_admin', 'admin'] } }).lean();
