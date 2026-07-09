@@ -20,6 +20,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+import { useModalA11y } from "@/hooks/use-modal-a11y";
 import {
   usePermissionsMap,
   useGrantPermission,
@@ -120,6 +121,9 @@ export function AdminRolesClient() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
   const [showSeedDialog, setShowSeedDialog] = useState(false);
+
+  // A11y: focus trap for Add Permission modal – Issue #22
+  useModalA11y(showAddDialog, () => setShowAddDialog(false));
 
   // Add permission form state
   const [formRole, setFormRole] = useState("admin");
@@ -482,18 +486,33 @@ export function AdminRolesClient() {
 
       {/* ── Add Permission Dialog ─────────────────────────────────────── */}
       {showAddDialog ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 text-right shadow-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm"
+          onClick={() => setShowAddDialog(false)}
+          role="presentation"
+        >
+          <div
+            className="w-full max-w-lg rounded-3xl bg-white p-6 text-right shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-permission-title"
+            aria-describedby="add-permission-desc"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-black text-slate-900">افزودن دسترسی جدید</h2>
+              <h2 id="add-permission-title" className="text-lg font-black text-slate-900">افزودن دسترسی جدید</h2>
               <button
                 type="button"
                 onClick={() => setShowAddDialog(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+                aria-label="بستن"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
+            <p id="add-permission-desc" className="sr-only">
+              فرم افزودن دسترسی جدید به نقش انتخابی
+            </p>
 
             {/* Role selector */}
             <div className="mb-4">
