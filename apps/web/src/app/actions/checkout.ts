@@ -76,7 +76,7 @@ export async function createPaymentAction(input: CreatePaymentActionInput): Prom
   });
   revalidateTag("orders", "max");
   revalidatePath("/orders", "page");
-  revalidatePath(`/order/success?orderId=${input.orderId}`, "page");
+  revalidatePath("/order/success", "page");
   return payment;
 }
 

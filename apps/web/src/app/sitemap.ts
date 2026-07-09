@@ -1,13 +1,8 @@
 import type { MetadataRoute } from "next";
-import { fetchCategoriesForSSR, fetchProductListForSSR } from "@/lib/server-api";
-import type { Category, Product } from "@/types/domain";
+import { fetchProductListForSSR } from "@/lib/server-api";
+import type { Product } from "@/types/domain";
 
 type SitemapProduct = Product & {
-  id?: string;
-  updatedAt?: string;
-};
-
-type SitemapCategory = Category & {
   id?: string;
   updatedAt?: string;
 };
@@ -102,25 +97,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // fail silent — sitemap will still serve static routes
   }
 
-  // Category URLs
-  let categoryUrls: MetadataRoute.Sitemap = [];
-  try {
-    const categories = (await fetchCategoriesForSSR()) as SitemapCategory[] | null;
-    if (Array.isArray(categories)) {
-      categoryUrls = categories
-        .filter((c) => c && (c._id || c.id))
-        .map((c) => ({
-          url: `${baseUrl}/categories/${c._id ?? c.id}`,
-          lastModified: (c as SitemapCategory).updatedAt
-            ? new Date((c as SitemapCategory).updatedAt as string)
-            : now,
-          changeFrequency: "weekly" as const,
-          priority: 0.6,
-        }));
-    }
-  } catch {
-    // ignore
-  }
-
-  return [...staticRoutes, ...categoryUrls, ...productUrls];
+  return [...staticRoutes, ...productUrls];
 }

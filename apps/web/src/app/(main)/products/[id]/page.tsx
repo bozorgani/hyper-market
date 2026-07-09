@@ -90,13 +90,6 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         url: siteUrl,
       },
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.5",
-      reviewCount: "12",
-      bestRating: "5",
-      worstRating: "1",
-    },
   };
 
   const breadcrumbLd = {

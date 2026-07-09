@@ -85,7 +85,7 @@ export function HomePageClient({
             </div>
 
             <h1 className="mt-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-              خرید سریع و<br />ارزان از اسنپ‌مارکت
+              خرید سریع و<br />ارزان از هایپرمارکت
             </h1>
             
             <p className="mt-4 max-w-md text-lg text-white/90">

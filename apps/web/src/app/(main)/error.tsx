@@ -12,7 +12,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    console.error(error?.message || "خطا در بارگذاری صفحه");
   }, [error]);
 
   return (
