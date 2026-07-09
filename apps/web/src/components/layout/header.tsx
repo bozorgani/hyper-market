@@ -28,7 +28,10 @@ export function Header() {
   const { showToast } = useToast();
   const isCustomer = isCustomerRole(user?.role);
   const cart = useCart(isCustomer);
-  const cartCount = isCustomer ? (cart.data?.items ?? []).length : 0;
+  const cartItems = cart.data?.items ?? [];
+  const cartCount = isCustomer
+    ? cartItems.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
+    : 0;
   const [query, setQuery] = useState("");
   const [isSuggestOpen, setIsSuggestOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -207,9 +210,21 @@ export function Header() {
               <MapPin className="h-3.5 w-3.5 text-emerald-500" /> ارسال به آدرس شما
             </div>
 
-            <Link href="/cart" className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-50 transition" aria-label="سبد خرید">
-              <ShoppingCart className="h-5 w-5" />
-              {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow ring-1 ring-white">{cartCount > 9 ? "۹+" : cartCount}</span>}
+            <Link 
+              href="/cart" 
+              className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-50 transition" 
+              aria-label={cartCount > 0 ? `سبد خرید، ${cartCount} عدد کالا` : "سبد خرید"}
+            >
+              <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+              {cartCount > 0 && (
+                <span 
+                  className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow ring-1 ring-white px-1"
+                  aria-label={`${cartCount} مورد در سبد خرید`}
+                  aria-live="polite"
+                >
+                  {cartCount > 9 ? "۹+" : cartCount.toLocaleString("fa-IR")}
+                </span>
+              )}
             </Link>
 
             {user ? (
