@@ -29,8 +29,9 @@ test('cart and checkout flow uses saved address, shipping quote and creates COD 
   await page.route('**/api/v1/payments/create', async (route) => route.fulfill({ status: 201, json: { _id: 'payment-1', orderId: 'order-1', userId: 'user-1', amount: 149000, status: 'paid', method: 'cod' } }));
 
   await page.goto('/checkout');
-  await page.getByLabel('انتخاب از آدرس‌های ذخیره‌شده').selectOption(sampleAddress._id);
-  await expect(page.getByPlaceholder('نام تحویل‌گیرنده')).toHaveValue(sampleAddress.recipientName);
+  await page.getByLabel('انتخاب آدرس').selectOption(sampleAddress._id);
+  // Address preview should show after selection
+  await expect(page.getByText(sampleAddress.recipientName)).toBeVisible();
   await page.getByRole('button', { name: /ثبت سفارش/ }).click();
   await page.getByRole('button', { name: /بله، ثبت سفارش/ }).click();
 
