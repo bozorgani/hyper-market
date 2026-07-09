@@ -32,15 +32,32 @@ export function PaymentDetailModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
-      <Card className="w-full max-w-2xl p-6 text-right shadow-2xl">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm"
+      onClick={onClose}
+      role="presentation"
+      aria-hidden={!open}
+    >
+      <Card
+        className="w-full max-w-2xl p-6 text-right shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-detail-title"
+        aria-describedby="payment-detail-description"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-start justify-between gap-4">
-          <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
-            <X className="h-5 w-5" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+            aria-label="بستن"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
           <div className="flex-1">
-            <h2 className="text-xl font-black text-slate-950">جزئیات پرداخت سفارش</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">اطلاعات پرداخت مرتبط با سفارش انتخاب‌شده در این پنجره نمایش داده می‌شود.</p>
+            <h2 id="payment-detail-title" className="text-xl font-black text-slate-950">جزئیات پرداخت سفارش</h2>
+            <p id="payment-detail-description" className="mt-2 text-sm leading-6 text-slate-500">اطلاعات پرداخت مرتبط با سفارش انتخاب‌شده در این پنجره نمایش داده می‌شود.</p>
           </div>
         </div>
 

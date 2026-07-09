@@ -15,7 +15,9 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
-      "@next/next/no-img-element": "off",
+      "@next/next/no-img-element": "error",
+      // Allow unescaped entities in Persian UI – copy is curated
+      "react/no-unescaped-entities": "off",
     },
   },
 ]);

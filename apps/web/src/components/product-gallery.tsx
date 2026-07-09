@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { useModalA11y } from "@/hooks/use-modal-a11y";
 import { getProductImageUrl } from "@/lib/image-utils";
 
 export function ProductGallery({ images, productName }: { images?: string[]; productName: string }) {
@@ -11,22 +12,25 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  const selectedImage = safeImages[selectedIndex] ? getProductImageUrl(safeImages[selectedIndex]) : undefined;
+  const openLightbox = () => setIsLightboxOpen(true);
+  const closeLightbox = () => setIsLightboxOpen(false);
 
-  if (!selectedImage) {
-    return (
-      <div className="flex h-full items-center justify-center rounded-3xl bg-slate-100 text-8xl border border-slate-200">
-        🛍️
-      </div>
-    );
-  }
+  // A11y: focus trap, Esc close, return focus – Issue #22
+  useModalA11y(isLightboxOpen, closeLightbox);
 
   const goTo = (idx: number) => {
     setSelectedIndex((idx + safeImages.length) % safeImages.length);
   };
 
-  const openLightbox = () => setIsLightboxOpen(true);
-  const closeLightbox = () => setIsLightboxOpen(false);
+  const selectedImage = safeImages[selectedIndex] ? getProductImageUrl(safeImages[selectedIndex]) : undefined;
+
+  if (!selectedImage) {
+    return (
+      <div className="flex h-full items-center justify-center rounded-3xl bg-slate-100 text-8xl border border-slate-200" role="img" aria-label="تصویر محصول موجود نیست">
+        🛒
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
