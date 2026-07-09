@@ -67,7 +67,7 @@ export function AdminStatCard({
             gradient === "bg-blue-500" && "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-200",
             gradient === "bg-amber-500" && "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-200",
             gradient === "bg-violet-500" && "bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-200",
-            !gradient && "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200",
+            !gradient && "bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-200",
           )}>
             <Icon className="h-6 w-6" />
           </div>

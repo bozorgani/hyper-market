@@ -318,7 +318,7 @@ export function AdminDashboardClient() {
       {/* Quick Action Cards */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "ثبت محصول جدید", href: "/admin/products/new", icon: Boxes, color: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-200" },
+          { label: "ثبت محصول جدید", href: "/admin/products/new", icon: Boxes, color: "from-emerald-500 to-emerald-700", shadow: "shadow-emerald-200" },
           { label: "بررسی سفارشات", href: "/admin/orders", icon: ReceiptText, color: "from-blue-500 to-indigo-600", shadow: "shadow-blue-200" },
           { label: "مدیریت کاربران", href: "/admin/users", icon: Users, color: "from-violet-500 to-purple-600", shadow: "shadow-violet-200" },
           { label: "مشاهده آنالیتیکس", href: "/admin/analytics", icon: TrendingUp, color: "from-amber-500 to-orange-600", shadow: "shadow-amber-200" },
