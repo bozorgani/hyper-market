@@ -11,7 +11,15 @@ import { formatNumber, formatPrice } from "@/lib/utils";
 import { getProductImageUrl } from "@/lib/image-utils";
 import type { Product } from "@/types/domain";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  priority = false,
+  fetchPriority,
+}: {
+  product: Product;
+  priority?: boolean;
+  fetchPriority?: "high" | "low" | "auto";
+}) {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const addToCart = useAddToCart();
@@ -55,9 +63,13 @@ export function ProductCard({ product }: { product: Product }) {
             src={getProductImageUrl(product.images[0])}
             alt={product.name}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
             quality={80}
+            priority={priority}
+            fetchPriority={fetchPriority ?? (priority ? "high" : "auto")}
+            loading={priority ? undefined : "lazy"}
+            decoding="async"
             placeholder="blur"
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx4f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
           />

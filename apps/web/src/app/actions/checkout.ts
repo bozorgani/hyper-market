@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { backendFetch } from "./backend";
 import type { DeliveryAddress, DeliveryWindow, Order, Payment } from "@/types/domain";
 import type { CouponValidationResult } from "@/hooks/use-coupons";
@@ -56,8 +56,11 @@ export async function createOrderAction(input: CreateOrderActionInput): Promise<
       ...(input.shippingMethod ? { shippingMethod: input.shippingMethod } : {}),
     }),
   });
-  revalidatePath("/cart");
-  revalidatePath("/orders");
+  // Issue #20: consolidate Server Actions – use revalidateTag (Issue #18) + revalidatePath fallback
+  revalidateTag("cart", "max");
+  revalidateTag("orders", "max");
+  revalidatePath("/cart", "page");
+  revalidatePath("/orders", "page");
   return order;
 }
 
@@ -71,8 +74,9 @@ export async function createPaymentAction(input: CreatePaymentActionInput): Prom
     idempotencyKey: input.idempotencyKey,
     body: JSON.stringify({ orderId: input.orderId, method: "cod" }),
   });
-  revalidatePath("/orders");
-  revalidatePath(`/order/success?orderId=${input.orderId}`);
+  revalidateTag("orders", "max");
+  revalidatePath("/orders", "page");
+  revalidatePath(`/order/success?orderId=${input.orderId}`, "page");
   return payment;
 }
 
@@ -81,7 +85,8 @@ export async function updateOrderStatusAction(input: { orderId: string; status: 
     method: "PATCH",
     body: JSON.stringify({ status: input.status }),
   });
-  revalidatePath("/admin/orders");
-  revalidatePath(`/admin/orders/${input.orderId}`);
+  revalidateTag("orders", "max");
+  revalidatePath("/admin/orders", "page");
+  revalidatePath(`/admin/orders/${input.orderId}`, "page");
   return order;
 }
