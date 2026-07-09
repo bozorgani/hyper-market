@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -109,6 +109,7 @@ export function CheckoutPageClient() {
   const [discountInput, setDiscountInput] = useState("");
   const [discountError, setDiscountError] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<CouponValidationResult | null>(null);
+  const addressInitializedRef = useRef(false);
 
   const detailedItems = cart.data?.items ?? [];
   const totalPrice = cart.data?.totalPrice ?? 0;
@@ -153,13 +154,14 @@ export function CheckoutPageClient() {
     }
   }, [hydrated, isCustomer, router, user]);
 
-  // Auto-select default address when saved addresses load
+  // Auto-select default address when saved addresses first load
   useEffect(() => {
+    if (addressInitializedRef.current) return;
     if (!savedAddresses.data || savedAddresses.data.length === 0) return;
-    if (deliveryAddress.recipientName || deliveryAddress.province || deliveryAddress.city || deliveryAddress.addressLine) return;
 
     const defaultAddr = savedAddresses.data.find((a) => a.isDefault) ?? savedAddresses.data[0];
     if (defaultAddr) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDeliveryAddress({
         recipientName: defaultAddr.recipientName,
         phoneNumber: defaultAddr.phoneNumber,
@@ -171,6 +173,7 @@ export function CheckoutPageClient() {
         postalCode: defaultAddr.postalCode ?? "",
       });
     }
+    addressInitializedRef.current = true;
   }, [savedAddresses.data]);
 
   function applySavedAddress(addressId: string) {
