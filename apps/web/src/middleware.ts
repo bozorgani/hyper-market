@@ -23,6 +23,17 @@ import type { NextRequest } from 'next/server';
 const ACCESS_TOKEN_COOKIE = 'hyper_market_access_token';
 const ADMIN_ROLES = new Set(['ADMIN', 'SUPER_ADMIN', 'admin', 'super_admin']);
 const ADMIN_PATHS = ['/admin'];
+// Customer PII routes – require any authenticated user
+const CUSTOMER_PROTECTED_PATHS = [
+  '/profile',
+  '/orders',
+  '/checkout',
+  '/wishlist',
+  '/cart',
+  '/order/success',
+];
+// Public auth pages – redirect authenticated users away (optional, can be handled client-side)
+// const AUTH_PUBLIC_PATHS = ['/login', '/register', '/verify-otp'];
 
 /**
  * Validates if a redirect URL is safe to use.
@@ -123,32 +134,67 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isAdminPath = ADMIN_PATHS.some((path) => pathname.startsWith(path));
-  if (!isAdminPath) {
+  const isCustomerProtectedPath = CUSTOMER_PROTECTED_PATHS.some((path) =>
+    pathname === path || pathname.startsWith(path + '/')
+  );
+
+  if (!isAdminPath && !isCustomerProtectedPath) {
     return NextResponse.next();
   }
 
   const role = getRoleFromCookie(request);
+  const isAuthenticated = Boolean(role);
 
-  if (!role || !ADMIN_ROLES.has(role)) {
-    const loginUrl = new URL('/login', request.url);
-    
-    // Validate the redirect path before adding it to the login URL
-    // This prevents Open Redirect attacks
-    const redirectPath = pathname;
-    if (isSafeRedirectUrl(redirectPath, request.nextUrl)) {
-      loginUrl.searchParams.set('redirect', redirectPath);
-    } else {
-      // Log suspicious redirect attempt
-      console.warn(`[SECURITY] Blocked potentially unsafe redirect attempt: ${redirectPath}`);
+  // --- Admin RBAC ---
+  if (isAdminPath) {
+    if (!role || !ADMIN_ROLES.has(role)) {
+      const loginUrl = new URL('/login', request.url);
+
+      const redirectPath = pathname + request.nextUrl.search;
+      if (isSafeRedirectUrl(redirectPath, request.nextUrl)) {
+        loginUrl.searchParams.set('redirect', redirectPath);
+      } else {
+        console.warn(`[SECURITY] Blocked potentially unsafe redirect attempt: ${redirectPath}`);
+      }
+
+      loginUrl.searchParams.set('error', 'unauthorized');
+      return NextResponse.redirect(loginUrl);
     }
-    
-    loginUrl.searchParams.set('error', 'unauthorized');
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.next();
+  }
+
+  // --- Customer PII protection ---
+  if (isCustomerProtectedPath) {
+    if (!isAuthenticated) {
+      const loginUrl = new URL('/login', request.url);
+      const redirectPath = pathname + request.nextUrl.search;
+      if (isSafeRedirectUrl(redirectPath, request.nextUrl)) {
+        loginUrl.searchParams.set('redirect', redirectPath);
+      }
+      // Don't set error=unauthorized for normal auth redirect – cleaner UX
+      return NextResponse.redirect(loginUrl);
+    }
+    // Authenticated – allow (role-based fine-grained check happens in API)
+    return NextResponse.next();
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/profile/:path*',
+    '/orders/:path*',
+    '/checkout/:path*',
+    '/wishlist/:path*',
+    '/cart/:path*',
+    '/cart',
+    '/order/success/:path*',
+    '/order/success',
+    '/profile',
+    '/orders',
+    '/checkout',
+    '/wishlist',
+  ],
 };
