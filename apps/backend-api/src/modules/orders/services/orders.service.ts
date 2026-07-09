@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -11,6 +12,7 @@ import { AuditService } from '../../audit/audit.service';
 import { AuditAction } from '../../audit/enums/audit-action.enum';
 import { EventType } from '../../../core/events/enums/event-type.enum';
 import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
+import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { CouponsService } from '../../coupons/coupons.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { CartService } from '../../cart/services/cart.service';
@@ -49,6 +51,7 @@ export class OrdersService {
     private readonly couponsService: CouponsService,
     private readonly shippingService: ShippingService,
     private readonly databaseTransactionService: DatabaseTransactionService,
+    private readonly redisService: RedisService,
     @Optional() private readonly eventBusService?: EventBusService,
     @Optional() private readonly auditService?: AuditService,
   ) {}
@@ -56,184 +59,200 @@ export class OrdersService {
   async createOrder(userId: string, dto: CreateOrderDto): Promise<Order> {
     this.validateDeliveryWindow(dto);
 
-    const existingOrder = await this.findRecentDuplicateOrder(userId);
-    if (existingOrder) {
-      this.logger.warn(
-        `Duplicate order creation prevented for user ${userId}. Returning existing order ${getEntityId(existingOrder)}.`,
-      );
-      return existingOrder;
+    // Redis distributed lock: prevent concurrent order creation for same user
+    const lockKey = `order:create:${userId}`;
+    const acquired = await this.redisService.setIfNotExists(lockKey, '1', 15);
+    if (!acquired) {
+      throw new ConflictException('Order creation already in progress for this account');
     }
 
-    const reducedItems: Array<{ productId: string; quantity: number }> = [];
+    try {
+      const existingOrder = await this.findRecentDuplicateOrder(userId);
+      if (existingOrder) {
+        this.logger.warn(
+          `Duplicate order creation prevented for user ${userId}. Returning existing order ${getEntityId(existingOrder)}.`,
+        );
+        return existingOrder;
+      }
 
-    const order = await this.databaseTransactionService.executeWithCompensation({
-      execute: async (session) => {
-        const cart = await this.cartService.getCartByUserId(userId, session);
+      const reducedItems: Array<{ productId: string; quantity: number }> = [];
 
-        if (!cart.items || cart.items.length === 0) {
-          throw new BadRequestException('Cart is empty');
-        }
+      const order = await this.databaseTransactionService.executeWithCompensation({
+        execute: async (session) => {
+          const cart = await this.cartService.getCartByUserId(userId, session);
 
-        const orderItems: OrderItem[] = [];
-        let subtotalPrice = 0;
-
-        for (const item of cart.items) {
-          const productId = getEntityId(item.productId);
-
-          const product = await this.productsService.getProductById(productId, session);
-
-          if (!product.isActive) {
-            throw new BadRequestException(`Product "${product.name}" is not active`);
+          if (!cart.items || cart.items.length === 0) {
+            throw new BadRequestException('Cart is empty');
           }
 
-          if (product.stock < item.quantity) {
-            throw new BadRequestException(
-              `Insufficient stock for product "${product.name}"`,
+          const orderItems: OrderItem[] = [];
+          let subtotalPrice = 0;
+
+          for (const item of cart.items) {
+            const productId = getEntityId(item.productId);
+
+            const product = await this.productsService.getProductById(productId, session);
+
+            if (!product.isActive) {
+              throw new BadRequestException(`Product "${product.name}" is not active`);
+            }
+
+            if (product.stock < item.quantity) {
+              throw new BadRequestException(
+                `Insufficient stock for product "${product.name}"`,
+              );
+            }
+
+            const priceAtPurchase = product.discountPrice ?? product.price;
+
+            orderItems.push({
+              productId: new Types.ObjectId(productId),
+              quantity: item.quantity,
+              priceAtPurchase,
+            });
+
+            subtotalPrice += priceAtPurchase * item.quantity;
+
+            await this.productsService.reduceStock(
+              productId,
+              item.quantity,
+              session,
+              false,
             );
+
+            reducedItems.push({ productId, quantity: item.quantity });
           }
 
-          const priceAtPurchase = product.discountPrice ?? product.price;
-
-          orderItems.push({
-            productId: new Types.ObjectId(productId),
-            quantity: item.quantity,
-            priceAtPurchase,
+          const coupon = await this.couponsService.validateCoupon(
+            dto.couponCode,
+            subtotalPrice,
+            userId,
+          );
+          const merchandiseTotal = coupon?.total ?? subtotalPrice;
+          const shippingQuote = this.shippingService.getQuote({
+            province: dto.deliveryAddress.province.trim(),
+            city: dto.deliveryAddress.city.trim(),
+            subtotal: merchandiseTotal,
+            deliveryDate: new Date(dto.deliveryWindow.date),
+            timeSlot: dto.deliveryWindow.timeSlot,
+            method: dto.shippingMethod,
           });
+          await this.ensureDeliveryCapacity(
+            new Date(dto.deliveryWindow.date),
+            dto.deliveryWindow.timeSlot,
+            dto.deliveryAddress.province.trim(),
+            dto.deliveryAddress.city.trim(),
+            shippingQuote.capacity,
+          );
+          const totalPrice = merchandiseTotal + shippingQuote.deliveryFee;
 
-          subtotalPrice += priceAtPurchase * item.quantity;
-
-          await this.productsService.reduceStock(
-            productId,
-            item.quantity,
+          const createdOrder = await this.ordersRepository.create(
+            {
+              userId: new Types.ObjectId(userId),
+              items: orderItems,
+              subtotalPrice,
+              discountAmount: coupon?.discountAmount ?? 0,
+              couponCode: coupon?.code ?? null,
+              shippingMethod: shippingQuote.method,
+              deliveryFee: shippingQuote.deliveryFee,
+              freeShippingApplied: shippingQuote.freeShippingApplied,
+              totalPrice,
+              status: OrderStatus.PENDING,
+              deliveryAddress: {
+                recipientName: dto.deliveryAddress.recipientName.trim(),
+                phoneNumber: dto.deliveryAddress.phoneNumber.trim(),
+                province: dto.deliveryAddress.province.trim(),
+                city: dto.deliveryAddress.city.trim(),
+                addressLine: dto.deliveryAddress.addressLine.trim(),
+                plate: dto.deliveryAddress.plate?.trim() || null,
+                unit: dto.deliveryAddress.unit?.trim() || null,
+                postalCode: dto.deliveryAddress.postalCode?.trim() || null,
+              },
+              deliveryWindow: {
+                date: new Date(dto.deliveryWindow.date),
+                timeSlot: dto.deliveryWindow.timeSlot,
+              },
+            },
             session,
-            false,
           );
 
-          reducedItems.push({ productId, quantity: item.quantity });
-        }
-
-        const coupon = await this.couponsService.validateCoupon(
-          dto.couponCode,
-          subtotalPrice,
-          userId,
-        );
-        const merchandiseTotal = coupon?.total ?? subtotalPrice;
-        const shippingQuote = this.shippingService.getQuote({
-          province: dto.deliveryAddress.province.trim(),
-          city: dto.deliveryAddress.city.trim(),
-          subtotal: merchandiseTotal,
-          deliveryDate: new Date(dto.deliveryWindow.date),
-          timeSlot: dto.deliveryWindow.timeSlot,
-          method: dto.shippingMethod,
-        });
-        await this.ensureDeliveryCapacity(
-          new Date(dto.deliveryWindow.date),
-          dto.deliveryWindow.timeSlot,
-          dto.deliveryAddress.province.trim(),
-          dto.deliveryAddress.city.trim(),
-          shippingQuote.capacity,
-        );
-        const totalPrice = merchandiseTotal + shippingQuote.deliveryFee;
-
-        const createdOrder = await this.ordersRepository.create(
-          {
-            userId: new Types.ObjectId(userId),
-            items: orderItems,
-            subtotalPrice,
-            discountAmount: coupon?.discountAmount ?? 0,
-            couponCode: coupon?.code ?? null,
-            shippingMethod: shippingQuote.method,
-            deliveryFee: shippingQuote.deliveryFee,
-            freeShippingApplied: shippingQuote.freeShippingApplied,
-            totalPrice,
-            status: OrderStatus.PENDING,
-            deliveryAddress: {
-              recipientName: dto.deliveryAddress.recipientName.trim(),
-              phoneNumber: dto.deliveryAddress.phoneNumber.trim(),
-              province: dto.deliveryAddress.province.trim(),
-              city: dto.deliveryAddress.city.trim(),
-              addressLine: dto.deliveryAddress.addressLine.trim(),
-              plate: dto.deliveryAddress.plate?.trim() || null,
-              unit: dto.deliveryAddress.unit?.trim() || null,
-              postalCode: dto.deliveryAddress.postalCode?.trim() || null,
-            },
-            deliveryWindow: {
-              date: new Date(dto.deliveryWindow.date),
-              timeSlot: dto.deliveryWindow.timeSlot,
-            },
-          },
-          session,
-        );
-
-        if (coupon) {
-          await this.couponsService.recordUsage({
-            couponId: coupon.couponId,
-            code: coupon.code,
-            userId,
-            orderId: getEntityId(createdOrder),
-            discountAmount: coupon.discountAmount,
-          });
-        }
-
-        await this.cartService.clearCart(userId, session);
-
-        return createdOrder;
-      },
-      compensate: async () => {
-        // Best-effort rollback of partial writes in non-transactional mode:
-        // restore stock for products that were already reduced.
-        for (const { productId, quantity } of reducedItems) {
-          try {
-            await this.productsService.restoreStock(productId, quantity, undefined, false);
-          } catch {
-            // Compensation is best-effort — log but don't throw
+          if (coupon) {
+            await this.couponsService.recordUsage({
+              couponId: coupon.couponId,
+              code: coupon.code,
+              userId,
+              orderId: getEntityId(createdOrder),
+              discountAmount: coupon.discountAmount,
+            });
           }
-        }
-        this.logger.warn('[COMPENSATE] Order creation failed in non-transactional mode; stock restoration attempted for affected products.');
-      },
-    });
 
-    const reducedProductIds = reducedItems.map((item) => item.productId);
+          await this.cartService.clearCart(userId, session);
 
-    // Post-transaction search sync
-    await Promise.all(
-      reducedProductIds.map((productId) =>
-        this.productsService.syncProductToSearch(productId),
-      ),
-    );
-
-    if (order.couponCode && order.discountAmount > 0) {
-      await this.auditService?.log({
-        actorUserId: userId,
-        action: AuditAction.COUPON_APPLIED,
-        resource: 'order',
-        resourceId: getEntityId(order),
-        metadata: {
-          couponCode: order.couponCode,
-          discountAmount: order.discountAmount,
-          subtotalPrice: order.subtotalPrice,
-          totalPrice: order.totalPrice,
+          return createdOrder;
+        },
+        compensate: async () => {
+          // Best-effort rollback of partial writes in non-transactional mode:
+          // restore stock for products that were already reduced.
+          for (const { productId, quantity } of reducedItems) {
+            try {
+              await this.productsService.restoreStock(productId, quantity, undefined, false);
+            } catch {
+              // Compensation is best-effort — log but don't throw
+            }
+          }
+          this.logger.warn('[COMPENSATE] Order creation failed in non-transactional mode; stock restoration attempted for affected products.');
         },
       });
+
+      const reducedProductIds = reducedItems.map((item) => item.productId);
+
+      // Post-transaction search sync
+      await Promise.all(
+        reducedProductIds.map((productId) =>
+          this.productsService.syncProductToSearch(productId),
+        ),
+      );
+
+      if (order.couponCode && order.discountAmount > 0) {
+        await this.auditService?.log({
+          actorUserId: userId,
+          action: AuditAction.COUPON_APPLIED,
+          resource: 'order',
+          resourceId: getEntityId(order),
+          metadata: {
+            couponCode: order.couponCode,
+            discountAmount: order.discountAmount,
+            subtotalPrice: order.subtotalPrice,
+            totalPrice: order.totalPrice,
+          },
+        });
+      }
+
+      this.eventBusService?.emit({
+        type: EventType.ORDER_CREATED,
+        payload: {
+          userId,
+          orderId: getEntityId(order),
+          totalPrice: order.totalPrice,
+          subtotalPrice: order.subtotalPrice,
+          discountAmount: order.discountAmount,
+          couponCode: order.couponCode,
+          deliveryFee: order.deliveryFee,
+          shippingMethod: order.shippingMethod,
+          itemsCount: order.items.length,
+        },
+        timestamp: Date.now(),
+      });
+
+      return order;
+    } finally {
+      // Release the distributed lock
+      try {
+        await this.redisService.delete(lockKey);
+      } catch {
+        // Lock TTL will expire anyway
+      }
     }
-
-    this.eventBusService?.emit({
-      type: EventType.ORDER_CREATED,
-      payload: {
-        userId,
-        orderId: getEntityId(order),
-        totalPrice: order.totalPrice,
-        subtotalPrice: order.subtotalPrice,
-        discountAmount: order.discountAmount,
-        couponCode: order.couponCode,
-        deliveryFee: order.deliveryFee,
-        shippingMethod: order.shippingMethod,
-        itemsCount: order.items.length,
-      },
-      timestamp: Date.now(),
-    });
-
-    return order;
   }
 
   async getMyOrders(userId: string): Promise<Order[]> {
