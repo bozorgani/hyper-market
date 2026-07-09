@@ -99,8 +99,8 @@ export class UsersRepository implements BaseRepository<User> {
     if (!isValidObjectId(id)) return null;
     return this.userModel
       .findOneAndUpdate(
-        { _id: id, deletedAt: null },
-        { isEmailVerified: true, accountStatus: 'active' },
+        { _id: id, deletedAt: null, accountStatus: AccountStatus.PENDING },
+        { isEmailVerified: true, accountStatus: AccountStatus.ACTIVE },
         { returnDocument: 'after' },
       )
       .exec();
@@ -110,8 +110,8 @@ export class UsersRepository implements BaseRepository<User> {
     if (!isValidObjectId(id)) return null;
     return this.userModel
       .findOneAndUpdate(
-        { _id: id, deletedAt: null },
-        { isPhoneVerified: true, accountStatus: 'active' },
+        { _id: id, deletedAt: null, accountStatus: AccountStatus.PENDING },
+        { isPhoneVerified: true, accountStatus: AccountStatus.ACTIVE },
         { returnDocument: 'after' },
       )
       .exec();
