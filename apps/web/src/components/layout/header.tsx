@@ -101,7 +101,6 @@ export function Header() {
                 <span
                   className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow ring-1 ring-white px-1"
                   aria-label={`${cartCount} مورد در سبد خرید`}
-                  aria-live="polite"
                 >
                   {cartCount > 9 ? "۹+" : cartCount.toLocaleString("fa-IR")}
                 </span>
