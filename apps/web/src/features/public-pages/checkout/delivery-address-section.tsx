@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Plus } from "lucide-react";
+import { Edit3, MapPin, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Address } from "@/types/domain";
@@ -13,14 +13,12 @@ export function todayDateInputValue() {
 }
 
 type DeliveryAddressSectionProps = {
-  deliveryAddress: { recipientName: string; phoneNumber: string; province: string; city: string; addressLine: string };
   savedAddresses: { data?: Address[] };
   selectedAddressId?: string;
   onApplySavedAddress: (addressId: string) => void;
 };
 
 export function DeliveryAddressSection({
-  deliveryAddress,
   savedAddresses,
   selectedAddressId,
   onApplySavedAddress,
@@ -68,21 +66,19 @@ export function DeliveryAddressSection({
                     <p className="text-sm text-slate-500">{address.addressLine}</p>
                     <p className="mt-0.5 text-xs text-slate-400">{address.recipientName} — {address.phoneNumber}</p>
                   </div>
+                  <Link
+                    href="/profile/addresses"
+                    onClick={(e) => e.stopPropagation()}
+                    className="shrink-0 rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                    aria-label={`ویرایش آدرس ${address.label || address.recipientName}`}
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </Link>
                 </div>
               </button>
             );
           })}
         </div>
-
-        {/* Selected address preview */}
-        {deliveryAddress.recipientName && (
-          <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm leading-7 text-slate-600">
-            <p className="font-bold text-slate-900">{deliveryAddress.recipientName}</p>
-            <p className="mt-1">{deliveryAddress.province}، {deliveryAddress.city}</p>
-            <p>{deliveryAddress.addressLine}</p>
-            <p className="mt-1 text-xs text-slate-400">{deliveryAddress.phoneNumber}</p>
-          </div>
-        )}
 
         <div className="mt-4">
           <Link href="/profile/addresses">

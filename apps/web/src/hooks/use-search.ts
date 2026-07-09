@@ -75,9 +75,20 @@ function normalizeSearchHit(hit: RawSearchHit): SearchProduct {
 }
 
 function normalizeSearchResponse(response: RawSearchResponse): SearchResponse {
+  // Deduplicate items by id — backend search may return duplicates
+  const seen = new Set<string>();
+  const uniqueItems: SearchProduct[] = [];
+  for (const item of response.items) {
+    const normalized = normalizeSearchHit(item);
+    if (!seen.has(normalized.id)) {
+      seen.add(normalized.id);
+      uniqueItems.push(normalized);
+    }
+  }
   return {
     ...response,
-    items: response.items.map(normalizeSearchHit),
+    items: uniqueItems,
+    total: uniqueItems.length,
     facets: response.facets ?? { categories: {}, brands: {}, tags: {} },
   };
 }

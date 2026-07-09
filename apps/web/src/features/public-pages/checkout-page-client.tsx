@@ -305,7 +305,6 @@ export function CheckoutPageClient() {
           <div className="space-y-4">
             {/* Address selection — simple dropdown or add-address prompt */}
             <DeliveryAddressSection
-              deliveryAddress={deliveryAddress}
               savedAddresses={savedAddresses}
               selectedAddressId={selectedAddressId}
               onApplySavedAddress={applySavedAddress}
