@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { ShoppingCart, Tag } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useAddToCart } from "@/hooks/use-cart";
@@ -43,11 +42,8 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <motion.div
-      whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.985 }}
-      transition={{ type: "spring", stiffness: 260, damping: 25 }}
-      className="group relative flex h-full min-h-[310px] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:shadow-lg focus-within:ring-2 focus-within:ring-emerald-200 focus-within:ring-offset-2 sm:min-h-[340px]"
+    <div
+      className="group relative flex h-full min-h-[310px] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-[3px] hover:shadow-lg active:scale-[0.985] focus-within:ring-2 focus-within:ring-emerald-200 focus-within:ring-offset-2 sm:min-h-[340px]"
     >
       <Link 
         href={`/products/${product._id}`} 
@@ -118,6 +114,6 @@ export function ProductCard({ product }: { product: Product }) {
           {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد"}
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }

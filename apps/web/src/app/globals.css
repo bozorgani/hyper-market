@@ -1,23 +1,17 @@
-@import "@fontsource/vazirmatn/100.css";
-@import "@fontsource/vazirmatn/200.css";
-@import "@fontsource/vazirmatn/300.css";
-@import "@fontsource/vazirmatn/400.css";
-@import "@fontsource/vazirmatn/500.css";
-@import "@fontsource/vazirmatn/600.css";
-@import "@fontsource/vazirmatn/700.css";
-@import "@fontsource/vazirmatn/800.css";
-@import "@fontsource/vazirmatn/900.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 
 /* ===== Enterprise Production Design System ===== */
+/* Font loaded via next/font/google in layout.tsx
+   Vazirmatn 400,500,700,900 – display:swap – subsets: arabic,latin
+*/
 
 @theme inline {
   --color-primary: #00a049;
   --color-primary-foreground: #ffffff;
   --color-background: #f8fafc;
   --color-foreground: #020617;
-  --font-sans: "Vazirmatn", Tahoma, Arial, sans-serif;
+  --font-sans: var(--font-vazirmatn), "Vazirmatn", Tahoma, Arial, sans-serif;
 }
 
 :root {
@@ -45,7 +39,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  font-family: var(--font-vazirmatn), "Vazirmatn", Tahoma, Arial, sans-serif;
   font-feature-settings: "ss01", "tnum";
   -webkit-font-smoothing: antialiased;
 }
@@ -231,13 +225,14 @@ tr:hover td {
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
 }
 
-/* Shake animation for OTP error feedback */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-  20%, 40%, 60%, 80% { transform: translateX(4px); }
-}
-
-.animate-shake {
-  animation: shake 0.55s cubic-bezier(0.36, 0, 0.66, 1);
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

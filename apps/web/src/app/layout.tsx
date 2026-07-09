@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
+import { Vazirmatn } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers";
+
+const vazirmatn = Vazirmatn({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700", "900"],
+  display: "swap",
+  variable: "--font-vazirmatn",
+  preload: true,
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
@@ -27,8 +36,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fa" dir="rtl">
-      <body className="min-h-screen bg-background text-foreground antialiased">
+    <html lang="fa" dir="rtl" className={vazirmatn.variable}>
+      <body className={`${vazirmatn.className} min-h-screen bg-background text-foreground antialiased`}>
         <Providers>
           {children}
         </Providers>
