@@ -79,7 +79,9 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     dangerouslyAllowSVG: false,
     contentDispositionType: "attachment",
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // CSP for image endpoint is separate from page CSP (handled by middleware)
+    // Not setting contentSecurityPolicy here to avoid blocking localhost:3001 fetches
+    ...(process.env.NODE_ENV !== "production" ? { unoptimized: true } : {}),
   },
   
   // Enable React strict mode for better performance

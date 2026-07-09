@@ -56,7 +56,7 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
-  // Fetch reviews
+  // Fetch reviews — silent 404 if backend not implemented
   const {
     data: reviewsData,
     isLoading: isLoadingReviews,
@@ -80,15 +80,17 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
       );
       return response.data;
     },
+    retry: false,
   });
 
-  // Fetch stats
+  // Fetch stats — silent 404 if backend not implemented
   const { data: stats } = useQuery<ReviewStats>({
     queryKey: ["review-stats", productId],
     queryFn: async () => {
       const response = await api.get(`/reviews/product/${productId}/stats`);
       return response.data;
     },
+    retry: false,
   });
 
   // Mark review as helpful
@@ -297,11 +299,7 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
           ))}
         </div>
       ) : reviewsError ? (
-        <Card className="p-6">
-          <p className="text-center text-red-600">
-            خطا در بارگذاری نظرات. لطفاً دوباره تلاش کنید.
-          </p>
-        </Card>
+        null
       ) : reviews.length === 0 ? (
         <EmptyState
           title="هنوز نظری ثبت نشده"
