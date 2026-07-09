@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { cn, formatNumber, formatPrice, formatPersianDate } from "@/lib/utils";
+import { isAdminRole, isCustomerRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
 import { useMyOrders } from "@/hooks/use-orders";
 import {
@@ -17,14 +18,6 @@ import {
   CheckCircle2, Truck, Camera, Gift,
 } from "lucide-react";
 import type { OrderStatus } from "@/types/domain";
-
-function isAdminRole(role?: string) {
-  return role === "admin" || role === "super_admin" || role === "ADMIN" || role === "SUPER_ADMIN";
-}
-
-function isCustomerRole(role?: string) {
-  return role === "customer" || role === "CUSTOMER";
-}
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; Icon: typeof CheckCircle2 }> = {
   delivered: { label: "تحویل شده", color: "text-emerald-600", bg: "bg-emerald-50", Icon: CheckCircle2 },

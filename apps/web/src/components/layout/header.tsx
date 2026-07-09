@@ -15,13 +15,10 @@ import { useSearchSuggest } from "@/hooks/use-search";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/utils";
 import { getProductImageUrl } from "@/lib/image-utils";
+import { isCustomerRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
 // i18n – Issue #24 progressive migration
 import { t, tf } from "@/i18n";
-
-function isCustomerRole(role?: string) {
-  return role === "customer" || role === "CUSTOMER";
-}
 
 export function Header() {
   const router = useRouter();

@@ -12,7 +12,7 @@ export function AdminProductEditClient() {
   const updateProduct = useUpdateProduct(params.id);
 
   return (
-    <main className="space-y-5 text-right">
+    <main id="main-content" className="space-y-5 text-right">
       <h1 className="text-2xl font-black">ویرایش محصول</h1>
       {product.isLoading ? <p className="text-slate-500">در حال بارگذاری...</p> : null}
       {product.data ? (

@@ -38,6 +38,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fa" dir="rtl" className={vazirmatn.variable}>
       <body className={`${vazirmatn.className} min-h-screen bg-background text-foreground antialiased`}>
+        {/* Skip-to-content link for keyboard users – Task 1 */}
+        <a
+          href="#main-content"
+          className="pointer-events-none absolute -top-40 right-4 z-[100] rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all focus:pointer-events-auto focus:top-4 focus:outline-none focus:ring-4 focus:ring-emerald-200"
+        >
+          پرش به محتوای اصلی
+        </a>
         <Providers>
           {children}
         </Providers>

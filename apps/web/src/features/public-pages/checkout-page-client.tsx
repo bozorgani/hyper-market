@@ -27,11 +27,8 @@ import { useCart } from "@/hooks/use-cart";
 import { useAvailableCoupons, useValidateCoupon, type CouponValidationResult } from "@/hooks/use-coupons";
 import { useCreateOrder, useCreatePayment } from "@/hooks/use-orders";
 import { useShippingQuote, type ShippingMethod } from "@/hooks/use-shipping";
+import { isCustomerRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
-
-function isCustomerRole(role?: string) {
-  return role === "customer" || role === "CUSTOMER";
-}
 
 const MapPicker = lazy(() =>
   import("@/components/ui/map-picker").then((m) => ({ default: m.MapPicker }))

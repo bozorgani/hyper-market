@@ -16,7 +16,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-[60vh] max-w-xl items-center px-4 py-16 text-right">
+    <main id="main-content" className="mx-auto flex min-h-[60vh] max-w-xl items-center px-4 py-16 text-right">
       <Card className="w-full p-8">
         <h2 className="text-xl font-black text-slate-950">خطایی در بارگذاری رخ داد</h2>
         <p className="mt-3 leading-7 text-slate-600">

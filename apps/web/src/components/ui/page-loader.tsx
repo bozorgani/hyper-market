@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function PageLoader({ title = "در حال آماده‌سازی صفحه..." }: { title?: string }) {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 text-right">
+    <main id="main-content" className="mx-auto max-w-5xl px-4 py-8 text-right">
       <p className="mb-5 text-sm font-semibold text-slate-500">{title}</p>
       <div className="grid gap-4 lg:grid-cols-[1.2fr,0.8fr]">
         <Card className="p-6">

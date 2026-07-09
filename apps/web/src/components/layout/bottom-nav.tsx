@@ -4,12 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, ShoppingBag, ShoppingCart, UserRound, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isCustomerRole } from "@/lib/auth";
 import { useCart } from "@/hooks/use-cart";
 import { useAuthStore } from "@/store/auth-store";
-
-function isCustomerRole(role?: string) {
-  return role === "customer" || role === "CUSTOMER";
-}
 
 const navItems = [
   { href: "/", label: "خانه", icon: Home },

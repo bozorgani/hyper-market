@@ -115,23 +115,23 @@ Module implementation matrix:
 
 | Module | Module file | Controllers | Services | Repositories | Schemas | DTOs |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| addresses | yes | 1 | 1 | 1 | 1 | 0 |
-| analytics | yes | 1 | 1 | 1 | 1 | 0 |
+| addresses | yes | 1 | 1 | 1 | 1 | 1 |
+| analytics | yes | 1 | 1 | 1 | 1 | 1 |
 | audit | yes | 0 | 1 | 1 | 1 | 0 |
-| auth | yes | 1 | 4 | 3 | 3 | 0 |
-| cart | yes | 1 | 1 | 1 | 1 | 0 |
-| categories | yes | 1 | 1 | 1 | 1 | 0 |
-| coupons | yes | 1 | 1 | 1 | 2 | 0 |
+| auth | yes | 1 | 4 | 3 | 3 | 10 |
+| cart | yes | 1 | 1 | 1 | 1 | 2 |
+| categories | yes | 1 | 1 | 1 | 1 | 2 |
+| coupons | yes | 1 | 1 | 1 | 2 | 2 |
 | mail | yes | 0 | 3 | 0 | 0 | 0 |
-| orders | yes | 1 | 1 | 1 | 1 | 0 |
+| orders | yes | 1 | 1 | 1 | 1 | 2 |
 | outbox | yes | 0 | 1 | 1 | 1 | 0 |
-| payments | yes | 1 | 1 | 1 | 1 | 0 |
-| permissions | yes | 1 | 1 | 1 | 1 | 0 |
-| products | yes | 1 | 2 | 1 | 1 | 0 |
+| payments | yes | 1 | 1 | 1 | 1 | 2 |
+| permissions | yes | 1 | 1 | 1 | 1 | 1 |
+| products | yes | 1 | 2 | 1 | 1 | 2 |
 | queue | yes | 0 | 1 | 0 | 0 | 0 |
 | reviews | no | 1 | 1 | 1 | 1 | 0 |
 | search | yes | 1 | 2 | 0 | 0 | 0 |
-| shipping | yes | 1 | 1 | 0 | 0 | 0 |
+| shipping | yes | 1 | 1 | 0 | 0 | 1 |
 | users | yes | 1 | 1 | 1 | 1 | 0 |
 | wishlist | yes | 1 | 1 | 1 | 1 | 0 |
 

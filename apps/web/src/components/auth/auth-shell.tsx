@@ -34,7 +34,7 @@ export function AuthShell({
   const featureList = features ?? defaultFeatures;
 
   return (
-    <div className="flex min-h-dvh bg-slate-50">
+    <div id="main-content" className="flex min-h-dvh bg-slate-50">
       {/* Left Branding Panel - Desktop Only */}
       <div className="relative hidden w-[480px] shrink-0 overflow-hidden bg-slate-950 lg:flex lg:flex-col lg:justify-between">
         {/* Background Pattern */}
@@ -67,7 +67,7 @@ export function AuthShell({
               </div>
               <div>
                 <h2 className="text-lg font-black text-white">هایپرمارکت</h2>
-                <p className="text-xs text-emerald-400/80">Hyper Market</p>
+                <p className="text-xs text-emerald-400">Hyper Market</p>
               </div>
             </div>
 

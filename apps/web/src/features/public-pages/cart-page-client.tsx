@@ -17,11 +17,8 @@ import { useToast } from "@/components/ui/toast";
 import { useCart, useClearCart, useRemoveFromCart, useUpdateCartQuantity } from "@/hooks/use-cart";
 import { formatNumber, formatPrice } from "@/lib/utils";
 import { getProductImageUrl } from "@/lib/image-utils";
+import { isCustomerRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
-
-function isCustomerRole(role?: string) {
-  return role === "customer" || role === "CUSTOMER";
-}
 
 export function CartPageClient() {
   const router = useRouter();

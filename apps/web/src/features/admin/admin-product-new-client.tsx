@@ -10,7 +10,7 @@ export function AdminProductNewClient() {
   const createProduct = useCreateProduct();
 
   return (
-    <main className="space-y-5 text-right">
+    <main id="main-content" className="space-y-5 text-right">
       <h1 className="text-2xl font-black">ایجاد محصول جدید</h1>
       <ProductForm
         loading={createProduct.isPending}

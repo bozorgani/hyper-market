@@ -21,7 +21,7 @@
   --color-emerald-100: #d1fae5;
   --color-emerald-200: #a7f3d0;
   --color-emerald-300: #6ee7b7;
-  --color-emerald-400: #00b368;
+  --color-emerald-400: #008749; /* WCAG AA 4.6:1 on white */
   --color-emerald-500: #007a38; /* was #10b981 – now 4.9:1 */
   --color-emerald-600: #00662f; /* was #059669 – now 7.0:1 */
   --color-emerald-700: #004d23; /* was #047857 – now 9.6:1 */

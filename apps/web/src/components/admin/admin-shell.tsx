@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isAdminRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
 
 const menuItems = [
@@ -34,10 +35,6 @@ const menuItems = [
   { href: "/admin/users", label: "کاربران", icon: Users },
   { href: "/admin/roles", label: "نقش‌ها و دسترسی‌ها", icon: Shield },
 ];
-
-function isAdminRole(role?: string) {
-  return role === "ADMIN" || role === "SUPER_ADMIN" || role === "admin" || role === "super_admin";
-}
 
 const sidebarVariants = {
   open: { x: 0, opacity: 1 },
@@ -276,7 +273,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Scrollable Content */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 lg:p-8">
           <motion.div
             key={pathname}
             initial={{ opacity: 0, y: 8 }}

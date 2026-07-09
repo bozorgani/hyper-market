@@ -12,13 +12,10 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMyOrders, usePaymentsBatch } from "@/hooks/use-orders";
+import { isCustomerRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
 import { formatNumber } from "@/lib/utils";
 import type { OrderStatus, Payment } from "@/types/domain";
-
-function isCustomerRole(role?: string) {
-  return role === "customer" || role === "CUSTOMER";
-}
 
 const statuses: Array<{ value: OrderStatus | "all"; label: string }> = [
   { value: "all", label: "همه" },

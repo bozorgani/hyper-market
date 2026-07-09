@@ -11,11 +11,8 @@ import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
 import { firstValidationError, loginSchema, normalizeDigits, normalizePhoneNumber } from "@/lib/validation/auth";
 import { useAuthStore } from "@/store/auth-store";
+import { isAdminRole } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-
-function isAdminRole(role?: string) {
-  return role === "admin" || role === "super_admin" || role === "ADMIN" || role === "SUPER_ADMIN";
-}
 
 export function LoginPageClient() {
   const router = useRouter();
