@@ -61,7 +61,7 @@ function localizeApiMessage(message: string, status?: number) {
   const normalized = message.toLowerCase();
 
   // Auth-related
-  if (normalized.includes("unauthorized") || normalized.includes("invalid credentials")) return "اطلاعات ورود معتبر نیست.";
+  if (normalized.includes("unauthorized") || normalized.includes("invalid credentials")) return "اطلاعات ورود معتبر نیست. اگر حساب کاربری ندارید، لطفاً ثبت‌نام کنید.";
   if (normalized.includes("forbidden") || normalized.includes("csrf")) return "شما مجوز انجام این عملیات را ندارید یا نشست شما منقضی شده است.";
   if (normalized.includes("account is temporarily locked")) return "حساب شما موقتاً مسدود شده است. لطفاً بعداً تلاش کنید.";
   if (normalized.includes("account verification is required")) return "حساب شما نیاز به تأیید دارد.";
@@ -205,6 +205,15 @@ api.interceptors.response.use(
           );
         if (!originalRequest._skipAuthRedirect && !isUserAuthForm) {
           redirectToLogin();
+        }
+        // For auth forms, reject with the ORIGINAL error (e.g. "Invalid credentials")
+        // instead of the refresh error ("Refresh token failed") — Issue #26
+        if (isUserAuthForm) {
+          const message = error.response?.data?.message;
+          const normalizedMessage = Array.isArray(message)
+            ? message.join("، ")
+            : message || error.response?.data?.error || error.message || "خطای غیرمنتظره رخ داد.";
+          return Promise.reject(new Error(localizeApiMessage(normalizedMessage, error.response?.status)));
         }
         return Promise.reject(refreshError);
       } finally {
