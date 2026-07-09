@@ -76,10 +76,16 @@ export function LoginPageClient() {
       <form onSubmit={submit} className="space-y-4 sm:space-y-5">
         {/* Identifier Field */}
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-slate-600">ایمیل یا شماره موبایل</label>
+          <label htmlFor="login-identifier" className="mb-1.5 block text-xs font-semibold text-slate-600">ایمیل یا شماره موبایل</label>
           <div className="relative">
-            <Mail className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Mail className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
             <input
+              id="login-identifier"
+              name="identifier"
+              autoComplete="username"
+              aria-required="true"
+              aria-invalid={error ? "true" : "false"}
+              aria-describedby={error ? "login-error" : undefined}
               value={identifier}
               onChange={(e) => setIdentifier(normalizeDigits(e.target.value))}
               onBlur={() => {
@@ -101,14 +107,20 @@ export function LoginPageClient() {
         {/* Password Field */}
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-xs font-semibold text-slate-600">رمز عبور</label>
+            <label htmlFor="login-password" className="text-xs font-semibold text-slate-600">رمز عبور</label>
             <button type="button" className="text-xs font-medium text-emerald-600 transition hover:text-emerald-700">
               فراموشی رمز عبور
             </button>
           </div>
           <div className="relative">
-            <Lock className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Lock className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
             <input
+              id="login-password"
+              name="password"
+              autoComplete="current-password"
+              aria-required="true"
+              aria-invalid={error ? "true" : "false"}
+              aria-describedby={error ? "login-error" : undefined}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="رمز عبور خود را وارد کنید"
@@ -134,7 +146,7 @@ export function LoginPageClient() {
 
         {/* Error Message */}
         {error && (
-          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} role="alert" aria-live="assertive" id="login-error">
             <StatusMessage variant="error">{error}</StatusMessage>
           </motion.div>
         )}
