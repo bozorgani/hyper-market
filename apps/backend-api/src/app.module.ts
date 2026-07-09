@@ -29,11 +29,11 @@ import { ProductsModule } from './modules/products/products.module';
 import { SearchModule } from './modules/search/search.module';
 import { ShippingModule } from './modules/shipping/shipping.module';
 import { UsersModule } from './modules/users/users.module';
+import { WishlistModule } from './modules/wishlist/wishlist.module';
 
 // Rate limiting uses Redis-backed storage so limits are shared across all
 // API instances behind a load-balancer. When Redis is unavailable the
 // storage fails open (allows the request) instead of blocking all traffic.
-const isProduction = process.env.APP_ENV === 'production';
 
 @Module({
   imports: [
@@ -45,36 +45,32 @@ const isProduction = process.env.APP_ENV === 'production';
       cache: true,
     }),
     MongooseModule.forRootAsync(databaseConfig),
-    ...(isProduction
-      ? [
-          ThrottlerModule.forRootAsync({
-            imports: [InfrastructureModule],
-            inject: [RedisThrottlerStorage],
-            useFactory: (
-              redisThrottlerStorage: RedisThrottlerStorage,
-            ): ThrottlerModuleOptions => ({
-              storage: redisThrottlerStorage,
-              throttlers: [
-                {
-                  name: 'default',
-                  ttl: Number(process.env.RATE_LIMIT_DEFAULT_TTL_MS ?? 60000),
-                  limit: Number(process.env.RATE_LIMIT_DEFAULT_LIMIT ?? 1000),
-                },
-                {
-                  name: 'auth',
-                  ttl: Number(process.env.RATE_LIMIT_AUTH_TTL_MS ?? 60000),
-                  limit: Number(process.env.RATE_LIMIT_AUTH_LIMIT ?? 30),
-                },
-                {
-                  name: 'sensitive',
-                  ttl: Number(process.env.RATE_LIMIT_SENSITIVE_TTL_MS ?? 60000),
-                  limit: Number(process.env.RATE_LIMIT_SENSITIVE_LIMIT ?? 100),
-                },
-              ],
-            }),
-          }),
-        ]
-      : []),
+    ThrottlerModule.forRootAsync({
+      imports: [InfrastructureModule],
+      inject: [RedisThrottlerStorage],
+      useFactory: (
+        redisThrottlerStorage: RedisThrottlerStorage,
+      ): ThrottlerModuleOptions => ({
+        storage: redisThrottlerStorage,
+        throttlers: [
+          {
+            name: 'default',
+            ttl: Number(process.env.RATE_LIMIT_DEFAULT_TTL_MS ?? 60000),
+            limit: Number(process.env.RATE_LIMIT_DEFAULT_LIMIT ?? 1000),
+          },
+          {
+            name: 'auth',
+            ttl: Number(process.env.RATE_LIMIT_AUTH_TTL_MS ?? 60000),
+            limit: Number(process.env.RATE_LIMIT_AUTH_LIMIT ?? 30),
+          },
+          {
+            name: 'sensitive',
+            ttl: Number(process.env.RATE_LIMIT_SENSITIVE_TTL_MS ?? 60000),
+            limit: Number(process.env.RATE_LIMIT_SENSITIVE_LIMIT ?? 100),
+          },
+        ],
+      }),
+    }),
     EventBusModule,
     InfrastructureModule,
     ObservabilityModule,
@@ -93,18 +89,15 @@ const isProduction = process.env.APP_ENV === 'production';
     CouponsModule,
     OrdersModule,
     PaymentsModule,
+    WishlistModule,
   ],
   controllers: [],
   providers: [
     HttpExceptionFilter,
-    ...(isProduction
-      ? [
-          {
-            provide: APP_GUARD,
-            useClass: ThrottlerGuard,
-          },
-        ]
-      : []),
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {

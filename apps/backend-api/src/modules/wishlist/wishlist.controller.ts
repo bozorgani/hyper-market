@@ -22,7 +22,7 @@ export class WishlistController {
   @Get()
   async getWishlist(@Request() req: any, @Query() query: WishlistQueryDto) {
     return this.wishlistService.getWishlist(
-      req.user.userId,
+      req.user.sub,
       query.page || 1,
       query.limit || 20,
     );
@@ -30,14 +30,14 @@ export class WishlistController {
 
   @Get('count')
   async getWishlistCount(@Request() req: any) {
-    const count = await this.wishlistService.getWishlistCount(req.user.userId);
+    const count = await this.wishlistService.getWishlistCount(req.user.sub);
     return { count };
   }
 
   @Get('check/:productId')
   async isInWishlist(@Request() req: any, @Query('productId') productId: string) {
     const isInWishlist = await this.wishlistService.isInWishlist(
-      req.user.userId,
+      req.user.sub,
       productId,
     );
     return { isInWishlist };
@@ -45,19 +45,19 @@ export class WishlistController {
 
   @Post('add')
   async addToWishlist(@Request() req: any, @Body() dto: AddToWishlistDto) {
-    return this.wishlistService.addToWishlist(req.user.userId, dto.productId);
+    return this.wishlistService.addToWishlist(req.user.sub, dto.productId);
   }
 
   @Post('toggle')
   async toggleWishlist(@Request() req: any, @Body() dto: AddToWishlistDto) {
-    return this.wishlistService.toggleWishlist(req.user.userId, dto.productId);
+    return this.wishlistService.toggleWishlist(req.user.sub, dto.productId);
   }
 
   @Delete('remove')
   @HttpCode(HttpStatus.OK)
   async removeFromWishlist(@Request() req: any, @Body() dto: RemoveFromWishlistDto) {
     return this.wishlistService.removeFromWishlist(
-      req.user.userId,
+      req.user.sub,
       dto.productId,
     );
   }
@@ -65,6 +65,6 @@ export class WishlistController {
   @Delete('clear')
   @HttpCode(HttpStatus.OK)
   async clearWishlist(@Request() req: any) {
-    return this.wishlistService.clearWishlist(req.user.userId);
+    return this.wishlistService.clearWishlist(req.user.sub);
   }
 }
