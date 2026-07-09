@@ -56,39 +56,44 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
-  // Fetch reviews — silent 404 if backend not implemented
+  // Fetch reviews — silent catch for 404 (backend may not implement reviews yet)
   const {
     data: reviewsData,
     isLoading: isLoadingReviews,
-    error: reviewsError,
   } = useQuery({
     queryKey: ["reviews", productId, ratingFilter, sortBy, sortOrder, page],
     queryFn: async () => {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-        sortBy,
-        sortOrder,
-      });
-
-      if (ratingFilter) {
-        params.append("rating", ratingFilter.toString());
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: limit.toString(),
+          sortBy,
+          sortOrder,
+        });
+        if (ratingFilter) {
+          params.append("rating", ratingFilter.toString());
+        }
+        const response = await api.get(`/reviews/product/${productId}?${params.toString()}`);
+        return response.data;
+      } catch {
+        // Reviews API not available — signal with reviewsApiAvailable: false
+        return { reviews: [], pagination: null, reviewsApiAvailable: false };
       }
-
-      const response = await api.get(
-        `/reviews/product/${productId}?${params.toString()}`
-      );
-      return response.data;
     },
     retry: false,
   });
 
-  // Fetch stats — silent 404 if backend not implemented
+  // Fetch stats — silent catch for 404
   const { data: stats } = useQuery<ReviewStats>({
     queryKey: ["review-stats", productId],
     queryFn: async () => {
-      const response = await api.get(`/reviews/product/${productId}/stats`);
-      return response.data;
+      try {
+        const response = await api.get(`/reviews/product/${productId}/stats`);
+        return response.data;
+      } catch {
+        // Reviews API not available — return empty stats silently
+        return { averageRating: 0, totalReviews: 0, ratingDistribution: {} };
+      }
     },
     retry: false,
   });
@@ -121,12 +126,16 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
 
   const reviews: Review[] = reviewsData?.reviews || [];
   const pagination = reviewsData?.pagination;
+  const isReviewsUnavailable = reviewsData?.reviewsApiAvailable === false;
 
   const handleReviewSuccess = () => {
     setShowReviewForm(false);
     queryClient.invalidateQueries({ queryKey: ["reviews", productId] });
     queryClient.invalidateQueries({ queryKey: ["review-stats", productId] });
   };
+
+  // If reviews API is not available, hide the entire section
+  if (isReviewsUnavailable) return null;
 
   return (
     <div className="space-y-6">
@@ -298,8 +307,6 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
             </Card>
           ))}
         </div>
-      ) : reviewsError ? (
-        null
       ) : reviews.length === 0 ? (
         <EmptyState
           title="هنوز نظری ثبت نشده"
