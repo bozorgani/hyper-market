@@ -1,59 +1,6 @@
 import type { NextConfig } from "next";
 
-function originFromUrl(value: string | undefined): string | null {
-  if (!value) return null;
-  try {
-    return new URL(value).origin;
-  } catch {
-    return null;
-  }
-}
-
 const isProduction = process.env.NODE_ENV === "production";
-const cspMode = process.env.CSP_MODE ?? "report-only";
-const apiOrigin = originFromUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
-const siteOrigin = originFromUrl(process.env.NEXT_PUBLIC_SITE_URL);
-const cspReportEndpoint = process.env.CSP_REPORT_ENDPOINT ?? "/api/csp-report";
-
-const connectSources = [
-  "'self'",
-  apiOrigin,
-  siteOrigin,
-  "https://nominatim.openstreetmap.org",
-].filter(Boolean);
-
-const imageSources = [
-  "'self'",
-  "data:",
-  "blob:",
-  apiOrigin,
-  siteOrigin,
-  "https://*.tile.openstreetmap.org",
-  "https://tile.openstreetmap.org",
-  "https://placehold.co",
-].filter(Boolean);
-
-const cspDirectives = [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "object-src 'none'",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "manifest-src 'self'",
-  "worker-src 'self' blob:",
-  "child-src 'self' blob:",
-  "font-src 'self' data:",
-  // Next.js and a few components still need inline style attributes/classes.
-  // Script nonces/hashes should be introduced before switching CSP_MODE=enforce.
-  `style-src 'self' 'unsafe-inline' https://unpkg.com`,
-  `style-src-elem 'self' 'unsafe-inline' https://unpkg.com`,
-  `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}`,
-  `connect-src ${connectSources.join(" ")}`,
-  `img-src ${imageSources.join(" ")}`,
-  `media-src ${imageSources.join(" ")}`,
-  ...(cspMode === "enforce" ? ["upgrade-insecure-requests"] : []),
-  `report-uri ${cspReportEndpoint}`,
-].join("; ");
 
 const securityHeaders = [
   // Prevent clickjacking attacks
@@ -91,12 +38,9 @@ const securityHeaders = [
   ...(isProduction
     ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }]
     : []),
-  
-  // Content Security Policy
-  {
-    key: cspMode === "enforce" ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only",
-    value: cspDirectives,
-  },
+
+  // NOTE: Content-Security-Policy is now handled dynamically in middleware.ts
+  // with per-request nonce (Issue #17). This prevents static unsafe-inline.
 ];
 
 const nextConfig: NextConfig = {
