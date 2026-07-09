@@ -95,6 +95,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="fa" dir="rtl" className={vazirmatn.variable}>
+      <head>
+        {/* Hreflang tags for Persian content – Task 18 */}
+        <link rel="alternate" hrefLang="fa" href={siteUrl} />
+        <link rel="alternate" hrefLang="x-default" href={siteUrl} />
+      </head>
       <body className={`${vazirmatn.className} min-h-screen bg-background text-foreground antialiased`}>
         {/* Skip-to-content link for keyboard users – Task 1 */}
         <a

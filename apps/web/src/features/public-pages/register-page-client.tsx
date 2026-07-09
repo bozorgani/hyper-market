@@ -7,6 +7,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, Lock, Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { Button } from "@/components/ui/button";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
 import { firstValidationError, normalizeDigits, normalizePhoneNumber, registerSchema } from "@/lib/validation/auth";
@@ -200,10 +201,11 @@ export function RegisterPageClient() {
 
         {/* Submit Button */}
         <motion.div whileTap={{ scale: 0.98 }}>
-          <button
+          <Button
             type="submit"
             disabled={loading || !canSubmit}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl whitespace-nowrap bg-gradient-to-l from-emerald-500 to-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:pointer-events-none"
+            className="w-full"
+            size="lg"
           >
             {loading ? (
               <>
@@ -216,7 +218,7 @@ export function RegisterPageClient() {
                 ساخت حساب کاربری
               </>
             )}
-          </button>
+          </Button>
         </motion.div>
       </form>
 

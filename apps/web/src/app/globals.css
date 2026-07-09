@@ -90,6 +90,21 @@
   --z-toast: 90;
 }
 
+/* ── Dark Mode — prefers-color-scheme ────────────────────────────── */
+/* Uses system preference; future work can add a manual toggle.     */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    --card: #1e293b;
+    --border: #334155;
+    --muted: #94a3b8;
+    --color-primary-text: #4ade80;
+    --color-link: #4ade80;
+    --color-link-hover: #22c55e;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
