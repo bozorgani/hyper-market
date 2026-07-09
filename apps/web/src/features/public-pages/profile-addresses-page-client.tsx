@@ -124,11 +124,19 @@ export function ProfileAddressesPageClient() {
       return;
     }
     try {
+      // Clean empty optional fields → null so backend doesn't reject empty strings
+      const cleaned: AddressInput = {
+        ...form,
+        postalCode: form.postalCode?.trim() || null,
+        plate: form.plate?.trim() || null,
+        unit: form.unit?.trim() || null,
+        label: form.label?.trim() || null,
+      };
       if (editing) {
-        await updateAddress.mutateAsync({ id: editing._id, input: form });
+        await updateAddress.mutateAsync({ id: editing._id, input: cleaned });
         showToast({ type: "success", title: "آدرس ویرایش شد" });
       } else {
-        await createAddress.mutateAsync(form);
+        await createAddress.mutateAsync(cleaned);
         showToast({ type: "success", title: "آدرس ذخیره شد" });
       }
       resetForm();
