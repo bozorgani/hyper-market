@@ -183,7 +183,7 @@ export class OtpService {
       return;
     }
 
-    console.log(`[OTP] Code for ${target}: ${code}`);
+    console.log(`[OTP] Code for ${target}: ***${code.slice(-2)}`);
   }
 
   private shouldLogOtpCode(): boolean {

@@ -1,6 +1,6 @@
 import { createLogger, format, transports } from 'winston';
 
-const SENSITIVE_KEYS = ['password', 'passwordHash', 'token', 'accessToken', 'refreshToken', 'authorization', 'cookie'];
+const SENSITIVE_KEYS = ['password', 'passwordHash', 'token', 'accessToken', 'refreshToken', 'authorization', 'cookie', 'code', 'otp', 'otpCode', 'secret', 'apiKey', 'pepper'];
 const isProduction = process.env.APP_ENV === 'production';
 
 const redactSensitiveData = format((info) => {

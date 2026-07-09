@@ -86,12 +86,13 @@ export class ReviewController {
   }
 
   @Post(':id/helpful')
-  @UseGuards(OptionalJwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async markReviewHelpful(
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body() dto: ReviewHelpfulDto,
   ) {
-    return this.reviewService.markReviewHelpful(id, dto.isHelpful);
+    return this.reviewService.markReviewHelpful(id, user.sub, dto.isHelpful);
   }
 }
 

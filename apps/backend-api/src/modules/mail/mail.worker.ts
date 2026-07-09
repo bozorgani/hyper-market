@@ -73,9 +73,8 @@ export class MailWorker implements OnModuleInit, OnModuleDestroy {
       );
     } else {
       // Fallback: log to console when SMTP is not configured
-      this.loggerService.info('[MAIL] OTP email (SMTP not configured — logged to console)', {
+      this.loggerService.info('[MAIL] OTP email (SMTP not configured)', {
         email: data.email,
-        code: data.code,
       });
     }
   }
@@ -90,9 +89,8 @@ export class MailWorker implements OnModuleInit, OnModuleDestroy {
         passwordResetEmailHtml(data.code, expiresMinutes),
       );
     } else {
-      this.loggerService.info('[MAIL] Password reset email (SMTP not configured — logged to console)', {
+      this.loggerService.info('[MAIL] Password reset email (SMTP not configured)', {
         email: data.email,
-        code: data.code,
       });
     }
   }

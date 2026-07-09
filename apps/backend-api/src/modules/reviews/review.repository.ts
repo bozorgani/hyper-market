@@ -2,13 +2,34 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Review, ReviewDocument } from './review.schema';
+import { ReviewHelpfulVote, ReviewHelpfulVoteDocument } from './review-helpful-vote.schema';
 import { CreateReviewDto, UpdateReviewDto, ReviewQueryDto } from './review.dto';
 
 @Injectable()
 export class ReviewRepository {
   constructor(
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
+    @InjectModel(ReviewHelpfulVote.name) private helpfulVoteModel: Model<ReviewHelpfulVoteDocument>,
   ) {}
+
+  async findHelpfulVote(reviewId: string, userId: string): Promise<ReviewHelpfulVote | null> {
+    if (!Types.ObjectId.isValid(reviewId) || !Types.ObjectId.isValid(userId)) return null;
+    return this.helpfulVoteModel
+      .findOne({
+        reviewId: new Types.ObjectId(reviewId),
+        userId: new Types.ObjectId(userId),
+      })
+      .exec();
+  }
+
+  async createHelpfulVote(reviewId: string, userId: string, isHelpful: boolean): Promise<ReviewHelpfulVote> {
+    const vote = new this.helpfulVoteModel({
+      reviewId: new Types.ObjectId(reviewId),
+      userId: new Types.ObjectId(userId),
+      isHelpful,
+    });
+    return vote.save();
+  }
 
   async create(data: CreateReviewDto & { userId: string; isVerifiedPurchase?: boolean }): Promise<Review> {
     const review = new this.reviewModel({

@@ -193,7 +193,13 @@ export class ReviewService {
     };
   }
 
-  async markReviewHelpful(reviewId: string, isHelpful: boolean) {
+  async markReviewHelpful(reviewId: string, userId: string, isHelpful: boolean) {
+    // Check if user already voted on this review
+    const existingVote = await this.reviewRepository.findHelpfulVote(reviewId, userId);
+    if (existingVote) {
+      throw new BadRequestException('You have already voted on this review');
+    }
+
     const review = isHelpful
       ? await this.reviewRepository.incrementHelpful(reviewId)
       : await this.reviewRepository.incrementNotHelpful(reviewId);
@@ -201,6 +207,9 @@ export class ReviewService {
     if (!review) {
       throw new NotFoundException('Review not found');
     }
+
+    // Record the vote
+    await this.reviewRepository.createHelpfulVote(reviewId, userId, isHelpful);
 
     return {
       message: isHelpful ? 'Marked as helpful' : 'Marked as not helpful',
