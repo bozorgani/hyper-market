@@ -41,4 +41,11 @@ PaymentSchema.index(
     partialFilterExpression: { status: PaymentStatus.PENDING },
   },
 );
+PaymentSchema.index(
+  { orderId: 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: PaymentStatus.PAID },
+  },
+);
 PaymentSchema.index({ status: 1, createdAt: -1 });

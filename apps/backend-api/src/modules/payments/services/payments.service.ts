@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -10,6 +11,7 @@ import { ClientSession, isValidObjectId, Types } from 'mongoose';
 import { EventBusService } from '../../../core/events/event-bus.service';
 import { EventType } from '../../../core/events/enums/event-type.enum';
 import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
+import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { getEntityId } from '../../../shared/utils/entity-id.util';
 import { OrderStatus } from '../../orders/enums/order-status.enum';
 import { OrdersService } from '../../orders/services/orders.service';
@@ -28,6 +30,7 @@ export class PaymentsService {
     private readonly paymentsRepository: PaymentsRepository,
     private readonly ordersService: OrdersService,
     private readonly databaseTransactionService: DatabaseTransactionService,
+    private readonly redisService: RedisService,
     private readonly eventBusService?: EventBusService,
   ) {}
 
@@ -68,20 +71,36 @@ export class PaymentsService {
 
     const method = dto.method ?? PaymentMethod.COD;
 
-    // ── COD: auto-confirm payment + transition order to PAID ──────────
-    if (method === PaymentMethod.COD) {
-      return this.confirmCashOnDelivery(userId, role, order.totalPrice, dto.orderId);
+    // ── Redis distributed lock: prevent concurrent COD payments for same order ──
+    const lockKey = `payment:cod:${dto.orderId}`;
+    const acquired = await this.redisService.setIfNotExists(lockKey, '1', 10);
+    if (!acquired) {
+      throw new ConflictException('Payment already in progress for this order');
     }
 
-    // ── Online gateways (future): create PENDING and wait for callback ─
-    return this.paymentsRepository.create({
-      orderId: new Types.ObjectId(dto.orderId),
-      userId: new Types.ObjectId(userId),
-      amount: order.totalPrice,
-      status: PaymentStatus.PENDING,
-      method,
-      transactionId: null,
-    });
+    try {
+      // ── COD: auto-confirm payment + transition order to PAID ──────────
+      if (method === PaymentMethod.COD) {
+        return this.confirmCashOnDelivery(userId, role, order.totalPrice, dto.orderId);
+      }
+
+      // ── Online gateways (future): create PENDING and wait for callback ─
+      return this.paymentsRepository.create({
+        orderId: new Types.ObjectId(dto.orderId),
+        userId: new Types.ObjectId(userId),
+        amount: order.totalPrice,
+        status: PaymentStatus.PENDING,
+        method,
+        transactionId: null,
+      });
+    } finally {
+      // Release the lock (best-effort in finally block)
+      try {
+        await this.redisService.delete(lockKey);
+      } catch {
+        // Lock TTL will expire anyway
+      }
+    }
   }
 
   /**
