@@ -127,6 +127,11 @@ test('OrdersService creates order inside transaction and clears cart', async () 
     },
   };
 
+  const redisService = {
+    setIfNotExists: async () => true,
+    delete: async () => {},
+  };
+
   const service = new OrdersService(
     ordersRepository as never,
     productsService as never,
@@ -134,6 +139,7 @@ test('OrdersService creates order inside transaction and clears cart', async () 
     { validateCoupon: () => null } as never,
     { getQuote: () => ({ method: 'standard', deliveryFee: 0, freeShippingApplied: false, capacity: 50 }) } as never,
     transactionService as never,
+    redisService as never,
   );
 
   const result = await service.createOrder(userId, {
@@ -224,6 +230,7 @@ test('OrdersService restores stock when order is cancelled', async () => {
     { validateCoupon: () => null } as never,
     { getQuote: () => ({ method: 'standard', deliveryFee: 0, freeShippingApplied: false, capacity: 50 }) } as never,
     transactionService as never,
+    { setIfNotExists: async () => true, delete: async () => {} } as never,
   );
 
   const result = await service.updateStatus(orderId, OrderStatus.CANCELLED);
@@ -290,6 +297,7 @@ test('PaymentsService COD auto-confirms payment and updates order status inside 
     paymentsRepository as never,
     ordersService as never,
     transactionService as never,
+    { setIfNotExists: async () => true, delete: async () => {} } as never,
   );
 
   const result = await service.createPaymentFromOrder(userId, 'customer', { orderId, method: PaymentMethod.COD });

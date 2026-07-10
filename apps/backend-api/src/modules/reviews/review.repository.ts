@@ -127,7 +127,7 @@ export class ReviewRepository {
     return { reviews, total };
   }
 
-  async update(id: string, data: UpdateReviewDto): Promise<Review | null> {
+  async update(id: string, data: Record<string, unknown>): Promise<Review | null> {
     if (!Types.ObjectId.isValid(id)) return null;
     return this.reviewModel
       .findByIdAndUpdate(id, data, { new: true })

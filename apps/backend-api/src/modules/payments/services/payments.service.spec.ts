@@ -3,6 +3,7 @@ import { BadRequestException, ForbiddenException, NotFoundException } from '@nes
 import { Types } from 'mongoose';
 import { PaymentsService } from './payments.service';
 import { PaymentsRepository } from '../repositories/payments.repository';
+import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { OrdersService } from '../../orders/services/orders.service';
 import { DatabaseTransactionService } from '../../../infrastructure/database/database-transaction.service';
 import { EventBusService } from '../../../core/events/event-bus.service';
@@ -73,6 +74,7 @@ describe('PaymentsService', () => {
         { provide: OrdersService, useValue: ordersService },
         { provide: DatabaseTransactionService, useValue: databaseTransactionService },
         { provide: EventBusService, useValue: { emit: jest.fn() } },
+        { provide: RedisService, useValue: { setIfNotExists: jest.fn().mockResolvedValue(true), delete: jest.fn() } },
       ],
     }).compile();
 

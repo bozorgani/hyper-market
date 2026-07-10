@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersRepository } from '../repositories/orders.repository';
+import { RedisService } from '../../../infrastructure/cache/redis.service';
 import { ProductsService } from '../../products/services/products.service';
 import { ShippingService } from '../../shipping/shipping.service';
 import { CartService } from '../../cart/services/cart.service';
@@ -105,6 +106,7 @@ describe('OrdersService — cancellation idempotency (#4)', () => {
           useValue: databaseTransactionService,
         },
         { provide: EventBusService, useValue: { emit: jest.fn() } },
+        { provide: RedisService, useValue: { setIfNotExists: jest.fn().mockResolvedValue(true), delete: jest.fn() } },
       ],
     }).compile();
 
@@ -253,6 +255,7 @@ describe('OrdersService — createOrder', () => {
         { provide: ShippingService, useValue: shippingService },
         { provide: DatabaseTransactionService, useValue: databaseTransactionService },
         { provide: EventBusService, useValue: { emit: jest.fn() } },
+        { provide: RedisService, useValue: { setIfNotExists: jest.fn().mockResolvedValue(true), delete: jest.fn() } },
       ],
     }).compile();
 
@@ -510,6 +513,7 @@ describe('OrdersService — getMyOrders and getOrderById', () => {
         { provide: ShippingService, useValue: {} },
         { provide: DatabaseTransactionService, useValue: {} },
         { provide: EventBusService, useValue: {} },
+        { provide: RedisService, useValue: { setIfNotExists: jest.fn().mockResolvedValue(true), delete: jest.fn() } },
       ],
     }).compile();
 
