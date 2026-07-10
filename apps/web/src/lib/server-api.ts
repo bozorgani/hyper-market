@@ -1,5 +1,9 @@
 import type { Category, Product, ProductListResponse } from "@/types/domain";
-import type { SearchResponse } from "@/hooks/use-search";
+import {
+  normalizeSearchResponse,
+  type RawSearchResponse,
+  type SearchResponse,
+} from "@/lib/search-normalizer";
 
 function getServerApiBaseUrl(): string {
   const configured = process.env.SERVER_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.PUBLIC_API_BASE_URL;
@@ -85,7 +89,7 @@ export async function fetchSearchForSSR(params: {
   minStock?: string;
   sort?: string;
 }): Promise<SearchResponse | null> {
-  return safeFetch<SearchResponse>(
+  const response = await safeFetch<RawSearchResponse>(
     `/search/products${toQuery({
       q: params.q,
       page: params.page ?? 1,
@@ -101,6 +105,8 @@ export async function fetchSearchForSSR(params: {
       revalidate: 60,
     }
   );
+
+  return response ? normalizeSearchResponse(response) : null;
 }
 
 export async function fetchCategoryForMetadata(id: string): Promise<Category | null> {

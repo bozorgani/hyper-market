@@ -10,6 +10,11 @@ function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function positivePage(value: string | undefined): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
   const params = (await searchParams) ?? {};
   const query = firstParam(params.q)?.trim();
@@ -33,12 +38,13 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = (await searchParams) ?? {};
   const query = firstParam(params.q)?.trim() ?? "";
+  const initialPage = positivePage(firstParam(params.page));
   const initialSearch = await fetchSearchForSSR({
     q: query,
-    page: 1,
+    page: initialPage,
     limit: 24,
     sort: "createdAt:desc",
   });
 
-  return <SearchPageClient initialSearch={initialSearch ?? undefined} />;
+  return <SearchPageClient initialSearch={initialSearch ?? undefined} initialPage={initialPage} />;
 }

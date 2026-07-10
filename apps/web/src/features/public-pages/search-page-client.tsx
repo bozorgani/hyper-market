@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/ui/pagination";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useCategories } from "@/hooks/use-products";
@@ -37,10 +38,18 @@ function SearchResultsSkeleton() {
   );
 }
 
-function SearchContent({ initialSearch }: { initialSearch?: SearchResponse }) {
+function SearchContent({
+  initialSearch,
+  initialPage,
+}: {
+  initialSearch?: SearchResponse;
+  initialPage: number;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q") ?? "";
+  const previousQueryRef = useRef(query);
+  const [page, setPage] = useState(initialPage);
   const [categoryId, setCategoryId] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -57,12 +66,24 @@ function SearchContent({ initialSearch }: { initialSearch?: SearchResponse }) {
     maxPrice: debouncedMaxPrice || undefined,
     minStock: availableOnly ? "1" : undefined,
     sort,
-    page: 1,
+    page,
     limit: 24,
   };
   const canUseInitialSearch =
-    !categoryId && !debouncedMinPrice && !debouncedMaxPrice && !availableOnly && sort === "createdAt:desc";
+    page === initialPage &&
+    !categoryId &&
+    !debouncedMinPrice &&
+    !debouncedMaxPrice &&
+    !availableOnly &&
+    sort === "createdAt:desc";
   const search = useProductSearch(searchParamsForQuery, canUseInitialSearch ? initialSearch : undefined);
+
+  useEffect(() => {
+    if (previousQueryRef.current !== query) {
+      previousQueryRef.current = query;
+      setPage(1);
+    }
+  }, [query]);
 
   useEffect(() => {
     if (query && search.data) {
@@ -76,6 +97,12 @@ function SearchContent({ initialSearch }: { initialSearch?: SearchResponse }) {
     setMaxPrice("");
     setAvailableOnly(false);
     setSort("createdAt:desc");
+    setPage(1);
+  }
+
+  function changePage(nextPage: number) {
+    setPage(nextPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   const searchErrorMessage = search.error instanceof Error ? search.error.message : "امکان جستجو وجود ندارد.";
@@ -97,7 +124,7 @@ function SearchContent({ initialSearch }: { initialSearch?: SearchResponse }) {
         />
 
         <div className="mt-5 grid gap-3 md:grid-cols-5">
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm">
+          <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1); }} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm">
             <option value="">همه دسته‌بندی‌ها</option>
             {(categories.data ?? []).map((category) => (
               <option key={category._id} value={category._id}>
@@ -105,15 +132,15 @@ function SearchContent({ initialSearch }: { initialSearch?: SearchResponse }) {
               </option>
             ))}
           </select>
-          <Input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="حداقل قیمت" type="number" />
-          <Input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="حداکثر قیمت" type="number" />
-          <select value={sort} onChange={(e) => setSort(e.target.value)} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm">
+          <Input value={minPrice} onChange={(e) => { setMinPrice(e.target.value); setPage(1); }} placeholder="حداقل قیمت" type="number" />
+          <Input value={maxPrice} onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }} placeholder="حداکثر قیمت" type="number" />
+          <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm">
             <option value="createdAt:desc">جدیدترین</option>
             <option value="price:asc">ارزان‌ترین</option>
             <option value="price:desc">گران‌ترین</option>
             <option value="stock:desc">موجودترین</option>
           </select>
-          <Button type="button" variant={availableOnly ? "default" : "outline"} onClick={() => setAvailableOnly((value) => !value)}>
+          <Button type="button" variant={availableOnly ? "default" : "outline"} onClick={() => { setAvailableOnly((value) => !value); setPage(1); }}>
             فقط کالاهای موجود
           </Button>
         </div>
@@ -194,14 +221,30 @@ function SearchContent({ initialSearch }: { initialSearch?: SearchResponse }) {
           ))}
         </section>
       ) : null}
+
+      {!search.isLoading && !search.isError && search.data?.meta ? (
+        <Pagination
+          page={page}
+          totalPages={search.data.meta.totalPages}
+          totalItems={search.data.total}
+          pageSize={search.data.limit}
+          onPageChange={changePage}
+        />
+      ) : null}
     </main>
   );
 }
 
-export function SearchPageClient({ initialSearch }: { initialSearch?: SearchResponse }) {
+export function SearchPageClient({
+  initialSearch,
+  initialPage = 1,
+}: {
+  initialSearch?: SearchResponse;
+  initialPage?: number;
+}) {
   return (
     <Suspense fallback={<main className="p-8 text-center text-slate-500">در حال بارگذاری جستجو...</main>}>
-      <SearchContent initialSearch={initialSearch} />
+      <SearchContent initialSearch={initialSearch} initialPage={initialPage} />
     </Suspense>
   );
 }
