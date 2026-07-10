@@ -5,10 +5,16 @@ import { ProductDetailPageClient } from "@/features/public-pages/product-detail-
 import { fetchProductForMetadata } from "@/lib/server-api";
 import { formatPrice } from "@/lib/utils";
 import { getProductImageUrl } from "@/lib/image-utils";
+import { serializeJsonLd } from "@/lib/structured-data";
 
 type ProductDetailPageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
+
+function firstParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
   const { id } = await params;
@@ -46,8 +52,10 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
   };
 }
 
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+export default async function ProductDetailPage({ params, searchParams }: ProductDetailPageProps) {
   const { id } = await params;
+  const queryParams = (await searchParams) ?? {};
+  const reviewOrderId = firstParam(queryParams.orderId);
 
   if (!id) {
     notFound();
@@ -80,8 +88,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     offers: {
       "@type": "Offer",
       url: `${siteUrl}/products/${id}`,
+      // UI/backend prices are in Toman; Schema.org's official IRR values are Riyal.
       priceCurrency: "IRR",
-      price: String(price),
+      price: String(Math.round(price * 10)),
       availability,
       itemCondition: "https://schema.org/NewCondition",
       seller: {
@@ -127,15 +136,15 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         nonce={nonce}
         // suppressHydrationWarning: JSON-LD is static server content
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <script
         type="application/ld+json"
         nonce={nonce}
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbLd) }}
       />
-      <ProductDetailPageClient productId={id} initialProduct={product} />
+      <ProductDetailPageClient productId={id} initialProduct={product} reviewOrderId={reviewOrderId} />
     </>
   );
 }

@@ -10,16 +10,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Heart, Trash2, ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import { LinkButton } from "@/components/ui/link-button";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useToast } from "@/components/ui/toast";
+import { useAuthStore } from "@/store/auth-store";
 
 export function WishlistPageClient() {
   const [page, setPage] = useState(1);
   const limit = 12;
   const { showToast } = useToast();
+  const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
 
-  const { data, isLoading } = useWishlist(page, limit);
+  const { data, isLoading } = useWishlist(page, limit, Boolean(hydrated && user));
   const clearMutation = useClearWishlist();
   const addToCartMutation = useAddToCart();
 
@@ -95,12 +98,10 @@ export function WishlistPageClient() {
             title="علاقه‌مندی‌های شما خالی است"
             description="محصولات مورد علاقه خود را با کلیک روی آیکون قلب به این لیست اضافه کنید."
             actions={
-              <Link href="/products">
-                <Button>
-                  <ShoppingBag className="ml-2 h-4 w-4" />
-                  مشاهده محصولات
-                </Button>
-              </Link>
+              <LinkButton href="/products">
+                <ShoppingBag className="ml-2 h-4 w-4" />
+                مشاهده محصولات
+              </LinkButton>
             }
           />
         )}

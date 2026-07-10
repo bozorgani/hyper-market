@@ -5,6 +5,7 @@ import { Gift, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { StatusMessage } from "@/components/ui/status-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
@@ -36,6 +37,7 @@ export function AdminCouponsClient() {
   const [page, setPage] = useState(1);
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [form, setForm] = useState<CouponFormInput>(emptyForm);
+  const [formError, setFormError] = useState("");
   const [editing, setEditing] = useState<Coupon | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Coupon | null>(null);
   const coupons = useAdminCoupons(page, activeFilter === "all" ? undefined : activeFilter === "active", PAGE_SIZE);
@@ -71,6 +73,33 @@ export function AdminCouponsClient() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    setFormError("");
+
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(form.code.trim())) {
+      setFormError("کد کوپن باید فقط شامل حروف انگلیسی، عدد، خط تیره یا زیرخط باشد.");
+      return;
+    }
+    if (!Number.isFinite(form.percent) || form.percent < 0 || form.percent > 100) {
+      setFormError("درصد تخفیف باید بین صفر تا صد باشد.");
+      return;
+    }
+    if ((form.minSubtotal ?? 0) < 0 || (form.maxDiscountAmount ?? 0) < 0) {
+      setFormError("مقادیر مالی کوپن نمی‌توانند منفی باشند.");
+      return;
+    }
+    if (form.usageLimit !== null && form.usageLimit !== undefined && form.usageLimit < 1) {
+      setFormError("سقف استفاده کل باید حداقل یک باشد.");
+      return;
+    }
+    if (form.perUserLimit !== null && form.perUserLimit !== undefined && form.perUserLimit < 1) {
+      setFormError("سقف استفاده هر کاربر باید حداقل یک باشد.");
+      return;
+    }
+    if (form.startsAt && form.endsAt && form.startsAt > form.endsAt) {
+      setFormError("تاریخ پایان باید بعد از تاریخ شروع باشد.");
+      return;
+    }
+
     try {
       const payload = normalizePayload(form);
       if (editing) {
@@ -117,6 +146,7 @@ export function AdminCouponsClient() {
       </section>
 
       <Card className="p-5">
+        {formError ? <div className="mb-4"><StatusMessage variant="error">{formError}</StatusMessage></div> : null}
         <form onSubmit={submit} className="grid gap-3 md:grid-cols-4">
           <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="کد مثل WELCOME10" required />
           <Input value={form.percent} onChange={(e) => setForm({ ...form, percent: Number(e.target.value) })} type="number" min={0} max={100} placeholder="درصد" required />

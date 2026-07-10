@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Drawer } from "@/components/ui/dialog";
 import { isAdminRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -35,16 +36,6 @@ const menuItems = [
   { href: "/admin/users", label: "کاربران", icon: Users },
   { href: "/admin/roles", label: "نقش‌ها و دسترسی‌ها", icon: Shield },
 ];
-
-const sidebarVariants = {
-  open: { x: 0, opacity: 1 },
-  closed: { x: 280, opacity: 0 },
-};
-
-const overlayVariants = {
-  open: { opacity: 1 },
-  closed: { opacity: 0 },
-};
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -199,41 +190,24 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         {sidebarContent}
       </aside>
 
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            variants={overlayVariants}
-            initial="closed"
-            animate="open"
-            exit="closed"
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-            onClick={() => setMobileOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Mobile Sidebar Drawer */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.aside
-            variants={sidebarVariants}
-            initial="closed"
-            animate="open"
-            exit="closed"
-            transition={{ type: "spring", damping: 25, stiffness: 250 }}
-            className="fixed inset-y-0 right-0 z-50 w-[280px] bg-slate-950 shadow-2xl lg:hidden"
-          >
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="absolute left-3 top-5 z-10 rounded-xl p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            {sidebarContent}
-          </motion.aside>
-        )}
-      </AnimatePresence>
+      <Drawer
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        ariaLabel="منوی مدیریت"
+        containerClassName="z-[70] bg-black/60 p-0 lg:hidden"
+        className="w-[280px] bg-slate-950"
+      >
+        <button
+          type="button"
+          onClick={() => setMobileOpen(false)}
+          className="absolute left-3 top-5 z-10 rounded-xl p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+          aria-label="بستن منوی مدیریت"
+        >
+          <X className="h-5 w-5" aria-hidden="true" />
+        </button>
+        {sidebarContent}
+      </Drawer>
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -241,7 +215,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <header className="flex h-16 shrink-0 items-center gap-4 border-b border-slate-200/80 bg-white px-4 shadow-sm lg:px-8">
           {/* Mobile Menu Button */}
           <button
+            type="button"
             onClick={() => setMobileOpen(true)}
+            aria-label="باز کردن منوی مدیریت"
+            aria-expanded={mobileOpen}
             className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 lg:hidden"
           >
             <Menu className="h-5 w-5" />

@@ -106,9 +106,9 @@ export function LoginPageClient() {
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <label htmlFor="login-password" className="text-xs font-semibold text-slate-600">رمز عبور</label>
-            <button type="button" className="text-xs font-medium text-emerald-600 transition hover:text-emerald-700">
+            <Link href="/forgot-password" className="text-xs font-medium text-emerald-600 transition hover:text-emerald-700">
               فراموشی رمز عبور
-            </button>
+            </Link>
           </div>
           <div className="relative">
             <Lock className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />

@@ -66,13 +66,15 @@ export class OrdersController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: string,
+    @Query('search') search?: string,
   ) {
-    if (page || limit) {
+    if (page || limit || search) {
       const parsedStatus = this.toOptionalOrderStatus(status);
       return this.ordersService.listAllOrdersPaginated(
         this.toPositiveInteger(page, 1),
         this.toPositiveInteger(limit, 20),
         parsedStatus,
+        search,
       );
     }
     return this.ordersService.listAllOrders();

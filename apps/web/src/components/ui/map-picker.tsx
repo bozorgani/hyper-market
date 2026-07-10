@@ -3,6 +3,7 @@
 import L from "leaflet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MapPin, Navigation, Crosshair, X } from "lucide-react";
+import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 const TEHRAN_CENTER: [number, number] = [35.6892, 51.389];
@@ -94,11 +95,7 @@ export function MapPicker({
     setIsMapReady(false);
     setMapError("");
 
-    const linkEl = document.createElement("link");
-    linkEl.rel = "stylesheet";
-    linkEl.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-    document.head.appendChild(linkEl);
-
+    // Leaflet CSS is bundled locally from `app/leaflet.css`.
     // Initialize map (L already imported at top)
     const container = mapRef.current;
     if (!container) return;
@@ -186,7 +183,6 @@ export function MapPicker({
       mapInstanceRef.current?.remove();
       mapInstanceRef.current = null;
       markerRef.current = null;
-      if (linkEl.parentNode) document.head.removeChild(linkEl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- map should only mount once
   }, []);
@@ -212,9 +208,14 @@ export function MapPicker({
     );
   };
 
-  // handleConfirm inlined in button onClick — keeping only return statement
   return (
-    <div className="fixed inset-0 z-[200] bg-white flex flex-col">
+    <Dialog
+      open
+      onClose={onClose}
+      ariaLabel="انتخاب آدرس از نقشه"
+      containerClassName="z-[200] bg-white p-0"
+      className="flex h-full w-full max-w-none flex-col rounded-none bg-white p-0 shadow-none"
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-slate-200 bg-white shrink-0 z-10">
         <div className="flex items-center gap-2.5">
@@ -226,7 +227,9 @@ export function MapPicker({
           </h2>
         </div>
         <button
+          type="button"
           onClick={onClose}
+          aria-label="بستن انتخاب آدرس"
           className="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors"
         >
           <X className="w-5 h-5 text-slate-500" />
@@ -255,8 +258,10 @@ export function MapPicker({
 
         {/* Locate me button */}
         <button
+          type="button"
           onClick={handleLocateMe}
           disabled={isLocating}
+          aria-label="مکان‌یابی من"
           className="absolute bottom-4 left-4 z-[1000] w-11 h-11 bg-white rounded-xl shadow-float flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-50"
         >
           <Crosshair className="w-5 h-5 text-blue-600" />
@@ -306,6 +311,6 @@ export function MapPicker({
           <MapPin className="w-4 h-4 inline mr-1.5" />
         </button>
       </div>
-    </div>
+    </Dialog>
   );
 }

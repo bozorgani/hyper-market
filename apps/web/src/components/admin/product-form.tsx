@@ -5,6 +5,7 @@ import { ProductImageManager } from "@/components/admin/product-image-manager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { StatusMessage } from "@/components/ui/status-message";
 import type { Product } from "@/types/domain";
 import type { ProductFormInput } from "@/features/admin/admin-api";
 import { useAdminCategories } from "@/features/admin/admin-api";
@@ -13,10 +14,12 @@ export function ProductForm({
   initialProduct,
   onSubmit,
   loading,
+  error,
 }: {
   initialProduct?: Product;
   onSubmit: (input: ProductFormInput) => void;
   loading?: boolean;
+  error?: string;
 }) {
   const categories = useAdminCategories();
   const [form, setForm] = useState<ProductFormInput>({
@@ -37,6 +40,7 @@ export function ProductForm({
 
   // Tags input state
   const [tagInput, setTagInput] = useState("");
+  const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
     if (initialProduct) {
@@ -62,10 +66,34 @@ export function ProductForm({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!form.categoryId) {
+    setValidationError("");
+
+    if (form.name.trim().length < 2) {
+      setValidationError("نام محصول باید حداقل ۲ کاراکتر باشد.");
       return;
     }
-    // Clean empty optional strings → undefined/null so they don't overwrite with ""
+    if (!form.description.trim()) {
+      setValidationError("توضیحات محصول الزامی است.");
+      return;
+    }
+    if (!form.categoryId) {
+      setValidationError("انتخاب دسته‌بندی الزامی است.");
+      return;
+    }
+    if (!Number.isFinite(form.price) || form.price < 0) {
+      setValidationError("قیمت محصول باید عددی صفر یا بزرگ‌تر باشد.");
+      return;
+    }
+    if (form.discountPrice !== undefined && (form.discountPrice < 0 || form.discountPrice > form.price)) {
+      setValidationError("قیمت تخفیفی باید بین صفر و قیمت اصلی باشد.");
+      return;
+    }
+    if (!Number.isFinite(form.stock) || form.stock < 0) {
+      setValidationError("موجودی محصول باید عددی صفر یا بزرگ‌تر باشد.");
+      return;
+    }
+
+    // Clean empty optional strings so they do not overwrite values with empty strings.
     const cleaned: ProductFormInput = {
       ...form,
       brand: form.brand?.trim() || undefined,
@@ -98,6 +126,11 @@ export function ProductForm({
 
   return (
     <Card className="p-5 text-right">
+      {error || validationError ? (
+        <div className="mb-4">
+          <StatusMessage variant="error">{validationError || error}</StatusMessage>
+        </div>
+      ) : null}
       <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
         {/* ── Basic Info ─────────────────────────────────────── */}
         <div className="flex items-center gap-2 md:col-span-2">

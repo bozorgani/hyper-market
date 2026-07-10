@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export default function ProductNotFound() {
@@ -8,7 +7,7 @@ export default function ProductNotFound() {
       <EmptyState
         title="محصول پیدا نشد"
         description="محصول مورد نظر وجود ندارد یا در حال حاضر فعال نیست."
-        actions={<Link href="/products"><Button type="button">مشاهده محصولات</Button></Link>}
+        actions={<LinkButton href="/products">مشاهده محصولات</LinkButton>}
       />
     </main>
   );

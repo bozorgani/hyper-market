@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { formatPrice } from "@/lib/utils";
 import type { Order, Payment } from "@/types/domain";
 import { PaymentStatusBadge } from "./admin-status-badge";
@@ -29,7 +29,7 @@ export function PaymentRow({
       <td className="p-4">
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" onClick={() => onOpenDetail(order._id)}>جزئیات پرداخت</Button>
-          <Link href={`/admin/orders/${order._id}`}><Button type="button" variant="ghost">مشاهده سفارش</Button></Link>
+          <LinkButton href={`/admin/orders/${order._id}`} variant="ghost">مشاهده سفارش</LinkButton>
         </div>
       </td>
     </tr>

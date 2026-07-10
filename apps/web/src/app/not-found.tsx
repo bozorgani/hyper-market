@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 
 export default function NotFound() {
   return (
@@ -10,8 +9,8 @@ export default function NotFound() {
         آدرس وارد شده اشتباه است یا صفحه حذف شده است. می‌توانید به صفحه اصلی بازگردید یا محصول مورد نظر را جستجو کنید.
       </p>
       <div className="mt-6 flex gap-3">
-        <Link href="/"><Button>صفحه اصلی</Button></Link>
-        <Link href="/products"><Button variant="outline">مشاهده محصولات</Button></Link>
+        <LinkButton href="/">صفحه اصلی</LinkButton>
+        <LinkButton href="/products" variant="outline">مشاهده محصولات</LinkButton>
       </div>
     </main>
   );

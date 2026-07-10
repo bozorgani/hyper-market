@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { RefreshCw } from "lucide-react";
+import { LinkButton } from "@/components/ui/link-button";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/order/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -102,9 +102,7 @@ export function OrderCard({
               بررسی مجدد پرداخت
             </Button>
           ) : null}
-          <Link href={`/order/success?orderId=${order._id}`}>
-            <Button type="button" variant="outline">جزئیات سفارش</Button>
-          </Link>
+          <LinkButton href={`/order/success?orderId=${order._id}`} variant="outline">جزئیات سفارش</LinkButton>
         </div>
       </div>
     </Card>

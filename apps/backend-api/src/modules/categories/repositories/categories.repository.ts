@@ -8,6 +8,10 @@ import { Category, CategoryDocument } from '../schemas/category.schema';
 
 export type CategoryListResult = PaginatedResult<Category>;
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 @Injectable()
 export class CategoriesRepository {
   constructor(
@@ -77,9 +81,17 @@ export class CategoriesRepository {
   async findAllPaginatedForAdmin(
     page: number,
     limit: number,
+    search?: string,
   ): Promise<CategoryListResult> {
     const skip = (page - 1) * limit;
-    const filter = { deletedAt: null };
+    const filter: Record<string, unknown> = { deletedAt: null };
+    if (search) {
+      const pattern = escapeRegex(search);
+      filter.$or = [
+        { name: { $regex: pattern, $options: "i" } },
+        { slug: { $regex: pattern, $options: "i" } },
+      ];
+    }
     const [items, total] = await Promise.all([
       this.categoryModel
         .find(filter)

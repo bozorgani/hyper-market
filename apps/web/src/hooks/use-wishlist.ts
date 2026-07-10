@@ -42,7 +42,30 @@ interface WishlistResponse {
   };
 }
 
-export function useWishlist(page = 1, limit = 20) {
+type WishlistToggleApiResponse = {
+  message?: string;
+  action?: "added" | "removed";
+  isInWishlist?: boolean;
+  productCount?: number;
+};
+
+export type WishlistToggleResult = WishlistToggleApiResponse & {
+  isInWishlist: boolean;
+};
+
+function resolveWishlistState(response: WishlistToggleApiResponse): boolean {
+  if (typeof response.isInWishlist === "boolean") return response.isInWishlist;
+  if (response.action === "added") return true;
+  if (response.action === "removed") return false;
+
+  const message = response.message?.toLowerCase() ?? "";
+  if (message.includes("added")) return true;
+  if (message.includes("removed")) return false;
+
+  throw new Error("Wishlist toggle response did not include an operation state");
+}
+
+export function useWishlist(page = 1, limit = 20, enabled = true) {
   return useQuery<WishlistResponse>({
     queryKey: ["wishlist", page, limit],
     queryFn: async () => {
@@ -51,27 +74,31 @@ export function useWishlist(page = 1, limit = 20) {
       });
       return response.data;
     },
+    enabled,
   });
 }
 
-export function useWishlistCount() {
+export function useWishlistCount(enabled = true) {
   return useQuery<{ count: number }>({
     queryKey: ["wishlist-count"],
     queryFn: async () => {
       const response = await api.get("/wishlist/count");
       return response.data;
     },
+    enabled,
   });
 }
 
-export function useIsInWishlist(productId: string) {
+export function useIsInWishlist(productId: string, enabled = true) {
   return useQuery<{ isInWishlist: boolean }>({
     queryKey: ["wishlist-check", productId],
     queryFn: async () => {
-      const response = await api.get(`/wishlist/check/${productId}`);
+      const response = await api.get("/wishlist/check", {
+        params: { productId },
+      });
       return response.data;
     },
-    enabled: !!productId,
+    enabled: Boolean(productId && enabled),
   });
 }
 
@@ -138,20 +165,21 @@ export function useToggleWishlist() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
-  return useMutation({
+  return useMutation<WishlistToggleResult, unknown, string>({
     mutationFn: async (productId: string) => {
-      const response = await api.post("/wishlist/toggle", { productId });
-      return response.data;
+      const response = await api.post<WishlistToggleApiResponse>("/wishlist/toggle", { productId });
+      return {
+        ...response.data,
+        isInWishlist: resolveWishlistState(response.data),
+      };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, productId) => {
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
       queryClient.invalidateQueries({ queryKey: ["wishlist-count"] });
-      
-      // Determine if added or removed based on response
-      const isAdded = data.productCount > 0;
+      queryClient.setQueryData(["wishlist-check", productId], { isInWishlist: data.isInWishlist });
       showToast({
         type: "success",
-        title: isAdded
+        title: data.isInWishlist
           ? "به علاقه‌مندی‌ها اضافه شد"
           : "از علاقه‌مندی‌ها حذف شد",
       });

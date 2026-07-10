@@ -20,7 +20,9 @@ import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { PaymentMethod } from '../enums/payment-method.enum';
 import { PaymentStatus } from '../enums/payment-status.enum';
 import { PaymentsRepository } from '../repositories/payments.repository';
+import { paginatedResult } from '../../../shared/utils/pagination.util';
 import { Payment } from '../schemas/payment.schema';
+import type { AdminPaymentListItem } from '../repositories/payments.repository';
 
 @Injectable()
 export class PaymentsService {
@@ -183,6 +185,23 @@ export class PaymentsService {
     }
 
     return payment;
+  }
+
+  async listAdminPayments(
+    page: number,
+    limit: number,
+    status?: PaymentStatus,
+    search?: string,
+  ) {
+    const safePage = Math.max(page, 1);
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    const result = await this.paymentsRepository.findAllPaginated(
+      safePage,
+      safeLimit,
+      status,
+      search?.trim(),
+    );
+    return paginatedResult<AdminPaymentListItem>(result.items, result.total, safePage, safeLimit);
   }
 
   async findPaymentsByOrderIds(

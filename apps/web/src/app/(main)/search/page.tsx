@@ -27,6 +27,7 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
     title,
     description,
     alternates: { canonical: "/search" },
+    robots: { index: false, follow: true },
     openGraph: {
       title,
       description,

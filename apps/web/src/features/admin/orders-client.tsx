@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Eye, RefreshCw, Package } from "lucide-react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
@@ -32,23 +32,13 @@ export function AdminOrdersClient() {
   const [status, setStatus] = useState<OrderStatus | "all">("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  const orders = useAdminOrders(page, status === "all" ? undefined : status, PAGE_SIZE);
+  const orders = useAdminOrders(page, status === "all" ? undefined : status, PAGE_SIZE, query.trim() || undefined);
   const updateStatus = useUpdateOrderStatus();
   const { showToast } = useToast();
 
-  const filteredOrders = useMemo(() => {
-    const items = orders.data?.items ?? [];
-    return items.filter((order) => {
-      const matchesQuery = query.trim() ? order._id.toLowerCase().includes(query.trim().toLowerCase()) : true;
-      return matchesQuery;
-    });
-  }, [orders.data?.items, query]);
-
-  const totalItems = query.trim() ? filteredOrders.length : (orders.data?.total ?? 0);
-  const totalPages = query.trim()
-    ? Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE))
-    : (orders.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE)));
-  const paginatedOrders = filteredOrders;
+  const paginatedOrders = orders.data?.items ?? [];
+  const totalItems = orders.data?.total ?? 0;
+  const totalPages = orders.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
   const errorMessage = orders.error instanceof Error ? orders.error.message : "دریافت سفارش‌ها ناموفق بود.";
 
   async function handleStatusChange(orderId: string, nextStatus: string) {
@@ -123,7 +113,7 @@ export function AdminOrdersClient() {
               <span className="text-sm font-semibold text-slate-700">فهرست سفارش‌ها</span>
             </div>
             <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
-              {filteredOrders.length} مورد
+              {totalItems} مورد
             </span>
           </div>
 
@@ -197,12 +187,12 @@ export function AdminOrdersClient() {
             ))}
           </div>
 
-          {!orders.isLoading && filteredOrders.length === 0 ? (
+          {!orders.isLoading && paginatedOrders.length === 0 ? (
             <div className="p-8">
               <EmptyState title="سفارشی یافت نشد" description="فیلتر وضعیت یا عبارت جستجو را تغییر دهید." actions={<Button type="button" onClick={() => { setQuery(""); setStatus("all"); setPage(1); }}>بازنشانی فیلترها</Button>} />
             </div>
           ) : null}
-          {!orders.isLoading && filteredOrders.length > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={filteredOrders.length} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
+          {!orders.isLoading && paginatedOrders.length > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={totalItems} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
         </div>
       )}
     </div>

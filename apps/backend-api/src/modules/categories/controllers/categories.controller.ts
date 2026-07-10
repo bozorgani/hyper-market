@@ -62,11 +62,13 @@ export class AdminCategoriesController {
   listCategoriesForAdmin(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('search') search?: string,
   ) {
-    if (page || limit) {
+    if (page || limit || search) {
       return this.categoriesService.listCategoriesPaginatedForAdmin(
         this.toPositiveInteger(page, 1),
         this.toPositiveInteger(limit, 20),
+        search,
       );
     }
     return this.categoriesService.listCategoriesForAdmin();

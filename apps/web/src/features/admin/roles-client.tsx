@@ -14,13 +14,13 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
-import { useModalA11y } from "@/hooks/use-modal-a11y";
 import {
   usePermissionsMap,
   useGrantPermission,
@@ -123,7 +123,6 @@ export function AdminRolesClient() {
   const [showSeedDialog, setShowSeedDialog] = useState(false);
 
   // A11y: focus trap for Add Permission modal – Issue #22
-  useModalA11y(showAddDialog, () => setShowAddDialog(false));
 
   // Add permission form state
   const [formRole, setFormRole] = useState("admin");
@@ -485,20 +484,13 @@ export function AdminRolesClient() {
       ) : null}
 
       {/* ── Add Permission Dialog ─────────────────────────────────────── */}
-      {showAddDialog ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm"
-          onClick={() => setShowAddDialog(false)}
-          role="presentation"
-        >
-          <div
-            className="w-full max-w-lg rounded-3xl bg-white p-6 text-right shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="add-permission-title"
-            aria-describedby="add-permission-desc"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <Dialog
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        titleId="add-permission-title"
+        descriptionId="add-permission-desc"
+        className="max-w-lg"
+      >
             <div className="mb-5 flex items-center justify-between">
               <h2 id="add-permission-title" className="text-lg font-black text-slate-900">افزودن دسترسی جدید</h2>
               <button
@@ -592,9 +584,7 @@ export function AdminRolesClient() {
                 {grantPermission.isPending ? "در حال افزودن..." : "افزودن دسترسی"}
               </Button>
             </div>
-          </div>
-        </div>
-      ) : null}
+      </Dialog>
 
       {/* ── Revoke Permission Dialog ──────────────────────────────────── */}
       <ConfirmDialog

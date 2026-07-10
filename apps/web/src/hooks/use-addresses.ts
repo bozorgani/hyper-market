@@ -4,10 +4,11 @@ import type { Address } from "@/types/domain";
 
 export type AddressInput = Omit<Address, "_id" | "userId" | "createdAt" | "updatedAt">;
 
-export function useMyAddresses() {
+export function useMyAddresses(enabled = true) {
   return useQuery({
     queryKey: ["addresses", "my"],
     queryFn: async () => (await api.get<Address[]>("/addresses/my")).data,
+    enabled,
     retry: false,
   });
 }

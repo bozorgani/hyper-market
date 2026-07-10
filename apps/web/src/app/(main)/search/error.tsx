@@ -1,22 +1,21 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ErrorState } from "@/components/ui/error-state";
+import { RouteError } from "@/components/ui/route-error";
 
-export default function SearchError({ reset }: { error: Error; reset: () => void }) {
+type RouteErrorProps = {
+  error: Error & { digest?: string };
+  reset: () => void;
+};
+
+export default function SearchError({ error, reset }: RouteErrorProps) {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <ErrorState
-        title="جستجو در دسترس نیست"
-        description="در دریافت نتایج جستجو مشکلی رخ داد."
-        actions={
-          <>
-            <Button type="button" variant="outline" onClick={reset}>تلاش مجدد</Button>
-            <Link href="/products"><Button type="button">مشاهده محصولات</Button></Link>
-          </>
-        }
-      />
-    </main>
+    <RouteError
+      error={error}
+      reset={reset}
+      title="جستجو در دسترس نیست"
+      description="در دریافت نتایج جستجو مشکلی رخ داد."
+      backHref="/products"
+      backLabel="مشاهده محصولات"
+    />
   );
 }

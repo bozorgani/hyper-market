@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, ShieldOff, ShieldCheck, RefreshCw, Users } from "lucide-react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
@@ -29,6 +29,7 @@ export function AdminUsersClient() {
     roleFilter === "all" ? undefined : roleFilter,
     statusFilter === "all" ? undefined : statusFilter,
     PAGE_SIZE,
+    query.trim() || undefined,
   );
   const blockUser = useBlockUser();
   const unblockUser = useUnblockUser();
@@ -39,22 +40,9 @@ export function AdminUsersClient() {
   const isMutationPending = blockUser.isPending || unblockUser.isPending;
   const errorMessage = users.error instanceof Error ? users.error.message : "امکان دریافت لیست کاربران وجود ندارد.";
 
-  const filteredUsers = useMemo(() => {
-    return (users.data?.items ?? []).filter((user) => {
-      const id = user.id ?? user._id ?? "";
-      const queryValue = query.trim().toLowerCase();
-      const matchesQuery = queryValue
-        ? [id, user.email ?? "", user.phoneNumber ?? ""].some((value) => value.toLowerCase().includes(queryValue))
-        : true;
-      return matchesQuery;
-    });
-  }, [users.data?.items, query]);
-
-  const totalItems = query.trim() ? filteredUsers.length : (users.data?.total ?? 0);
-  const totalPages = query.trim()
-    ? Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE))
-    : (users.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE)));
-  const paginatedUsers = filteredUsers;
+  const paginatedUsers = users.data?.items ?? [];
+  const totalItems = users.data?.total ?? 0;
+  const totalPages = users.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
   async function toggleUserBlock() {
     if (!selectedUserId) return;
@@ -203,10 +191,10 @@ export function AdminUsersClient() {
             })}
           </div>
 
-          {!users.isLoading && filteredUsers.length === 0 ? (
+          {!users.isLoading && paginatedUsers.length === 0 ? (
             <div className="p-8"><EmptyState title="کاربری یافت نشد" description="فیلترها را تغییر دهید." actions={<Button type="button" onClick={() => { setQuery(""); setRoleFilter("all"); setStatusFilter("all"); setPage(1); }}>بازنشانی فیلترها</Button>} /></div>
           ) : null}
-          {!users.isLoading && filteredUsers.length > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={filteredUsers.length} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
+          {!users.isLoading && paginatedUsers.length > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={totalItems} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
         </div>
       )}
 

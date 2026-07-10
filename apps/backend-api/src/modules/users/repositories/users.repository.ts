@@ -11,6 +11,10 @@ export type UserWithId = User & { _id: Types.ObjectId };
 
 export type UserListResult = PaginatedResult<User>;
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 @Injectable()
 export class UsersRepository implements BaseRepository<User> {
   constructor(
@@ -40,11 +44,20 @@ export class UsersRepository implements BaseRepository<User> {
     limit: number,
     role?: string,
     accountStatus?: string,
+    search?: string,
   ): Promise<UserListResult> {
     const skip = (page - 1) * limit;
     const filter: Record<string, unknown> = { deletedAt: null };
     if (role) filter.role = role;
     if (accountStatus) filter.accountStatus = accountStatus;
+    if (search) {
+      const pattern = escapeRegex(search);
+      filter.$or = [
+        ...(isValidObjectId(search) ? [{ _id: search }] : []),
+        { email: { $regex: pattern, $options: "i" } },
+        { phoneNumber: { $regex: pattern, $options: "i" } },
+      ];
+    }
     const [items, total] = await Promise.all([
       this.userModel
         .find(filter)

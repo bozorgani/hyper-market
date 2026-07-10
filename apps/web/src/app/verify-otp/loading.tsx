@@ -1,5 +1,5 @@
-import { PageLoader } from "@/components/ui/page-loader";
+import { RouteLoading } from "@/components/ui/route-loading";
 
 export default function Loading() {
-  return <PageLoader title="در حال بارگذاری..." />;
+  return <RouteLoading title="در حال بارگذاری..." />;
 }

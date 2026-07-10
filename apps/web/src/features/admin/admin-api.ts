@@ -32,6 +32,10 @@ export type ProductImageUploadResponse = {
   mimeType: string;
 };
 
+export type AdminPaymentListItem = Payment & {
+  order: { _id: string; totalPrice: number } | null;
+};
+
 export function useAdminProducts(page = 1, isActive?: boolean, limit = 100) {
   return useQuery({
     queryKey: ["admin", "products", page, isActive, limit],
@@ -113,12 +117,12 @@ export type CategoryFormInput = {
   isActive?: boolean;
 };
 
-export function useAdminCategories(page?: number, limit?: number) {
+export function useAdminCategories(page?: number, limit?: number, search?: string) {
   return useQuery({
-    queryKey: ["admin", "categories", page, limit],
+    queryKey: ["admin", "categories", page, limit, search],
     queryFn: async () => {
-      if (page || limit) {
-        return (await api.get<PaginatedResponse<Category>>("/admin/categories", { params: { page, limit } })).data;
+      if (page || limit || search) {
+        return (await api.get<PaginatedResponse<Category>>("/admin/categories", { params: { page, limit, search } })).data;
       }
       const items = (await api.get<Category[]>("/admin/categories")).data;
       return { items, total: items.length, page: 1, limit: items.length || 1, meta: { totalPages: 1, hasNextPage: false, hasPreviousPage: false } };
@@ -173,12 +177,12 @@ export function useDeleteCategory() {
   });
 }
 
-export function useAdminOrders(page?: number, status?: string, limit?: number) {
+export function useAdminOrders(page?: number, status?: string, limit?: number, search?: string) {
   return useQuery({
-    queryKey: ["admin", "orders", page, status, limit],
+    queryKey: ["admin", "orders", page, status, limit, search],
     queryFn: async () => {
-      if (page || limit || status) {
-        return (await api.get<PaginatedResponse<Order>>("/orders", { params: { page, limit, status } })).data;
+      if (page || limit || status || search) {
+        return (await api.get<PaginatedResponse<Order>>("/orders", { params: { page, limit, status, search } })).data;
       }
       const items = (await api.get<Order[]>("/orders")).data;
       return { items, total: items.length, page: 1, limit: items.length || 1, meta: { totalPages: 1, hasNextPage: false, hasPreviousPage: false } };
@@ -203,23 +207,14 @@ export function useAdminPayment(orderId: string) {
   });
 }
 
-/**
- * Batch-fetch payments for many orders in a SINGLE request (fixes the N+1 on
- * the admin payments/orders tables).
- */
-export function useAdminPayments(orderIds: string[]) {
-  const key = [...orderIds].sort().join(",");
+export function useAdminPayments(page = 1, status?: string, search?: string, limit = 10) {
   return useQuery({
-    queryKey: ["admin", "payments", "batch", key],
-    queryFn: async () => {
-      if (orderIds.length === 0) return [] as Payment[];
-      return (
-        await api.get<Payment[]>("/payments/batch", {
-          params: { orderIds: orderIds.join(",") },
-        })
-      ).data;
-    },
-    enabled: orderIds.length > 0,
+    queryKey: ["admin", "payments", page, status, search, limit],
+    queryFn: async () => (
+      await api.get<PaginatedResponse<AdminPaymentListItem>>("/payments/admin", {
+        params: { page, limit, status, search },
+      })
+    ).data,
     staleTime: 30_000,
   });
 }
@@ -240,12 +235,12 @@ export function useAdminAnalyticsDashboard() {
   });
 }
 
-export function useAdminUsers(page?: number, role?: string, accountStatus?: string, limit?: number) {
+export function useAdminUsers(page?: number, role?: string, accountStatus?: string, limit?: number, search?: string) {
   return useQuery({
-    queryKey: ["admin", "users", page, role, accountStatus, limit],
+    queryKey: ["admin", "users", page, role, accountStatus, limit, search],
     queryFn: async () => {
-      if (page || limit || role || accountStatus) {
-        return (await api.get<PaginatedResponse<User>>("/users", { params: { page, limit, role, accountStatus } })).data;
+      if (page || limit || role || accountStatus || search) {
+        return (await api.get<PaginatedResponse<User>>("/users", { params: { page, limit, role, accountStatus, search } })).data;
       }
       const items = (await api.get<User[]>("/users")).data;
       return { items, total: items.length, page: 1, limit: items.length || 1, meta: { totalPages: 1, hasNextPage: false, hasPreviousPage: false } };

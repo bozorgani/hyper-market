@@ -145,10 +145,11 @@ export class CategoriesService {
   async listCategoriesPaginatedForAdmin(
     page: number,
     limit: number,
+    search?: string,
   ): Promise<CategoryListResult> {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.min(Math.max(limit, 1), 100);
-    return this.categoriesRepository.findAllPaginatedForAdmin(safePage, safeLimit);
+    return this.categoriesRepository.findAllPaginatedForAdmin(safePage, safeLimit, search?.trim());
   }
 
   async updateCategory(id: string, data: UpdateCategoryDto): Promise<Category> {

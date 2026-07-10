@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
 import {
   CategoryFormInput,
@@ -27,31 +28,22 @@ const PAGE_SIZE = 8;
 export function AdminCategoriesClient() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  const categories = useAdminCategories(page, PAGE_SIZE);
+  const categories = useAdminCategories(page, PAGE_SIZE, query.trim() || undefined);
   const allCategories = useAdminCategories();
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
   const { showToast } = useToast();
   const [form, setForm] = useState<CategoryFormInput>(emptyForm);
+  const [formError, setFormError] = useState("");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   const isSubmitting = createCategory.isPending || updateCategory.isPending;
 
-  const filteredCategories = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return categories.data?.items ?? [];
-    return (categories.data?.items ?? []).filter((category) =>
-      category.name.toLowerCase().includes(normalizedQuery) || category.slug.toLowerCase().includes(normalizedQuery),
-    );
-  }, [categories.data?.items, query]);
-
-  const totalItems = query.trim() ? filteredCategories.length : (categories.data?.total ?? 0);
-  const totalPages = query.trim()
-    ? Math.max(1, Math.ceil(filteredCategories.length / PAGE_SIZE))
-    : (categories.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE)));
-  const paginatedCategories = filteredCategories;
+  const paginatedCategories = categories.data?.items ?? [];
+  const totalItems = categories.data?.total ?? 0;
+  const totalPages = categories.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
   // Build parent category options (root categories only, excluding current editing)
   const rootCategories = useMemo(() => {
@@ -61,7 +53,7 @@ export function AdminCategoriesClient() {
     });
   }, [allCategories.data?.items, editingCategory]);
 
-  function resetForm() { setForm(emptyForm); setEditingCategory(null); }
+  function resetForm() { setForm(emptyForm); setFormError(""); setEditingCategory(null); }
   function startEdit(category: Category) {
     setEditingCategory(category);
     setForm({
@@ -78,6 +70,17 @@ export function AdminCategoriesClient() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormError("");
+
+    if (form.name.trim().length < 2) {
+      setFormError("نام دسته‌بندی باید حداقل ۲ کاراکتر باشد.");
+      return;
+    }
+    if (!/^[a-z0-9-]{2,120}$/.test(form.slug.trim().toLowerCase())) {
+      setFormError("اسلاگ باید فقط شامل حروف انگلیسی کوچک، عدد و خط تیره باشد.");
+      return;
+    }
+
     try {
       const cleaned: CategoryFormInput = {
         ...form,
@@ -97,7 +100,9 @@ export function AdminCategoriesClient() {
       }
       resetForm();
     } catch (error) {
-      showToast({ type: "error", title: "خطا در عملیات", description: error instanceof Error ? error.message : undefined });
+      const message = error instanceof Error ? error.message : "خطا در عملیات دسته‌بندی.";
+      setFormError(message);
+      showToast({ type: "error", title: "خطا در عملیات", description: message });
     }
   }
 
@@ -133,6 +138,7 @@ export function AdminCategoriesClient() {
           {editingCategory ? <Edit3 className="h-4 w-4 text-emerald-600" /> : <Plus className="h-4 w-4 text-emerald-600" />}
           <span className="text-sm font-bold text-slate-700">{editingCategory ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی جدید"}</span>
         </div>
+        {formError ? <div className="mb-4"><StatusMessage variant="error">{formError}</StatusMessage></div> : null}
         <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
           {/* ── Basic ─────────────────── */}
           <div className="flex items-center gap-2 md:col-span-2">

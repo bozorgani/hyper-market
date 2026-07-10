@@ -16,10 +16,11 @@ export function useValidateCoupon() {
 }
 
 
-export function useAvailableCoupons() {
+export function useAvailableCoupons(enabled = true) {
   return useQuery({
     queryKey: ["coupons", "available"],
     queryFn: async () => (await import("@/services/api")).api.get<CouponValidationResult[]>("/coupons/available").then((res) => res.data),
+    enabled,
     retry: false,
   });
 }

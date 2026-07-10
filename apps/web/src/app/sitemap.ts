@@ -11,19 +11,19 @@ function getBaseUrl(): string {
   const url =
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.SITE_URL ||
-    "https://hypermarket.example.com";
+    "http://localhost:3000";
   try {
     return new URL(url).origin;
   } catch {
-    return "https://hypermarket.example.com";
+    return "http://localhost:3000";
   }
 }
 
 /**
  * Maximum URLs per sitemap (Google allows up to 50,000).
- * Keeping well under limit for performance.
+ * The catalog is fetched page-by-page up to this limit.
  */
-const MAX_PRODUCTS = 1000;
+const MAX_PRODUCTS = 50_000;
 const PRODUCTS_PER_PAGE = 200;
 
 export const revalidate = 3600; // 1h
@@ -51,12 +51,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/search`,
-      lastModified: now,
-      changeFrequency: "daily",
-      priority: 0.7,
     },
   ];
 

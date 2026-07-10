@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { AlertTriangle, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -136,9 +136,7 @@ export function CartPageClient() {
                   <Button type="button" variant="outline" onClick={() => cart.refetch()}>
                     تلاش مجدد
                   </Button>
-                  <Link href="/products">
-                    <Button type="button">مشاهده محصولات</Button>
-                  </Link>
+                  <LinkButton href="/products">مشاهده محصولات</LinkButton>
                 </>
               }
             />
@@ -151,9 +149,7 @@ export function CartPageClient() {
               title="سبد خرید شما خالی است"
               description="برای ثبت سفارش، ابتدا چند محصول به سبد اضافه کنید و سپس دوباره به این صفحه برگردید."
               actions={
-                <Link href="/products">
-                  <Button type="button">شروع خرید</Button>
-                </Link>
+                <LinkButton href="/products">شروع خرید</LinkButton>
               }
             />
           </div>
@@ -217,9 +213,14 @@ export function CartPageClient() {
                 <Button type="button" variant="outline" onClick={() => setClearDialogOpen(true)} disabled={isMutating}>
                   خالی کردن سبد
                 </Button>
-                <Link href="/checkout" className="flex-1">
-                  <Button type="button" className="w-full" disabled={isMutating}>ادامه خرید</Button>
-                </Link>
+                <LinkButton
+                  href="/checkout"
+                  aria-disabled={isMutating}
+                  tabIndex={isMutating ? -1 : undefined}
+                  className={`w-full flex-1 ${isMutating ? "pointer-events-none opacity-60" : ""}`}
+                >
+                  ادامه خرید
+                </LinkButton>
               </div>
             </div>
           </>

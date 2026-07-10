@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useModalA11y } from "@/hooks/use-modal-a11y";
+import { Dialog } from "@/components/ui/dialog";
 
 export function ConfirmDialog({
   open,
@@ -24,22 +24,21 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  useModalA11y(open, onCancel);
-
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm">
-      <div role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-description" className="w-full max-w-md rounded-3xl bg-white p-6 text-right shadow-2xl">
-        <h2 id="confirm-dialog-title" className="text-xl font-black text-slate-950">{title}</h2>
-        <p id="confirm-dialog-description" className="mt-3 leading-7 text-slate-600">{description}</p>
-        <div className="mt-6 flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>{cancelText}</Button>
-          <Button type="button" variant={destructive ? "destructive" : "default"} onClick={onConfirm} disabled={loading}>
-            {loading ? "در حال انجام..." : confirmText}
-          </Button>
-        </div>
+    <Dialog
+      open={open}
+      onClose={onCancel}
+      titleId="confirm-dialog-title"
+      descriptionId="confirm-dialog-description"
+    >
+      <h2 id="confirm-dialog-title" className="text-xl font-black text-slate-950">{title}</h2>
+      <p id="confirm-dialog-description" className="mt-3 leading-7 text-slate-600">{description}</p>
+      <div className="mt-6 flex justify-end gap-3">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>{cancelText}</Button>
+        <Button type="button" variant={destructive ? "destructive" : "default"} onClick={onConfirm} disabled={loading}>
+          {loading ? "در حال انجام..." : confirmText}
+        </Button>
       </div>
-    </div>
+    </Dialog>
   );
 }

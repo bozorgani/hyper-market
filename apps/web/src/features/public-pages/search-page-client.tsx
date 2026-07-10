@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -169,9 +170,7 @@ function SearchContent({
                 <Button type="button" variant="outline" onClick={() => search.refetch()}>
                   تلاش مجدد
                 </Button>
-                <Link href="/products">
-                  <Button type="button">مشاهده همه محصولات</Button>
-                </Link>
+                <LinkButton href="/products">مشاهده همه محصولات</LinkButton>
               </>
             }
           />
@@ -186,9 +185,7 @@ function SearchContent({
             actions={
               <>
                 <Button type="button" onClick={resetFilters}>پاک‌کردن فیلترها</Button>
-                <Link href="/products">
-                  <Button type="button" variant="outline">بازگشت به محصولات</Button>
-                </Link>
+                <LinkButton href="/products" variant="outline">بازگشت به محصولات</LinkButton>
               </>
             }
           />

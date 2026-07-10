@@ -4,6 +4,15 @@ import { ClientSession, isValidObjectId, Model } from 'mongoose';
 import { PaymentStatus } from '../enums/payment-status.enum';
 import { Payment, PaymentDocument } from '../schemas/payment.schema';
 
+export type AdminPaymentListItem = Omit<Payment, 'orderId'> & {
+  orderId: string;
+  order: { _id: string; totalPrice: number } | null;
+};
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 @Injectable()
 export class PaymentsRepository {
   constructor(
@@ -35,6 +44,55 @@ export class PaymentsRepository {
       .sort({ createdAt: -1 })
       .lean()
       .exec();
+  }
+
+  async findAllPaginated(
+    page: number,
+    limit: number,
+    status?: PaymentStatus,
+    search?: string,
+  ): Promise<{ items: AdminPaymentListItem[]; total: number }> {
+    const skip = (page - 1) * limit;
+    const filter: Record<string, unknown> = {};
+    if (status) filter.status = status;
+
+    if (search) {
+      const pattern = escapeRegex(search);
+      filter.$or = [
+        { transactionId: { $regex: pattern, $options: "i" } },
+        ...(isValidObjectId(search) ? [{ orderId: search }] : []),
+        ...(!isValidObjectId(search)
+          ? [{ $expr: { $regexMatch: { input: { $toString: "$orderId" }, regex: pattern, options: "i" } } }]
+          : []),
+      ];
+    }
+
+    const [payments, total] = await Promise.all([
+      this.paymentModel
+        .find(filter)
+        .populate("orderId", "_id totalPrice")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.paymentModel.countDocuments(filter).exec(),
+    ]);
+
+    const items = payments.map((payment) => {
+      const populatedOrder = payment.orderId as unknown as { _id?: unknown; totalPrice?: number };
+      const hasOrder = Boolean(populatedOrder && typeof populatedOrder === "object" && populatedOrder._id);
+      const orderId = hasOrder ? String(populatedOrder._id) : String(payment.orderId);
+      return {
+        ...payment,
+        orderId,
+        order: hasOrder && typeof populatedOrder.totalPrice === "number"
+          ? { _id: orderId, totalPrice: populatedOrder.totalPrice }
+          : null,
+      };
+    }) as AdminPaymentListItem[];
+
+    return { items, total };
   }
 
   async findPendingByOrderId(orderId: string): Promise<Payment | null> {

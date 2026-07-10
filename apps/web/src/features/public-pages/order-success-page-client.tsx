@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Suspense } from "react";
+import { LinkButton } from "@/components/ui/link-button";
 import { useSearchParams } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Clock, MapPin, PackageCheck, ReceiptText, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { useOrder, usePayment } from "@/hooks/use-orders";
 import { formatPersianDate, formatPrice, translateOrderStatus, translatePaymentMethod, translatePaymentStatus } from "@/lib/utils";
 
 type OrderItemSnapshot = {
+  productId: string;
   name?: string;
   quantity?: number;
   priceAtPurchase?: number;
@@ -93,13 +94,24 @@ function OrderSuccessContent() {
               <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4 text-right">
                 <p className="font-black text-sm mb-3">اقلام سفارش</p>
                 <div className="space-y-2 text-sm">
-                  {order.data.items.map((item: OrderItemSnapshot, idx: number) => (
-                    <div key={idx} className="flex justify-between border-b pb-2 last:border-0">
+                  {order.data.items.map((item: OrderItemSnapshot) => (
+                    <div key={item.productId} className="flex flex-wrap items-center justify-between gap-3 border-b pb-2 last:border-0">
                       <div>
                         <span className="font-medium">{item.name || `محصول`}</span>
                         <span className="text-slate-400 ml-2">×{item.quantity}</span>
                       </div>
-                      <span className="font-semibold">{formatPrice((item.priceAtPurchase || 0) * (item.quantity || 1))}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold">{formatPrice((item.priceAtPurchase || 0) * (item.quantity || 1))}</span>
+                        {order.data.status === "delivered" ? (
+                          <LinkButton
+                            href={`/products/${encodeURIComponent(item.productId)}?orderId=${encodeURIComponent(order.data._id)}`}
+                            variant="outline"
+                            size="sm"
+                          >
+                            ثبت نظر
+                          </LinkButton>
+                        ) : null}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -134,8 +146,8 @@ function OrderSuccessContent() {
         ) : null}
 
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/orders"><Button>مشاهده سفارش‌ها</Button></Link>
-          <Link href="/products"><Button variant="outline">ادامه خرید</Button></Link>
+          <LinkButton href="/orders">مشاهده سفارش‌ها</LinkButton>
+          <LinkButton href="/products" variant="outline">ادامه خرید</LinkButton>
         </div>
       </Card>
     </div>

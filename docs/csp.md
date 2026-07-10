@@ -4,21 +4,25 @@ Frontend security headers are configured in:
 
 ```text
 apps/web/next.config.ts
+apps/web/src/middleware.ts
 ```
 
 ## Current mode
 
-By default CSP runs in report-only mode:
+CSP is generated per request with a cryptographic nonce. The default is:
+
+- **Production:** `enforce`
+- **Development:** `report-only`
+
+The mode can be overridden explicitly:
 
 ```env
+CSP_MODE=enforce
+# or
 CSP_MODE=report-only
 ```
 
-This sends:
-
-```http
-Content-Security-Policy-Report-Only: ...
-```
+Production should use `enforce`. `report-only` is intended for controlled rollout/debugging only.
 
 Reports are received by:
 
@@ -28,39 +32,49 @@ POST /api/csp-report
 
 The in-app endpoint logs reports with the `[CSP_REPORT]` prefix. In production, route logs should be shipped to the central log pipeline.
 
-## Enforcing CSP
+## Policy hardening
 
-After reviewing report-only violations, switch to enforce mode:
+The current policy:
+
+- Uses a per-request nonce for scripts.
+- Uses `strict-dynamic` for scripts.
+- Does not include `script-src 'unsafe-inline'`.
+- Does not include a broad `https:` script source.
+- Does not allow third-party Leaflet CSS.
+- Uses `frame-src 'none'`, `object-src 'none'`, `base-uri 'self'`, and `frame-ancestors 'none'`.
+- Allows `unsafe-inline` for styles temporarily because the current Next/Tailwind/UI layer still emits inline styles and style attributes.
+
+The Leaflet stylesheet is bundled locally at:
+
+```text
+apps/web/src/app/leaflet.css
+```
+
+The map still uses the following external resources:
+
+- `https://*.tile.openstreetmap.org` — map tile images
+- `https://nominatim.openstreetmap.org` — reverse geocoding requests
+- `NEXT_PUBLIC_API_BASE_URL` origin — backend API and images
+- `NEXT_PUBLIC_SITE_URL` origin — deployed frontend origin
+
+## Nonce rollout and style follow-up
+
+Before tightening `style-src` further:
+
+1. Review `/api/csp-report` output for a complete release cycle.
+2. Remove remaining inline style attributes where possible.
+3. Introduce request-scoped style nonces or stable hashes for unavoidable inline styles.
+4. Replace `style-src 'unsafe-inline'` with a nonce/hash-based policy after validation.
+5. Keep the production default as `CSP_MODE=enforce`.
+
+## Environment
 
 ```env
 CSP_MODE=enforce
+CSP_REPORT_ENDPOINT=/api/csp-report
 ```
 
-This sends:
-
-```http
-Content-Security-Policy: ...
-```
-
-## External resources currently allowed
-
-The policy explicitly accounts for the current external resources used by the frontend:
-
-- `https://unpkg.com` — Leaflet CSS loaded by the map picker
-- `https://*.tile.openstreetmap.org` — map tile images
-- `https://nominatim.openstreetmap.org` — reverse geocoding requests
-- `NEXT_PUBLIC_API_BASE_URL` origin — backend API/images
-- `NEXT_PUBLIC_SITE_URL` origin — deployed frontend origin
-
-## Nonce/hash strategy
-
-The policy is intentionally report-only first because some current UI code still uses inline style attributes and Next.js injects runtime scripts/styles. Before switching high-traffic production to strict enforcement:
-
-1. Review `/api/csp-report` output for at least one full release cycle.
-2. Remove or isolate inline style attributes where possible.
-3. Introduce request-scoped script nonces through Next middleware/proxy and pass the nonce via `x-nonce`.
-4. Replace remaining stable inline snippets with SHA-256 hashes when a nonce is not practical.
-5. Remove `unsafe-inline` from `script-src` first, then consider tightening `style-src`.
+`CSP_REPORT_ENDPOINT` should normally remain a same-origin relative path. Do not put secrets in CSP configuration.
 
 ## Other security headers
 

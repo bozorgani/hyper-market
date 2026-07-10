@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { faIR } from "date-fns/locale";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { isKnownOptimizedImageSource } from "@/lib/image-utils";
 
 interface Review {
   _id: string;
@@ -93,6 +94,7 @@ export function ReviewCard({ review, onHelpful, className }: ReviewCardProps) {
                 fill
                 className="object-cover"
                 sizes="80px"
+                unoptimized={!isKnownOptimizedImageSource(image)}
               />
             </div>
           ))}
@@ -104,15 +106,21 @@ export function ReviewCard({ review, onHelpful, className }: ReviewCardProps) {
         <span className="text-sm text-slate-600">آیا این نظر مفید بود؟</span>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => onHelpful?.(review._id, true)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700"
+            disabled={!onHelpful}
+            title={!onHelpful ? "برای ثبت رأی ابتدا وارد شوید" : undefined}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ThumbsUp className="h-4 w-4" />
             <span>مفید ({review.helpfulCount})</span>
           </button>
           <button
+            type="button"
             onClick={() => onHelpful?.(review._id, false)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-red-50 hover:text-red-700"
+            disabled={!onHelpful}
+            title={!onHelpful ? "برای ثبت رأی ابتدا وارد شوید" : undefined}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ThumbsDown className="h-4 w-4" />
             <span>({review.notHelpfulCount})</span>

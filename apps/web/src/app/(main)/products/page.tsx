@@ -24,11 +24,13 @@ export async function generateMetadata({ searchParams }: ProductsPageProps): Pro
 
   const description = category?.description ||
     "مشاهده و جستجوی محصولات هایپرمارکت، فیلتر دسته‌بندی و بررسی موجودی کالاها.";
+  const isParameterizedView = Boolean(categoryId || search);
 
   return {
     title,
     description,
     alternates: { canonical: "/products" },
+    robots: isParameterizedView ? { index: false, follow: true } : { index: true, follow: true },
     openGraph: {
       title,
       description,

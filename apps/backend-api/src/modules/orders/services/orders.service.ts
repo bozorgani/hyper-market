@@ -296,10 +296,11 @@ export class OrdersService {
     page: number,
     limit: number,
     status?: OrderStatus,
+    search?: string,
   ): Promise<OrderListResult> {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.min(Math.max(limit, 1), 100);
-    return this.ordersRepository.findAllPaginated(safePage, safeLimit, status);
+    return this.ordersRepository.findAllPaginated(safePage, safeLimit, status, search?.trim());
   }
 
   async updateStatus(

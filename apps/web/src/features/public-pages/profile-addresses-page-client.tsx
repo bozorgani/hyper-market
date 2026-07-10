@@ -18,6 +18,7 @@ import {
   type AddressInput,
 } from "@/hooks/use-addresses";
 import type { Address } from "@/types/domain";
+import { useAuthStore } from "@/store/auth-store";
 
 const MapPicker = lazy(() =>
   import("@/components/ui/map-picker").then((m) => ({ default: m.MapPicker }))
@@ -64,7 +65,9 @@ function isAddressValid(address: AddressInput) {
 }
 
 export function ProfileAddressesPageClient() {
-  const addresses = useMyAddresses();
+  const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
+  const addresses = useMyAddresses(Boolean(hydrated && user));
   const createAddress = useCreateAddress();
   const updateAddress = useUpdateAddress();
   const deleteAddress = useDeleteAddress();

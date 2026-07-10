@@ -1,4 +1,7 @@
 import { Body, Controller, Get, Headers, Param, Post, Query, Req, Res } from '@nestjs/common';
+import { Permissions } from '../../permissions/decorators/permissions.decorator';
+import { Roles } from '../../auth/decorators/roles.decorator';
+import { UserRole } from '../../users/enums/user-role.enum';
 import { Request, Response } from 'express';
 import { AuditService } from '../../audit/audit.service';
 import { AuditAction } from '../../audit/enums/audit-action.enum';
@@ -7,6 +10,7 @@ import { IdempotencyService } from '../../../infrastructure/idempotency/idempote
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
+import { PaymentStatus } from '../enums/payment-status.enum';
 import { PaymentsService } from '../services/payments.service';
 
 @Controller('payments')
@@ -42,6 +46,26 @@ export class PaymentsController {
       request,
     });
     return result.data;
+  }
+
+  @Get('admin')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Permissions('payments.read')
+  listAdminPayments(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    const parsedStatus = Object.values(PaymentStatus).includes(status as PaymentStatus)
+      ? (status as PaymentStatus)
+      : undefined;
+    return this.paymentsService.listAdminPayments(
+      Number(page) || 1,
+      Number(limit) || 20,
+      parsedStatus,
+      search,
+    );
   }
 
   @Get('batch')

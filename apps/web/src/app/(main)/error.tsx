@@ -1,32 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { ErrorState } from "@/components/ui/error-state";
-import { Button } from "@/components/ui/button";
+import { RouteError } from "@/components/ui/route-error";
 
-export default function Error({
-  error,
-  reset,
-}: {
+type RouteErrorProps = {
   error: Error & { digest?: string };
   reset: () => void;
-}) {
-  useEffect(() => {
-    console.error(error?.message || "خطا در بارگذاری صفحه");
-  }, [error]);
+};
 
-  return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
-      <ErrorState
-        title="خطایی رخ داد"
-        description={error.message || "مشکلی در بارگذاری این صفحه پیش آمد. لطفاً دوباره تلاش کنید."}
-        actions={
-          <>
-            <Button onClick={() => reset()} variant="default">تلاش مجدد</Button>
-            <Button onClick={() => window.location.href = "/"} variant="outline">بازگشت به خانه</Button>
-          </>
-        }
-      />
-    </div>
-  );
+export default function Error({ error, reset }: RouteErrorProps) {
+  return <RouteError error={error} reset={reset} />;
 }

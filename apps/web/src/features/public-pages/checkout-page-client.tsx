@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -78,12 +78,13 @@ export function CheckoutPageClient() {
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
   const isCustomer = isCustomerRole(user?.role);
-  const cart = useCart(Boolean(hydrated && isCustomer));
-  const savedAddresses = useMyAddresses();
+  const isAuthenticatedCustomer = Boolean(hydrated && isCustomer);
+  const cart = useCart(isAuthenticatedCustomer);
+  const savedAddresses = useMyAddresses(isAuthenticatedCustomer);
   const createOrder = useCreateOrder();
   const createPayment = useCreatePayment();
   const validateCoupon = useValidateCoupon();
-  const availableCoupons = useAvailableCoupons();
+  const availableCoupons = useAvailableCoupons(isAuthenticatedCustomer);
   const { showToast } = useToast();
 
   const [error, setError] = useState("");
@@ -293,9 +294,7 @@ export function CheckoutPageClient() {
           title="سبد خرید خالی است"
           description="ابتدا محصولاتی را به سبد خرید اضافه کنید."
           actions={
-            <Link href="/products">
-              <Button type="button">مشاهده محصولات</Button>
-            </Link>
+            <LinkButton href="/products">مشاهده محصولات</LinkButton>
           }
         />
       ) : null}

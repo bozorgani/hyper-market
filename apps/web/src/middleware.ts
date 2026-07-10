@@ -161,14 +161,14 @@ function originFromUrl(value: string | undefined): string | null {
 }
 
 /**
- * Build Content-Security-Policy with per-request nonce.
- * - script-src: 'self' 'nonce-xxx' 'strict-dynamic' [unsafe-eval in dev] 'unsafe-inline' (fallback for older browsers)
- * - style-src: 'self' 'unsafe-inline' https://unpkg.com (Tailwind runtime – to be hardened with hashes later)
- * - Removes blanket 'unsafe-inline' from script-src in modern browsers via nonce+strict-dynamic
+ * Build Content-Security-Policy with a per-request nonce.
+ * Production script policy intentionally avoids `unsafe-inline` and broad `https:`
+ * script sources. Inline styles remain temporarily allowed because Next.js and
+ * the current Tailwind/UI layer still emit style attributes.
  */
 function buildCsp(nonce: string): string {
   const isProduction = process.env.NODE_ENV === 'production';
-  const cspMode = process.env.CSP_MODE ?? 'report-only';
+  const cspMode = process.env.CSP_MODE ?? (isProduction ? 'enforce' : 'report-only');
   const apiOrigin = originFromUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
   const siteOrigin = originFromUrl(process.env.NEXT_PUBLIC_SITE_URL);
   const cspReportEndpoint = process.env.CSP_REPORT_ENDPOINT ?? '/api/csp-report';
@@ -191,20 +191,13 @@ function buildCsp(nonce: string): string {
     'https://placehold.co',
   ].filter(Boolean);
 
-  // script-src: nonce + strict-dynamic is the modern secure pattern.
-  // We KEEP 'unsafe-inline' as a fallback for Safari <15.4 / old browsers – 
-  // browsers that support nonce will ignore unsafe-inline when nonce is present.
-  // 'unsafe-eval' only in development (Next.js dev overlay needs it).
+  // Nonce + strict-dynamic is the production script policy. `unsafe-eval` is
+  // retained only for the Next.js development overlay.
   const scriptSrc = [
     "'self'",
     `'nonce-${nonce}'`,
     "'strict-dynamic'",
-    // Fallback for legacy browsers – will be ignored by nonce-aware browsers
-    "'unsafe-inline'",
     !isProduction ? "'unsafe-eval'" : null,
-    'https:',
-    // Allow blob: workers
-    'blob:',
   ]
     .filter(Boolean)
     .join(' ');
@@ -216,12 +209,13 @@ function buildCsp(nonce: string): string {
     "frame-ancestors 'none'",
     "form-action 'self'",
     "manifest-src 'self'",
+    "frame-src 'none'",
     "worker-src 'self' blob:",
     "child-src 'self' blob:",
     "font-src 'self' data:",
-    // style-src: still needs unsafe-inline for Tailwind + Next.js – Phase 2 will add hashes
-    "style-src 'self' 'unsafe-inline' https://unpkg.com",
-    "style-src-elem 'self' 'unsafe-inline' https://unpkg.com",
+    // Inline styles remain temporary until the UI can move to nonce/hash-based styles.
+    "style-src 'self' 'unsafe-inline'",
+    "style-src-elem 'self' 'unsafe-inline'",
     `script-src ${scriptSrc}`,
     `script-src-elem ${scriptSrc}`,
     `connect-src ${connectSources.join(' ')}`,
@@ -229,7 +223,6 @@ function buildCsp(nonce: string): string {
     `media-src ${imageSources.join(' ')}`,
     cspMode === 'enforce' ? 'upgrade-insecure-requests' : null,
     `report-uri ${cspReportEndpoint}`,
-    // Report-To is deprecated but keep report-uri for compatibility
   ]
     .filter(Boolean)
     .join('; ');
@@ -243,7 +236,7 @@ export async function middleware(request: NextRequest) {
   // ---- CSP Nonce generation (applies to ALL routes matched) ----
   const nonce = generateNonce();
   const csp = buildCsp(nonce);
-  const cspMode = process.env.CSP_MODE ?? 'report-only';
+  const cspMode = process.env.CSP_MODE ?? (process.env.NODE_ENV === 'production' ? 'enforce' : 'report-only');
   const cspHeaderName =
     cspMode === 'enforce'
       ? 'Content-Security-Policy'

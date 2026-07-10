@@ -10,9 +10,10 @@ import {
   Clock, CheckCircle2 
 } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/components/ui/status-message";
 import { useToast } from "@/components/ui/toast";
-import { emailSchema, firstValidationError, normalizePhoneNumber, normalizeOtpCode, phoneNumberSchema, verifyOtpSchema } from "@/lib/validation/auth";
+import { emailSchema, firstValidationError, normalizePhoneNumber, normalizeOtpCode, passwordSchema, phoneNumberSchema, verifyOtpSchema } from "@/lib/validation/auth";
 import { api } from "@/services/api";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,7 @@ function VerifyOtpContent() {
   
   const target = initialTarget;
   const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [type, setType] = useState(initialType);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -126,7 +128,7 @@ function VerifyOtpContent() {
   }
 
   function handleAutoSubmit(fullCode: string) {
-    if (fullCode.length === OTP_LENGTH && target.trim()) {
+    if (type !== "password_reset" && fullCode.length === OTP_LENGTH && target.trim()) {
       void submitOtp(fullCode);
     }
   }
@@ -144,8 +146,20 @@ function VerifyOtpContent() {
       return;
     }
 
-    const normTarget = type === "phone_verify" ? normalizePhoneNumber(target) : target.trim().toLowerCase();
+    const isPhoneTarget = type === "phone_verify" || (type === "password_reset" && !target.includes("@"));
+    const normTarget = isPhoneTarget ? normalizePhoneNumber(target) : target.trim().toLowerCase();
     const normCode = normalizeOtpCode(finalCode);
+
+    if (type === "password_reset") {
+      const passwordValidation = passwordSchema.safeParse(newPassword);
+      if (!passwordValidation.success) {
+        const msg = firstValidationError(passwordValidation.error);
+        setError(msg);
+        showToast({ type: "error", title: "رمز عبور معتبر نیست", description: msg });
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -153,16 +167,27 @@ function VerifyOtpContent() {
         await api.post("/auth/verify-phone", { phoneNumber: normTarget, code: normCode });
       } else if (type === "email_verify") {
         await api.post("/auth/verify-email", { email: normTarget, code: normCode });
-      } else {
-        await api.post("/auth/verify-otp", {
-          target: (type === "password_reset" && !normTarget.includes("@")) ? normalizePhoneNumber(target) : normTarget,
+      } else if (isPhoneTarget) {
+        await api.post("/auth/reset-password", {
+          phoneNumber: normTarget,
           code: normCode,
-          type,
+          newPassword,
+        });
+      } else {
+        await api.post("/auth/reset-password", {
+          email: normTarget,
+          code: normCode,
+          newPassword,
         });
       }
 
-      setSuccess("کد با موفقیت تأیید شد. در حال انتقال...");
-      showToast({ type: "success", title: "تأیید موفق" });
+      setSuccess(type === "password_reset"
+        ? "رمز عبور با موفقیت تغییر کرد. در حال انتقال به ورود..."
+        : "کد با موفقیت تأیید شد. در حال انتقال...");
+      showToast({
+        type: "success",
+        title: type === "password_reset" ? "رمز عبور تغییر کرد" : "تأیید موفق",
+      });
       setTimeout(() => router.replace("/login"), 1100);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "تأیید کد ناموفق بود";
@@ -185,10 +210,17 @@ function VerifyOtpContent() {
     setError(""); setSuccess("");
 
     try {
-      const normTarget = type === "phone_verify" ? normalizePhoneNumber(target) : target.trim().toLowerCase();
-      await api.post("/auth/send-verification-otp", {
-        ...(type === "phone_verify" ? { phoneNumber: normTarget } : { email: normTarget }),
-      });
+      const isPhoneTarget = type === "phone_verify" || (type === "password_reset" && !target.includes("@"));
+      const normTarget = isPhoneTarget ? normalizePhoneNumber(target) : target.trim().toLowerCase();
+      if (type === "password_reset") {
+        await api.post("/auth/forgot-password", isPhoneTarget
+          ? { phoneNumber: normTarget }
+          : { email: normTarget });
+      } else {
+        await api.post("/auth/send-verification-otp", {
+          ...(type === "phone_verify" ? { phoneNumber: normTarget } : { email: normTarget }),
+        });
+      }
 
       showToast({ type: "success", title: "کد جدید ارسال شد" });
       setResendCooldown(RESEND_COOLDOWN);
@@ -204,6 +236,8 @@ function VerifyOtpContent() {
   const detectedTargetType = detectTargetVerificationType(target);
   const isPhone = type === "phone_verify" || (!target.includes("@") && type === "password_reset");
   const isComplete = code.length === OTP_LENGTH;
+  const isResetPasswordValid = type !== "password_reset" || passwordSchema.safeParse(newPassword).success;
+  const canSubmit = isComplete && Boolean(target.trim()) && isResetPasswordValid;
   const displayTarget = initialTarget || target;
   const formattedTarget = isPhone && displayTarget ? displayTarget.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3") : displayTarget;
   const deliveryLabel = isPhone ? "شماره موبایل" : "ایمیل";
@@ -251,6 +285,7 @@ function VerifyOtpContent() {
                   if (detectedTargetType && opt.value !== detectedTargetType && opt.value !== "password_reset") return;
                   setType(opt.value as OtpVerificationType);
                   setCode("");
+                  setNewPassword("");
                   setError("");
                   setTimeout(() => inputRefs.current[0]?.focus(), 50);
                 }}
@@ -283,7 +318,7 @@ function VerifyOtpContent() {
           </div>
 
           {/* 6 Professional Boxes */}
-          <div id="otp-container" className="flex justify-center gap-2 sm:gap-3" dir="ltr" role="group" aria-label="کد تأیید ۶ رقمی">
+          <div id="otp-container" className="flex justify-center gap-1.5 sm:gap-3" dir="ltr" role="group" aria-label="کد تأیید ۶ رقمی">
             {Array.from({ length: OTP_LENGTH }).map((_, index) => {
               const digit = code[index] || "";
               const isFilled = !!digit;
@@ -300,7 +335,7 @@ function VerifyOtpContent() {
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onFocus={(e) => e.target.select()}
                   className={cn(
-                    "h-14 w-11 sm:h-16 sm:w-12 rounded-2xl border-2 text-center text-2xl font-bold tracking-[2px] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2",
+                    "h-12 w-9 sm:h-16 sm:w-12 rounded-2xl border-2 text-center text-2xl font-bold tracking-[2px] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2",
                     error ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-red-200"
                     : isFilled ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-inner"
                     : "border-slate-200 bg-white hover:border-slate-300 focus:border-emerald-500 focus:ring-emerald-200"
@@ -312,6 +347,25 @@ function VerifyOtpContent() {
           </div>
           <p className="mt-3 text-center text-[13px] text-slate-400">{otpHint}</p>
         </div>
+
+        {type === "password_reset" ? (
+          <div>
+            <label htmlFor="reset-new-password" className="mb-2 block text-sm font-semibold text-slate-700">
+              رمز عبور جدید
+            </label>
+            <Input
+              id="reset-new-password"
+              name="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              autoComplete="new-password"
+              placeholder="حداقل ۸ کاراکتر با حروف، عدد و کاراکتر ویژه"
+              disabled={loading}
+              aria-required="true"
+            />
+          </div>
+        ) : null}
 
         {/* Feedback */}
         <AnimatePresence>
@@ -332,16 +386,16 @@ function VerifyOtpContent() {
         <button
           type="button"
           onClick={() => void submitOtp()}
-          disabled={loading || !isComplete || !target.trim()}
+          disabled={loading || !canSubmit}
           className={cn(
             "group flex h-12 w-full items-center justify-center gap-2 rounded-2xl font-bold transition-all active:scale-[0.985]",
-            isComplete ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700" : "bg-slate-200 text-slate-400 cursor-not-allowed"
+            canSubmit ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700" : "bg-slate-200 text-slate-400 cursor-not-allowed"
           )}
         >
           {loading ? (
-            <><Loader2 className="h-4 w-4 animate-spin" /> در حال بررسی کد...</>
+            <><Loader2 className="h-4 w-4 animate-spin" /> {type === "password_reset" ? "در حال تغییر رمز..." : "در حال بررسی کد..."}</>
           ) : (
-            <>تأیید و ادامه <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-0.5" /></>
+            <>{type === "password_reset" ? "تغییر رمز عبور" : "تأیید و ادامه"} <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-0.5" /></>
           )}
         </button>
 

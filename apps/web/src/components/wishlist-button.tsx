@@ -25,7 +25,8 @@ export function WishlistButton({
   const { showToast } = useToast();
 
   const { data: isInWishlistData, isLoading: isChecking } = useIsInWishlist(
-    productId
+    productId,
+    Boolean(user),
   );
   const toggleMutation = useToggleWishlist();
 

@@ -8,6 +8,10 @@ import { Order, OrderDocument } from '../schemas/order.schema';
 
 export type OrderListResult = PaginatedResult<Order>;
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 @Injectable()
 export class OrdersRepository {
   constructor(
@@ -140,11 +144,25 @@ export class OrdersRepository {
     page: number,
     limit: number,
     status?: OrderStatus,
+    search?: string,
   ): Promise<OrderListResult> {
     const skip = (page - 1) * limit;
     const filter: Record<string, unknown> = {};
     if (status) {
       filter.status = status;
+    }
+    if (search) {
+      if (isValidObjectId(search)) {
+        filter._id = search;
+      } else {
+        filter.$expr = {
+          $regexMatch: {
+            input: { $toString: "$_id" },
+            regex: escapeRegex(search),
+            options: "i",
+          },
+        };
+      }
     }
     const [items, total] = await Promise.all([
       this.orderModel

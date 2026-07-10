@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 
 const FOCUSABLE_SELECTOR = [
   "a[href]",
@@ -9,14 +9,16 @@ const FOCUSABLE_SELECTOR = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
-// Accessible behavior shared by the app's modal overlays:
-// - closes on the Escape key
-// - traps Tab navigation inside the dialog
+// Accessible behavior shared by the app's dialog and drawer overlays:
+// - closes on Escape
+// - traps Tab navigation inside the owned dialog element
 // - moves focus into the dialog and restores previous focus on close
 // - locks body scroll while open and restores the previous overflow on close
-// Only `open` is a dependency so the listener and scroll lock are not torn down
-// on every parent re-render; the latest close handler is read through a ref.
-export function useModalA11y(open: boolean, onClose: () => void): void {
+export function useModalA11y(
+  open: boolean,
+  onClose: () => void,
+  dialogRef: RefObject<HTMLElement | null>,
+): void {
   const onCloseRef = useRef(onClose);
 
   useEffect(() => {
@@ -28,15 +30,16 @@ export function useModalA11y(open: boolean, onClose: () => void): void {
 
     const previousOverflow = document.body.style.overflow;
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    const dialog = document.querySelector<HTMLElement>('[role="dialog"][aria-modal="true"]');
+    const dialog = dialogRef.current;
 
     function focusFirstElement(): void {
       const firstFocusable = dialog?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-      (firstFocusable ?? dialog)?.focus?.();
+      (firstFocusable ?? dialog)?.focus();
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        event.preventDefault();
         onCloseRef.current();
         return;
       }
@@ -64,12 +67,13 @@ export function useModalA11y(open: boolean, onClose: () => void): void {
 
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", handleKeyDown);
-    window.setTimeout(focusFirstElement, 0);
+    const focusTimeout = window.setTimeout(focusFirstElement, 0);
 
     return () => {
+      window.clearTimeout(focusTimeout);
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus?.();
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
     };
-  }, [open]);
+  }, [dialogRef, open]);
 }

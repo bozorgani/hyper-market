@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
+import "./leaflet.css";
 import { Providers } from "@/providers";
+import { serializeJsonLd } from "@/lib/structured-data";
 
 const vazirmatn = Vazirmatn({
   subsets: ["arabic", "latin"],
@@ -57,18 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     name: "هایپرمارکت",
     alternateName: "HyperMarket",
     url: siteUrl,
-    logo: `${siteUrl}/logo.png`,
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+98-21-12345678",
-      contactType: "customer service",
-      areaServed: "IR",
-      availableLanguage: ["Persian"],
-    },
-    sameAs: [
-      "https://instagram.com/hypermarket",
-      "https://twitter.com/hypermarket",
-    ],
+    logo: `${siteUrl}/og-image.jpg`,
   };
 
   const websiteLd = {
@@ -113,13 +104,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           type="application/ld+json"
           nonce={nonce}
           suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationLd) }}
         />
         <script
           type="application/ld+json"
           nonce={nonce}
           suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteLd) }}
         />
         <Providers>
           {children}

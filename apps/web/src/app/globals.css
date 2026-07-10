@@ -282,6 +282,17 @@ tr:hover td {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
 }
 
+/* Reserve the fixed mobile bottom navigation space for main content. */
+.pb-main-nav {
+  padding-bottom: calc(4rem + max(env(safe-area-inset-bottom, 0px), 14px));
+}
+
+@media (min-width: 768px) {
+  .pb-main-nav {
+    padding-bottom: 0;
+  }
+}
+
 /* Shake animation for OTP error feedback */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }

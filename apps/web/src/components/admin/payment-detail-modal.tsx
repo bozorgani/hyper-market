@@ -3,9 +3,8 @@
 import { X } from "lucide-react";
 import { PaymentStatusBadge } from "@/components/order/status-badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Dialog } from "@/components/ui/dialog";
 import { useAdminPayment } from "@/features/admin/admin-api";
-import { useModalA11y } from "@/hooks/use-modal-a11y";
 import { formatPrice, translatePaymentMethod } from "@/lib/utils";
 
 function PaymentInfoRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
@@ -27,25 +26,15 @@ export function PaymentDetailModal({
   onClose: () => void;
 }) {
   const payment = useAdminPayment(orderId ?? "");
-  useModalA11y(open, onClose);
-
-  if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-sm"
-      onClick={onClose}
-      role="presentation"
-      aria-hidden={!open}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      titleId="payment-detail-title"
+      descriptionId="payment-detail-description"
+      className="max-w-2xl"
     >
-      <Card
-        className="w-full max-w-2xl p-6 text-right shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="payment-detail-title"
-        aria-describedby="payment-detail-description"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex items-start justify-between gap-4">
           <button
             type="button"
@@ -88,7 +77,6 @@ export function PaymentDetailModal({
         <div className="mt-6 flex justify-end">
           <Button type="button" variant="outline" onClick={onClose}>بستن</Button>
         </div>
-      </Card>
-    </div>
+    </Dialog>
   );
 }

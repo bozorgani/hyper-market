@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect } from "react";
+import { LinkButton } from "@/components/ui/link-button";
 import { ProductGallery } from "@/components/product-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,15 @@ import { formatNumber, formatPrice } from "@/lib/utils";
 import { ProductReviews } from "@/components/reviews/product-reviews";
 import type { Product } from "@/types/domain";
 
-export function ProductDetailPageClient({ productId, initialProduct }: { productId: string; initialProduct?: Product }) {
+export function ProductDetailPageClient({
+  productId,
+  initialProduct,
+  reviewOrderId,
+}: {
+  productId: string;
+  initialProduct?: Product;
+  reviewOrderId?: string;
+}) {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const product = useProduct(productId, initialProduct);
@@ -84,9 +92,9 @@ export function ProductDetailPageClient({ productId, initialProduct }: { product
           <p className="mt-3 text-sm leading-7">
             {product.error instanceof Error ? product.error.message : "دریافت جزئیات محصول با خطا مواجه شد."}
           </p>
-          <Link href="/products" className="mt-6 inline-flex">
-            <Button type="button">بازگشت به لیست محصولات</Button>
-          </Link>
+          <LinkButton href="/products" className="mt-6">
+            بازگشت به لیست محصولات
+          </LinkButton>
         </Card>
       </main>
     );
@@ -152,15 +160,13 @@ export function ProductDetailPageClient({ productId, initialProduct }: { product
           <Button type="button" disabled={item.stock < 1 || addToCart.isPending} onClick={handleAddToCart} className="w-full sm:w-auto">
             {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد خرید"}
           </Button>
-          <Link href="/cart" className="w-full sm:w-auto">
-            <Button type="button" variant="outline" className="w-full">مشاهده سبد خرید</Button>
-          </Link>
+          <LinkButton href="/cart" variant="outline" className="w-full sm:w-auto">مشاهده سبد خرید</LinkButton>
         </div>
       </section>
     </main>
     {/* Product Reviews Section */}
     <div className="mx-auto max-w-6xl px-4 pb-12">
-      <ProductReviews productId={item._id} />
+      <ProductReviews productId={item._id} orderId={reviewOrderId} />
     </div>
     </>
   );

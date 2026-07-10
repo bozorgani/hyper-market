@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
+import { LinkButton } from "@/components/ui/link-button";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { OrderCard } from "@/components/order-card";
 import { Button } from "@/components/ui/button";
@@ -99,9 +99,7 @@ export function OrdersPageClient() {
                   <Button type="button" variant="outline" onClick={() => orders.refetch()}>
                     تلاش مجدد
                   </Button>
-                  <Link href="/products">
-                    <Button type="button">مشاهده محصولات</Button>
-                  </Link>
+                  <LinkButton href="/products">مشاهده محصولات</LinkButton>
                 </>
               }
             />
@@ -135,9 +133,7 @@ export function OrdersPageClient() {
                   سفارش #{latestOrder._id.slice(-8)} با مبلغ {formatNumber(latestOrder.totalPrice)} تومان ثبت شده است.
                 </p>
               </div>
-              <Link href={`/order/success?orderId=${latestOrder._id}`}>
-                <Button type="button">مشاهده وضعیت</Button>
-              </Link>
+              <LinkButton href={`/order/success?orderId=${latestOrder._id}`}>مشاهده وضعیت</LinkButton>
             </div>
           </Card>
         ) : null}
@@ -159,9 +155,7 @@ export function OrdersPageClient() {
                 title="هنوز سفارشی ثبت نکرده‌اید"
                 description="بعد از تکمیل خرید، وضعیت سفارش‌ها و پرداخت‌ها را از همین صفحه دنبال می‌کنید."
                 actions={
-                  <Link href="/products">
-                    <Button type="button">شروع خرید</Button>
-                  </Link>
+                  <LinkButton href="/products">شروع خرید</LinkButton>
                 }
               />
             ) : null}

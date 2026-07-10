@@ -8,6 +8,7 @@ import {
   Clock, Percent, Star 
 } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
+import { LinkButton } from "@/components/ui/link-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts, useCategories } from "@/hooks/use-products";
 import { useAuthStore } from "@/store/auth-store";
@@ -72,7 +73,7 @@ export function HomePageClient({
     : uniqueItems.slice(0, 4); // fallback
 
   return (
-    <main className="pb-20 lg:pb-10 bg-slate-50">
+    <main className="pb-0 lg:pb-10 bg-slate-50">
       {/* ==================== HERO ==================== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-blue-700 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] bg-[length:4px_4px]" />
@@ -93,17 +94,13 @@ export function HomePageClient({
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/products">
-                <button className="flex items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-lg font-bold text-emerald-700 shadow-xl transition hover:bg-emerald-50 active:scale-[0.985]">
-                  شروع خرید
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-              </Link>
-              <Link href="#categories">
-                <button className="flex items-center justify-center gap-2 rounded-2xl border border-white/40 bg-white/10 px-6 py-4 text-lg font-semibold backdrop-blur transition hover:bg-white/20">
-                  مشاهده دسته‌بندی‌ها
-                </button>
-              </Link>
+              <LinkButton href="/products" className="rounded-2xl bg-white px-8 py-4 text-lg font-bold text-emerald-700 shadow-xl hover:bg-emerald-50">
+                شروع خرید
+                <ArrowLeft className="h-5 w-5" />
+              </LinkButton>
+              <LinkButton href="#categories" variant="ghost" className="rounded-2xl border border-white/40 bg-white/10 px-6 py-4 text-lg font-semibold text-white backdrop-blur hover:bg-white/20">
+                مشاهده دسته‌بندی‌ها
+              </LinkButton>
             </div>
 
             <div className="mt-8 flex items-center gap-6 text-sm text-white/80">
@@ -279,11 +276,9 @@ export function HomePageClient({
             <p className="mt-3 text-slate-300">
               {user ? "سفارش‌های خود را دنبال کنید" : "همین حالا ثبت‌نام کنید و از تخفیف‌های اختصاصی بهره‌مند شوید"}
             </p>
-            <Link href={user ? "/orders" : "/register"}>
-              <button className="mt-6 rounded-2xl bg-emerald-500 px-8 py-3.5 font-bold text-white shadow-lg transition hover:bg-emerald-600">
-                {user ? "مشاهده سفارش‌ها" : "ثبت‌نام رایگان"}
-              </button>
-            </Link>
+            <LinkButton href={user ? "/orders" : "/register"} className="mt-6 rounded-2xl bg-emerald-500 px-8 py-3.5 font-bold text-white shadow-lg hover:bg-emerald-600">
+              {user ? "مشاهده سفارش‌ها" : "ثبت‌نام رایگان"}
+            </LinkButton>
           </div>
         </div>
       </section>

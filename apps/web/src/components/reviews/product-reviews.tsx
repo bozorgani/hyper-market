@@ -37,6 +37,20 @@ interface ReviewStats {
   ratingDistribution: Record<number, number>;
 }
 
+interface ProductReviewsResponse {
+  reviews: Review[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  } | null;
+  statistics: ReviewStats;
+  reviewsApiAvailable?: boolean;
+}
+
 interface ProductReviewsProps {
   productId: string;
   orderId?: string; // For review form
@@ -60,7 +74,7 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
   const {
     data: reviewsData,
     isLoading: isLoadingReviews,
-  } = useQuery({
+  } = useQuery<ProductReviewsResponse>({
     queryKey: ["reviews", productId, ratingFilter, sortBy, sortOrder, page],
     queryFn: async () => {
       try {
@@ -77,22 +91,12 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
         return response.data;
       } catch {
         // Reviews API not available — signal with reviewsApiAvailable: false
-        return { reviews: [], pagination: null, reviewsApiAvailable: false };
-      }
-    },
-    retry: false,
-  });
-
-  // Fetch stats — silent catch for 404
-  const { data: stats } = useQuery<ReviewStats>({
-    queryKey: ["review-stats", productId],
-    queryFn: async () => {
-      try {
-        const response = await api.get(`/reviews/product/${productId}/stats`);
-        return response.data;
-      } catch {
-        // Reviews API not available — return empty stats silently
-        return { averageRating: 0, totalReviews: 0, ratingDistribution: {} };
+        return {
+          reviews: [],
+          pagination: null,
+          statistics: { averageRating: 0, totalReviews: 0, ratingDistribution: {} },
+          reviewsApiAvailable: false,
+        };
       }
     },
     retry: false,
@@ -125,13 +129,13 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
   });
 
   const reviews: Review[] = reviewsData?.reviews || [];
+  const stats = reviewsData?.statistics;
   const pagination = reviewsData?.pagination;
   const isReviewsUnavailable = reviewsData?.reviewsApiAvailable === false;
 
   const handleReviewSuccess = () => {
     setShowReviewForm(false);
     queryClient.invalidateQueries({ queryKey: ["reviews", productId] });
-    queryClient.invalidateQueries({ queryKey: ["review-stats", productId] });
   };
 
   // If reviews API is not available, hide the entire section
@@ -330,9 +334,9 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
               <ReviewCard
                 key={review._id}
                 review={review}
-                onHelpful={(reviewId, isHelpful) =>
-                  helpfulMutation.mutate({ reviewId, isHelpful })
-                }
+                onHelpful={user
+                  ? (reviewId, isHelpful) => helpfulMutation.mutate({ reviewId, isHelpful })
+                  : undefined}
               />
             ))}
           </div>

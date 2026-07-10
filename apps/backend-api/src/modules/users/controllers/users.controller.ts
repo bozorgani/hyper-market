@@ -24,13 +24,15 @@ export class UsersController {
     @Query('limit') limit?: string,
     @Query('role') role?: string,
     @Query('accountStatus') accountStatus?: string,
+    @Query('search') search?: string,
   ) {
-    if (page || limit) {
+    if (page || limit || search) {
       return this.usersService.listUsersPaginated(
         this.toPositiveInteger(page, 1),
         this.toPositiveInteger(limit, 20),
         role,
         accountStatus,
+        search,
       );
     }
     return this.usersService.listUsers();

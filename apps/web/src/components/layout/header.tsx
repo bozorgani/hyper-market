@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { DesktopSearch } from "./desktop-search";
 import { MobileSearchOverlay } from "./mobile-search-overlay";
 import { MobileMenu } from "./mobile-menu";
+import { LinkButton } from "@/components/ui/link-button";
 
 export function Header() {
   const router = useRouter();
@@ -113,9 +114,7 @@ export function Header() {
                 <UserRound className="h-5 w-5" />
               </Link>
             ) : (
-              <Link href="/login">
-                <button className="flex h-9 items-center gap-1.5 rounded-2xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700">ورود / ثبت‌نام</button>
-              </Link>
+              <LinkButton href="/login" size="sm" className="rounded-2xl text-xs">ورود / ثبت‌نام</LinkButton>
             )}
 
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden ml-1 flex h-10 w-10 items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-50" aria-label="منوی اصلی">

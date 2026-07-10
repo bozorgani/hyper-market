@@ -1,26 +1,46 @@
 /**
- * Converts a product image filename to a full URL
- * 
+ * Converts a product image filename to a full URL.
+ *
  * @param fileName - The image filename (e.g., "product-123.jpg")
- * @returns Full URL to the image (e.g., "http://localhost:3001/api/v1/products/images/product-123.jpg")
+ * @returns Full URL to the image
  */
 export function getProductImageUrl(fileName: string): string {
-  // If it's already a full URL, return as-is
-  if (fileName.startsWith('http://') || fileName.startsWith('https://')) {
+  if (fileName.startsWith("http://") || fileName.startsWith("https://")) {
     return fileName;
   }
-  
-  // Build the full URL
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1';
-  return `${apiBaseUrl}/products/images/${fileName}`;
+
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001/api/v1";
+  return `${apiBaseUrl}/products/images/${encodeURIComponent(fileName)}`;
 }
 
 /**
- * Converts an array of product image filenames to full URLs
- * 
- * @param fileNames - Array of image filenames
- * @returns Array of full URLs
+ * Returns whether an image source is covered by the configured Next Image
+ * remote patterns. Unknown admin/CDN URLs remain explicitly unoptimized
+ * instead of disabling optimization for the whole application.
  */
+export function isKnownOptimizedImageSource(value: string): boolean {
+  if (value.startsWith("/")) return true;
+
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+
+    const configuredApi = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (configuredApi && new URL(configuredApi).origin === url.origin) return true;
+
+    return (
+      url.hostname === "localhost" ||
+      url.hostname === "hypermarket.ir" ||
+      url.hostname.endsWith(".hypermarket.ir") ||
+      url.hostname === "placehold.co" ||
+      url.hostname === "up.railway.app" ||
+      url.hostname.endsWith(".up.railway.app")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function getProductImageUrls(fileNames: string[]): string[] {
   return fileNames.map(getProductImageUrl);
 }

@@ -13,6 +13,8 @@ const LEGACY_KEYS = [
   "hyper_market_user",
 ];
 
+let hydrationPromise: Promise<void> | null = null;
+
 type LoginInput = {
   email?: string;
   phoneNumber?: string;
@@ -68,17 +70,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setUser: (user) => set({ user }),
 
   hydrate: async () => {
-    // Prevent double hydrate in React StrictMode
     if (get().hydrated) return;
+    if (hydrationPromise) return hydrationPromise;
 
-    clearLegacyAuthStorage();
+    hydrationPromise = (async () => {
+      clearLegacyAuthStorage();
 
-    try {
-      const user = await fetchCurrentUser();
-      set({ user, hydrated: true });
-    } catch {
-      set({ user: null, hydrated: true });
-    }
+      try {
+        const user = await fetchCurrentUser();
+        set({ user, hydrated: true });
+      } catch {
+        set({ user: null, hydrated: true });
+      }
+    })().finally(() => {
+      hydrationPromise = null;
+    });
+
+    return hydrationPromise;
   },
 
   login: async (input: LoginInput) => {

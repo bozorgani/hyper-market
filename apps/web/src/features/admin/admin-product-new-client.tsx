@@ -14,6 +14,7 @@ export function AdminProductNewClient() {
       <h1 className="text-2xl font-black">ایجاد محصول جدید</h1>
       <ProductForm
         loading={createProduct.isPending}
+        error={createProduct.error instanceof Error ? createProduct.error.message : undefined}
         onSubmit={(input) => createProduct.mutate(input, { onSuccess: () => router.push("/admin/products") })}
       />
     </main>

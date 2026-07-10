@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { LinkButton } from "@/components/ui/link-button";
 import { Button } from "@/components/ui/button";
 import { cn, formatNumber, formatPrice } from "@/lib/utils";
 import type { CouponValidationResult } from "@/hooks/use-coupons";
@@ -173,11 +173,15 @@ export function OrderSummaryCard({
             شروع تلاش جدید
           </Button>
         ) : null}
-        <Link href="/cart" aria-disabled={isSubmitting} className={isSubmitting ? "pointer-events-none" : undefined}>
-          <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
-            بازگشت به سبد خرید
-          </Button>
-        </Link>
+        <LinkButton
+          href="/cart"
+          variant="outline"
+          aria-disabled={isSubmitting}
+          tabIndex={isSubmitting ? -1 : undefined}
+          className={cn("w-full", isSubmitting && "pointer-events-none opacity-60")}
+        >
+          بازگشت به سبد خرید
+        </LinkButton>
       </div>
     </Card>
   );

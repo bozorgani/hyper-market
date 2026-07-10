@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { useModalA11y } from "@/hooks/use-modal-a11y";
+import { Dialog } from "@/components/ui/dialog";
 import { getProductImageUrl } from "@/lib/image-utils";
 
 export function ProductGallery({ images, productName }: { images?: string[]; productName: string }) {
@@ -14,9 +14,6 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
 
   const openLightbox = () => setIsLightboxOpen(true);
   const closeLightbox = () => setIsLightboxOpen(false);
-
-  // A11y: focus trap, Esc close, return focus – Issue #22
-  useModalA11y(isLightboxOpen, closeLightbox);
 
   const goTo = (idx: number) => {
     setSelectedIndex((idx + safeImages.length) % safeImages.length);
@@ -106,28 +103,29 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
       {/* Lightbox Modal */}
       <AnimatePresence>
         {isLightboxOpen && (
-          <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4"
-            onClick={closeLightbox}
-            role="dialog"
-            aria-modal="true"
-            aria-label="گالری تصاویر محصول"
+          <Dialog
+            open={isLightboxOpen}
+            onClose={closeLightbox}
+            ariaLabel="گالری تصاویر محصول"
+            containerClassName="z-[100] bg-black/95 p-4"
+            className="relative w-full max-w-5xl rounded-none bg-transparent p-0 shadow-none"
           >
-            <button 
-              onClick={closeLightbox} 
-              className="absolute top-4 right-4 z-10 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+            <button
+              type="button"
+              onClick={closeLightbox}
+              className="absolute right-0 top-0 z-10 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
               aria-label="بستن گالری"
             >
-              <X className="h-6 w-6" />
+              <X className="h-6 w-6" aria-hidden="true" />
             </button>
 
-            <div className="relative max-h-[90vh] max-w-5xl w-full" onClick={e => e.stopPropagation()}>
-              <div className="relative aspect-[4/3] md:aspect-[16/9] overflow-hidden rounded-3xl bg-black">
-                <Image 
-                  src={selectedImage} 
-                  alt={productName} 
-                  fill 
-                  className="object-contain" 
+            <div className="relative max-h-[90vh] w-full pt-2">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-black md:aspect-[16/9]">
+                <Image
+                  src={selectedImage}
+                  alt={productName}
+                  fill
+                  className="object-contain"
                   sizes="100vw"
                 />
               </div>
@@ -136,16 +134,17 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
                 <div className="mt-4 flex items-center justify-center gap-2">
                   {safeImages.map((_, idx) => (
                     <button
+                      type="button"
                       key={idx}
                       onClick={() => setSelectedIndex(idx)}
-                      className={`h-1.5 rounded-full transition-all ${idx === selectedIndex ? 'bg-white w-6' : 'bg-white/40 w-2 hover:bg-white/70'}`}
+                      className={`h-1.5 rounded-full transition-all ${idx === selectedIndex ? "w-6 bg-white" : "w-2 bg-white/40 hover:bg-white/70"}`}
                       aria-label={`رفتن به تصویر ${idx + 1}`}
                     />
                   ))}
                 </div>
               )}
             </div>
-          </div>
+          </Dialog>
         )}
       </AnimatePresence>
     </div>

@@ -51,7 +51,7 @@ export function ProfilePageClient() {
   const { showToast } = useToast();
   const isCustomer = isCustomerRole(user?.role);
   const ordersQuery = useMyOrders(Boolean(hydrated && isCustomer));
-  const wishlistCountQuery = useWishlistCount();
+  const wishlistCountQuery = useWishlistCount(Boolean(hydrated && user));
   const recentOrders = useMemo(
     () => (ordersQuery.data ?? []).slice(0, 3),
     [ordersQuery.data],
