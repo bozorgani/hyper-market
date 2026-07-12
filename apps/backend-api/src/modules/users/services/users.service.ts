@@ -43,7 +43,10 @@ export class UsersService {
   ): Promise<UserListResult> {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.min(Math.max(limit, 1), 100);
-    return this.usersRepository.findAllPaginated(safePage, safeLimit, role, accountStatus, search?.trim());
+    const normalizedSearch = search?.trim();
+    return normalizedSearch
+      ? this.usersRepository.findAllPaginated(safePage, safeLimit, role, accountStatus, normalizedSearch)
+      : this.usersRepository.findAllPaginated(safePage, safeLimit, role, accountStatus);
   }
 
   async getUserByEmail(email: string): Promise<User | null> {

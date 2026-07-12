@@ -300,7 +300,10 @@ export class OrdersService {
   ): Promise<OrderListResult> {
     const safePage = Math.max(page, 1);
     const safeLimit = Math.min(Math.max(limit, 1), 100);
-    return this.ordersRepository.findAllPaginated(safePage, safeLimit, status, search?.trim());
+    const normalizedSearch = search?.trim();
+    return normalizedSearch
+      ? this.ordersRepository.findAllPaginated(safePage, safeLimit, status, normalizedSearch)
+      : this.ordersRepository.findAllPaginated(safePage, safeLimit, status);
   }
 
   async updateStatus(
