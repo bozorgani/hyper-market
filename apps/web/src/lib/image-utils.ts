@@ -40,7 +40,3 @@ export function isKnownOptimizedImageSource(value: string): boolean {
     return false;
   }
 }
-
-export function getProductImageUrls(fileNames: string[]): string[] {
-  return fileNames.map(getProductImageUrl);
-}

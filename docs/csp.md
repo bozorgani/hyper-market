@@ -4,7 +4,7 @@ Frontend security headers are configured in:
 
 ```text
 apps/web/next.config.ts
-apps/web/src/middleware.ts
+apps/web/src/proxy.ts
 ```
 
 ## Current mode

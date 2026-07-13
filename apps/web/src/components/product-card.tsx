@@ -12,8 +12,6 @@ import { getProductImageUrl } from "@/lib/image-utils";
 import type { Product } from "@/types/domain";
 // i18n – Issue #24
 import { t, tf } from "@/i18n";
-// design tokens – Issue #25 – CSS variables used in JSX, TS tokens available via:
-// import { card as cardTokens, tw } from "@/lib/design-tokens";
 
 export function ProductCard({
   product,

@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-  // CSP nonce from middleware – Issue #17
+  // CSP nonce from proxy – Issue #17
   const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   const organizationLd = {

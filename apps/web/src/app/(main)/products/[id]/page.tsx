@@ -126,7 +126,7 @@ export default async function ProductDetailPage({ params, searchParams }: Produc
     ],
   };
 
-  // CSP nonce from middleware – Issue #17
+  // CSP nonce from proxy – Issue #17
   const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (

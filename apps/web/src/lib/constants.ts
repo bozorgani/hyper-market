@@ -1,7 +1,7 @@
 /**
  * Shared application constants — single source of truth.
  *
- * Previously scattered across middleware.ts, api.ts, auth-store.ts,
+ * Previously scattered across proxy.ts, api.ts, auth-store.ts,
  * backend.ts, analytics.ts, etc. Centralizing here prevents:
  * - Duplicate string definitions
  * - Misspellings that cause silent failures

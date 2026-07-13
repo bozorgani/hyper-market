@@ -5,26 +5,6 @@ import { cn } from "@/lib/utils";
 // existing admin imports working without churn.
 export { OrderStatusBadge, PaymentStatusBadge } from "@/components/order/status-badge";
 
-const orderStyles: Record<string, string> = {
-  pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50",
-  paid: "bg-green-50 text-green-700 ring-1 ring-green-200/50",
-  processing: "bg-blue-50 text-blue-700 ring-1 ring-blue-200/50",
-  shipped: "bg-violet-50 text-violet-700 ring-1 ring-violet-200/50",
-  delivered: "bg-green-50 text-green-700 ring-1 ring-green-200/50",
-  cancelled: "bg-red-50 text-red-600 ring-1 ring-red-200/50",
-};
-
-
-// Wrap with enhanced styles
-export function EnhancedOrderStatusBadge({ status }: { status: string }) {
-  return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold", orderStyles[status] ?? "bg-slate-100 text-slate-600")}>
-      <span className={cn("h-1.5 w-1.5 rounded-full", status === "pending" ? "bg-amber-500" : status === "paid" ? "bg-emerald-500" : status === "cancelled" ? "bg-red-500" : status === "shipped" ? "bg-violet-500" : "bg-slate-400")} />
-      <span className="hidden sm:inline">{status}</span>
-    </span>
-  );
-}
-
 export function ProductStatusBadge({ isActive }: { isActive?: boolean }) {
   if (typeof isActive !== "boolean") {
     return (

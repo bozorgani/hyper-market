@@ -59,7 +59,7 @@ hyper-market/
             ├── providers.tsx     # TanStack Query + Toast provider
             ├── services/api.ts   # Axios instance: withCredentials, CSRF header, 401 refresh-queue, Persian error map
             ├── store/auth-store.ts # Zustand auth store (sessionStorage user + localStorage deviceId)
-            ├── middleware.ts     # edge middleware: protects /admin by role via /auth/me
+            ├── proxy.ts          # request proxy: protects /admin by role via JWT claim
             └── types/domain.ts
 ```
 
@@ -144,7 +144,7 @@ Cross‑cutting services are `@Global()`:
 - App Router, Persian/RTL (`<html lang="fa" dir="rtl">`, Tailwind v4 `@import "tailwindcss"`, Vazirmatn font).
 - **Axios `api.ts`:** `withCredentials`, CSRF header on unsafe methods from cookie, **401 refresh queue** (single in‑flight refresh + failed‑queue), Persian error mapping, `idempotency-key` header support.
 - **Auth:** Zustand `auth-store` (re‑hydrates via `/auth/me`, stores user in sessionStorage, deviceId in localStorage).
-- **Server guard:** `middleware.ts` protects `/admin/*` by calling `/auth/me` and checking role.
+- **Server guard:** `proxy.ts` protects `/admin/*` with a fast JWT role-claim check; backend RBAC remains authoritative.
 - **Data fetching:** TanStack Query hooks per domain; analytics events throttled client‑side and POSTed to `/analytics/event`.
 - **shadcn/ui:** implemented as local `components/ui/*` (button, card, input, toast, dialog, skeleton, …) — consistent with "shadcn/ui" requirement without the CLI dependency.
 
@@ -196,7 +196,7 @@ Search performed    ──emit(SEARCH_PERFORMED)──▶ AnalyticsSubscriber
 ### 3.3 Request lifecycle (end‑to‑end, e.g. checkout)
 
 ```text
-Browser ─▶ Next middleware (role guard for /admin)
+Browser ─▶ Next proxy (role guard for /admin)
   └▶ Next page/hook ─▶ Axios(api.ts) [+CSRF header, withCredentials]
       └▶ Nest: CSRF Middleware → ThrottlerGuard → JwtAuthGuard → RolesGuard → PermissionsGuard
           └▶ Controller → Service → (DatabaseTransactionService) → Repository → MongoDB
@@ -265,7 +265,7 @@ Browser ─▶ Next middleware (role guard for /admin)
 - Account lockout, bcrypt+pepper, audit logging that never blocks auth.
 - Repository pattern + transactional order/payment/cart with price snapshots & stock restore.
 - Global validation, helmet, CORS hardening, structured Winston logging, idempotent payments.
-- Clean frontend data layer (Axios + retry queue + TanStack Query + Zustand + role‑guarded middleware).
+- Clean frontend data layer (Axios + retry queue + TanStack Query + Zustand + role‑guarded proxy).
 
 ---
 

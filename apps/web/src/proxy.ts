@@ -2,16 +2,16 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Admin route protection middleware + CSP nonce hardening (Issue #17).
+ * Admin route protection proxy + CSP nonce hardening (Issue #17).
  *
  * Instead of making an API call to /auth/me on every admin page navigation
- * (which was slow and added unnecessary backend load), this middleware
+ * (which was slow and added unnecessary backend load), this proxy
  * reads the JWT access token from the cookie and extracts the role claim
  * via lightweight base64 decoding.
  *
  * Security notes:
  *   - The JWT is NOT verified here (signature check) — that happens on the
- *     backend via JwtStrategy. This middleware only provides a fast first
+ *     backend via JwtStrategy. This proxy only provides a fast first
  *     line of defense to redirect non-admin users early.
  *   - If the token is expired, tampered, or has a stale role, the backend
  *     will reject it on the next API call, and the client-side auth store
@@ -140,7 +140,7 @@ function getRoleFromCookie(request: NextRequest): string | null {
 
 /**
  * Generate a CSP nonce – cryptographically strong, base64.
- * Uses Web Crypto API available in Edge runtime.
+ * Uses Web Crypto API available in the Node.js runtime used by Next.js Proxy.
  */
 function generateNonce(): string {
   const array = new Uint8Array(16);
@@ -230,7 +230,7 @@ function buildCsp(nonce: string): string {
   return directives;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ---- CSP Nonce generation (applies to ALL routes matched) ----
@@ -246,7 +246,8 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
   requestHeaders.set('x-csp-nonce', nonce);
-  // For Next.js to forward nonce to its own inline scripts (best-effort)
+  // Next.js forwards request headers through its internal `x-middleware-request-*`
+  // mechanism even when the entrypoint uses the Proxy convention.
   requestHeaders.set('x-middleware-request-nonce', nonce);
 
   const isAdminPath = ADMIN_PATHS.some((path) => pathname.startsWith(path));

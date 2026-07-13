@@ -125,8 +125,3 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 }));
-
-// Optional: expose a selector-stable helper for components that previously
-// read accessToken / refreshToken (now always null) – keeps backward compat
-// during migration. Remove in next major.
-export const useAuthToken = () => null;

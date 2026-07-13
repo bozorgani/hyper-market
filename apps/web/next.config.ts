@@ -56,7 +56,7 @@ const securityHeaders = [
   ...(isProduction
     ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" }]
     : []),
-  // Content-Security-Policy is generated dynamically in middleware.ts with a per-request nonce.
+  // Content-Security-Policy is generated dynamically in proxy.ts with a per-request nonce.
 ];
 
 const nextConfig: NextConfig = {

@@ -63,14 +63,6 @@ export const shadow = {
   xl: "var(--shadow-xl)",
 } as const;
 
-export const zIndex = {
-  dropdown: "var(--z-dropdown)",
-  sticky: "var(--z-sticky)",
-  modalBackdrop: "var(--z-modal-backdrop)",
-  modal: "var(--z-modal)",
-  toast: "var(--z-toast)",
-} as const;
-
 /**
  * Tailwind class helpers – prefer these over arbitrary values
  */
