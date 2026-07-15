@@ -32,7 +32,9 @@ export function isKnownOptimizedImageSource(value: string): boolean {
       url.hostname === "localhost" ||
       url.hostname === "hypermarket.ir" ||
       url.hostname.endsWith(".hypermarket.ir") ||
-      url.hostname === "placehold.co" ||
+      // placehold.co currently returns SVG placeholders and is not reliably
+      // reachable from a self-hosted Docker server. Keep it unoptimized so
+      // Next's server-side image fetcher does not fail or reject SVG content.
       url.hostname === "up.railway.app" ||
       url.hostname.endsWith(".up.railway.app")
     );

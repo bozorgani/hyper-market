@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useAuthStore } from "@/store/auth-store";
 import { formatNumber, formatPrice } from "@/lib/utils";
-import { getProductImageUrl } from "@/lib/image-utils";
+import { getProductImageUrl, isKnownOptimizedImageSource } from "@/lib/image-utils";
 import { WishlistButton } from "@/components/wishlist-button";
 import type { Product } from "@/types/domain";
 // i18n – Issue #24
@@ -72,6 +72,7 @@ export function ProductCard({
           <Image
             src={getProductImageUrl(product.images[0])}
             alt={product.name}
+            unoptimized={!isKnownOptimizedImageSource(getProductImageUrl(product.images[0]))}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"

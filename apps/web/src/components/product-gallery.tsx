@@ -5,7 +5,7 @@ import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { AnimatePresence } from "@/components/ui/csp-motion";
 import { Dialog } from "@/components/ui/dialog";
-import { getProductImageUrl } from "@/lib/image-utils";
+import { getProductImageUrl, isKnownOptimizedImageSource } from "@/lib/image-utils";
 
 export function ProductGallery({ images, productName }: { images?: string[]; productName: string }) {
   const safeImages = (images ?? []).filter(Boolean);
@@ -40,6 +40,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
           src={selectedImage}
           alt={productName}
           fill
+          unoptimized={!isKnownOptimizedImageSource(selectedImage)}
           priority
           sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-cover transition-all duration-500 group-hover:scale-[1.035]"
@@ -92,6 +93,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
                 src={getProductImageUrl(image)}
                 alt={`${productName} - ${index + 1}`}
                 fill
+                unoptimized={!isKnownOptimizedImageSource(getProductImageUrl(image))}
                 sizes="20vw"
                 className="object-cover"
               />
@@ -125,6 +127,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
                   src={selectedImage}
                   alt={productName}
                   fill
+                  unoptimized={!isKnownOptimizedImageSource(selectedImage)}
                   className="object-contain"
                   sizes="100vw"
                 />
