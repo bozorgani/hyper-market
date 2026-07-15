@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { useCart, useClearCart, useRemoveFromCart, useUpdateCartQuantity } from "@/hooks/use-cart";
 import { formatNumber, formatPrice } from "@/lib/utils";
-import { getProductImageUrl } from "@/lib/image-utils";
+import { getProductImageUrl, isKnownOptimizedImageSource } from "@/lib/image-utils";
 import { isCustomerRole } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -165,7 +165,14 @@ export function CartPageClient() {
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 text-2xl">
                       {item.image ? (
-                        <Image src={getProductImageUrl(item.image)} alt={item.name} fill sizes="64px" className="object-cover" />
+                        <Image
+                          src={getProductImageUrl(item.image)}
+                          alt={item.name}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                          unoptimized={!isKnownOptimizedImageSource(getProductImageUrl(item.image))}
+                        />
                       ) : (
                         "🛒"
                       )}

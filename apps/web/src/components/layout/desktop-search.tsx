@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useSearchSuggest } from "@/hooks/use-search";
 import { formatPrice } from "@/lib/utils";
-import { getProductImageUrl } from "@/lib/image-utils";
+import { getProductImageUrl, isKnownOptimizedImageSource } from "@/lib/image-utils";
 
 export function DesktopSearch() {
   const router = useRouter();
@@ -123,6 +123,7 @@ export function DesktopSearch() {
                     src={getProductImageUrl(item.images[0])}
                     alt=""
                     width={36}
+                    unoptimized={!isKnownOptimizedImageSource(getProductImageUrl(item.images[0]))}
                     height={36}
                     className="h-full w-full object-cover"
                   />
