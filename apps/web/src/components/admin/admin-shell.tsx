@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/components/ui/csp-motion";
 import {
   Activity,
   BarChart3,
@@ -182,8 +182,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         {/* Collapse Toggle - Desktop */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute left-0 top-7 z-50 hidden h-7 w-7 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-400 transition hover:bg-slate-700 hover:text-white lg:flex"
-          style={{ left: collapsed ? "58px" : "250px" }}
+          className={cn(
+            "absolute top-7 z-50 hidden h-7 w-7 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-400 transition hover:bg-slate-700 hover:text-white lg:flex",
+            collapsed ? "left-[58px]" : "left-[250px]",
+          )}
         >
           <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
         </button>

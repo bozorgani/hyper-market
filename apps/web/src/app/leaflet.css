@@ -659,3 +659,36 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		print-color-adjust: exact;
 		}
 	}
+
+/* CSP-safe custom marker styles. Leaflet positions the marker itself through
+ * runtime CSSOM updates; these static styles replace the former inline HTML
+ * styles in the marker template. */
+.map-picker-marker {
+  position: relative;
+  width: 40px;
+  height: 52px;
+}
+
+.map-picker-marker__dot {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: #e11d48;
+  box-shadow: 0 0 6px rgb(225 29 72 / 50%);
+  transform: translate(-50%, -50%);
+}
+
+.map-picker-marker__shadow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 20px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 15%);
+  transform: translateX(-50%);
+}

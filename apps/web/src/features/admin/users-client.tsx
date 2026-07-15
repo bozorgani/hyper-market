@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/components/ui/csp-motion";
 import { Search, ShieldOff, ShieldCheck, RefreshCw, Users } from "lucide-react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { AccountStatusBadge } from "@/components/admin/admin-status-badge";

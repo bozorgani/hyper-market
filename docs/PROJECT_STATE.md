@@ -129,7 +129,7 @@ Module implementation matrix:
 | permissions | yes | 1 | 1 | 1 | 1 | 1 |
 | products | yes | 1 | 2 | 1 | 1 | 2 |
 | queue | yes | 0 | 1 | 0 | 0 | 0 |
-| reviews | no | 1 | 1 | 1 | 1 | 0 |
+| reviews | no | 1 | 2 | 1 | 2 | 0 |
 | search | yes | 1 | 2 | 0 | 0 | 0 |
 | shipping | yes | 1 | 1 | 0 | 0 | 1 |
 | users | yes | 1 | 1 | 1 | 1 | 0 |
@@ -267,6 +267,7 @@ POST   /reviews
 DELETE /reviews/:id
 PUT    /reviews/:id
 POST   /reviews/:id/helpful
+POST   /reviews/images/upload
 GET    /reviews/my-reviews
 GET    /reviews/product/:productId
 GET    /reviews/product/:productId/stats
@@ -329,7 +330,7 @@ GET    /health/ready    [Public()]
 ### apps/backend-api/src/infrastructure/observability/observability.controller.ts
 
 ```text
-GET    /metrics    [Public()]
+GET    /metrics    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 GET    /observability/dashboard    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 ```
 
@@ -347,6 +348,7 @@ GET    /orders/my    [Roles(UserRole.CUSTOMER)]
 
 ```text
 GET    /payments/:orderId
+GET    /payments/admin    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN), Permissions('payments.read')]
 GET    /payments/batch
 POST   /payments/create
 ```

@@ -26,6 +26,7 @@ import { CouponsModule } from './modules/coupons/coupons.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ProductsModule } from './modules/products/products.module';
+import { ReviewModule } from './modules/reviews/review.module';
 import { SearchModule } from './modules/search/search.module';
 import { ShippingModule } from './modules/shipping/shipping.module';
 import { UsersModule } from './modules/users/users.module';
@@ -89,6 +90,7 @@ import { WishlistModule } from './modules/wishlist/wishlist.module';
     CouponsModule,
     OrdersModule,
     PaymentsModule,
+    ReviewModule,
     WishlistModule,
   ],
   controllers: [],

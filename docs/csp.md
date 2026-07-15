@@ -42,7 +42,8 @@ The current policy:
 - Does not include a broad `https:` script source.
 - Does not allow third-party Leaflet CSS.
 - Uses `frame-src 'none'`, `object-src 'none'`, `base-uri 'self'`, and `frame-ancestors 'none'`.
-- Allows `unsafe-inline` for styles temporarily because the current Next/Tailwind/UI layer still emits inline styles and style attributes.
+- Removes `unsafe-inline` from style policies; static styling is served from same-origin stylesheets and nonce-bearing style elements.
+- Blocks style attributes explicitly with `style-src-attr 'none'`.
 
 The Leaflet stylesheet is bundled locally at:
 
@@ -57,15 +58,15 @@ The map still uses the following external resources:
 - `NEXT_PUBLIC_API_BASE_URL` origin — backend API and images
 - `NEXT_PUBLIC_SITE_URL` origin — deployed frontend origin
 
-## Nonce rollout and style follow-up
+## Style policy validation
 
-Before tightening `style-src` further:
+The style policy is now enforced without `unsafe-inline`:
 
-1. Review `/api/csp-report` output for a complete release cycle.
-2. Remove remaining inline style attributes where possible.
-3. Introduce request-scoped style nonces or stable hashes for unavoidable inline styles.
-4. Replace `style-src 'unsafe-inline'` with a nonce/hash-based policy after validation.
-5. Keep the production default as `CSP_MODE=enforce`.
+1. `style-src` allows same-origin stylesheets and the request-scoped nonce.
+2. `style-src-elem` allows same-origin stylesheets and nonce-bearing style elements.
+3. `style-src-attr 'none'` blocks inline style attributes.
+4. Static component styles live in CSS classes or same-origin stylesheets.
+5. Keep the production default as `CSP_MODE=enforce` and review CSP reports after deployment.
 
 ## Environment
 

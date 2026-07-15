@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/components/ui/csp-motion";
 import { 
   Mail, Phone, KeyRound, ArrowLeft, Loader2, ShieldCheck, RefreshCw, 
   Clock, CheckCircle2 

@@ -186,7 +186,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "node -e \"require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""
+          "node -e \"const req=require('http').get('http://127.0.0.1:3000/health', r => { r.resume(); r.on('end', () => process.exit(r.statusCode === 200 ? 0 : 1)); }); req.on('error', () => process.exit(1));\""
         ]
       interval: 15s
       timeout: 5s

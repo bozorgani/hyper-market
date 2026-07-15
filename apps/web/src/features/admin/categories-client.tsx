@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/components/ui/csp-motion";
 import { Search, Plus, Edit3, Trash2, RefreshCw, FolderTree, Eye, EyeOff } from "lucide-react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { Button } from "@/components/ui/button";

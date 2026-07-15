@@ -9,6 +9,7 @@ import { useAddToCart } from "@/hooks/use-cart";
 import { useAuthStore } from "@/store/auth-store";
 import { formatNumber, formatPrice } from "@/lib/utils";
 import { getProductImageUrl } from "@/lib/image-utils";
+import { WishlistButton } from "@/components/wishlist-button";
 import type { Product } from "@/types/domain";
 // i18n – Issue #24
 import { t, tf } from "@/i18n";
@@ -54,14 +55,16 @@ export function ProductCard({
   return (
     <div
       className="group product-card relative flex h-full min-h-[var(--card-product-min-h)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-[3px] hover:shadow-lg active:scale-[0.985] focus-within:ring-2 focus-visible:outline-none sm:min-h-[var(--card-product-min-h-sm)]"
-      style={{
-        // Design tokens – Issue #25 centralized
-        // min-height via CSS variables instead of magic 310px/340px
-        borderRadius: "var(--radius-2xl)",
-      }}
     >
-      <Link 
-        href={`/products/${product._id}`} 
+      <div className="absolute left-3 top-3 z-10">
+        <WishlistButton
+          productId={product._id}
+          size="sm"
+          className="border border-slate-100/80"
+        />
+      </div>
+      <Link
+        href={`/products/${product._id}`}
         className="relative block aspect-square bg-slate-50 overflow-hidden"
         aria-label={tf('product.detailAriaLabel', { name: product.name })}
       >
@@ -129,11 +132,7 @@ export function ProductCard({
           onClick={handleAddToCart}
           disabled={product.stock < 1 || addToCart.isPending}
           aria-label={tf('product.addToCartAriaLabel', { name: product.name })}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-emerald-50 py-[9px] text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-100 active:bg-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            borderRadius: "var(--radius-xl)",
-            minHeight: "var(--touch-target-min)",
-          }}
+          className="mt-3 flex min-h-[var(--touch-target-min)] w-full items-center justify-center gap-1.5 rounded-2xl bg-emerald-50 py-[9px] text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-100 active:bg-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ShoppingCart className="h-3.5 w-3.5" aria-hidden="true" />
           {addToCart.isPending ? t('common.adding') : t('common.addToCart')}

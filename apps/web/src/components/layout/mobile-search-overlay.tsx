@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/components/ui/csp-motion";
 import { Search, X } from "lucide-react";
 import { useRef, useEffect, type FormEvent } from "react";
 

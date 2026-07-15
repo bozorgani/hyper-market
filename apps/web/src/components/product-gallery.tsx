@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "@/components/ui/csp-motion";
 import { Dialog } from "@/components/ui/dialog";
 import { getProductImageUrl } from "@/lib/image-utils";
 

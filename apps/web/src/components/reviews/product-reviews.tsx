@@ -56,6 +56,35 @@ interface ProductReviewsProps {
   orderId?: string; // For review form
 }
 
+const REVIEW_PROGRESS_CLASSES = [
+  "review-progress-0",
+  "review-progress-5",
+  "review-progress-10",
+  "review-progress-15",
+  "review-progress-20",
+  "review-progress-25",
+  "review-progress-30",
+  "review-progress-35",
+  "review-progress-40",
+  "review-progress-45",
+  "review-progress-50",
+  "review-progress-55",
+  "review-progress-60",
+  "review-progress-65",
+  "review-progress-70",
+  "review-progress-75",
+  "review-progress-80",
+  "review-progress-85",
+  "review-progress-90",
+  "review-progress-95",
+  "review-progress-100",
+] as const;
+
+function getReviewProgressClass(percentage: number) {
+  const bucket = Math.max(0, Math.min(20, Math.round(percentage / 5)));
+  return REVIEW_PROGRESS_CLASSES[bucket];
+}
+
 export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [ratingFilter, setRatingFilter] = useState<number | undefined>();
@@ -222,8 +251,10 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
                     <div className="flex-1">
                       <div className="h-2 overflow-hidden rounded-full bg-slate-200">
                         <div
-                          className="h-full bg-amber-400 transition-all"
-                          style={{ width: `${percentage}%` }}
+                          className={cn(
+                            "h-full bg-amber-400 transition-all",
+                            getReviewProgressClass(percentage),
+                          )}
                         />
                       </div>
                     </div>
