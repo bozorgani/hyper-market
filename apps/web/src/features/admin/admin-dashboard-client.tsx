@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "@/components/ui/csp-motion";
 import { useMemo } from "react";
 import { ReceiptText, TrendingUp, Users, Boxes, ArrowUpRight, Clock, ShoppingCart, DollarSign } from "lucide-react";
 import Link from "next/link";
@@ -239,8 +239,7 @@ export function AdminDashboardClient() {
                       initial={{ height: 0 }}
                       animate={{ height: `${Math.max(heightPercent, 3)}%` }}
                       transition={{ delay: 0.4 + index * 0.06, duration: 0.6, ease: "easeOut" }}
-                      className="w-full rounded-xl bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-md shadow-emerald-100"
-                      style={{ minHeight: "8px" }}
+                      className="min-h-2 w-full rounded-xl bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-md shadow-emerald-100"
                     />
                   </div>
                   {/* Day label */}
@@ -328,8 +327,7 @@ export function AdminDashboardClient() {
             <Link
               key={action.href}
               href={action.href}
-              className="group relative overflow-hidden rounded-2xl bg-gradient-to-br p-5 text-white transition-transform hover:-translate-y-0.5"
-              style={{ boxShadow: `0 8px 24px -4px var(--tw-gradient-from)` }}
+              className={`group relative overflow-hidden rounded-2xl bg-gradient-to-br p-5 text-white transition-transform hover:-translate-y-0.5 ${action.shadow}`}
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${action.color}`} />
               <div className="absolute -left-4 -bottom-4 h-20 w-20 rounded-full bg-white/10 blur-xl" />

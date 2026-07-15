@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useProduct } from "@/hooks/use-products";
 import { formatNumber, formatPrice } from "@/lib/utils";
 import { ProductReviews } from "@/components/reviews/product-reviews";
+import { WishlistButton } from "@/components/wishlist-button";
 import type { Product } from "@/types/domain";
 
 export function ProductDetailPageClient({
@@ -160,6 +161,12 @@ export function ProductDetailPageClient({
           <Button type="button" disabled={item.stock < 1 || addToCart.isPending} onClick={handleAddToCart} className="w-full sm:w-auto">
             {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد خرید"}
           </Button>
+          <WishlistButton
+            productId={item._id}
+            size="md"
+            showLabel
+            className="w-full justify-center sm:w-auto"
+          />
           <LinkButton href="/cart" variant="outline" className="w-full sm:w-auto">مشاهده سبد خرید</LinkButton>
         </div>
       </section>

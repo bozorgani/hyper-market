@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "@/components/ui/csp-motion";
 import { ShieldCheck, ShoppingCart, Truck, Headphones, ArrowLeftRight, CreditCard } from "lucide-react";
 
 type AuthFeature = {
@@ -44,13 +44,7 @@ export function AuthShell({
           <div className="absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-emerald-600/15 blur-[120px]" />
           <div className="absolute left-1/2 top-1/3 h-48 w-48 rounded-full bg-emerald-500/10 blur-[80px]" />
           {/* Grid pattern */}
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-              backgroundSize: "32px 32px",
-            }}
-          />
+          <div className="auth-grid-pattern absolute inset-0 opacity-[0.03]" />
         </div>
 
         {/* Top Section */}

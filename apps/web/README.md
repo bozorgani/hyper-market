@@ -110,7 +110,7 @@ Recommended production rollout:
 
 1. Set `CSP_MODE=report-only` for a controlled observation period.
 2. Review `/api/csp-report` reports and remove unnecessary external resources.
-3. Resolve inline-script/style violations and validate nonce propagation.
+3. Confirm nonce propagation and verify that no `style-src-*` violations are emitted.
 4. Set `CSP_MODE=enforce` before high-traffic production use.
 5. Keep `CSP_REPORT_ENDPOINT=/api/csp-report` or use an approved same-origin reporting path.
 

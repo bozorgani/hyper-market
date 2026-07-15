@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsOptional, IsArray, Min, Max, MinLength, MaxLength, IsBoolean } from 'class-validator';
+import { IsInt, IsString, IsOptional, IsArray, Min, Max, MinLength, MaxLength, IsBoolean, ArrayMaxSize } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateReviewDto {
@@ -26,7 +26,9 @@ export class CreateReviewDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(5)
   @IsString({ each: true })
+  @MaxLength(2048, { each: true })
   images?: string[];
 }
 
@@ -51,7 +53,9 @@ export class UpdateReviewDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(5)
   @IsString({ each: true })
+  @MaxLength(2048, { each: true })
   images?: string[];
 }
 

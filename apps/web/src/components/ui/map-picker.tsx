@@ -11,13 +11,13 @@ const TEHRAN_CENTER: [number, number] = [35.6892, 51.389];
 function createCustomIcon() {
   return L.divIcon({
     html: `
-      <div style="position:relative;width:40px;height:52px;">
+      <div class="map-picker-marker">
         <svg width="40" height="52" viewBox="0 0 40 52" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M20 0C8.954 0 0 8.954 0 20c0 15 20 32 20 32s20-17 20-32C40 8.954 31.046 0 20 0z" fill="#e11d48"/>
           <circle cx="20" cy="18" r="8" fill="white"/>
         </svg>
-        <div style="position:absolute;top:18px;left:20px;width:12px;height:12px;background:#e11d48;border-radius:50%;transform:translate(-50%,-50%);border:2px solid white;box-shadow:0 0 6px rgba(225,29,72,0.5);"></div>
-        <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:20px;height:4px;background:rgba(0,0,0,0.15);border-radius:50%;"></div>
+        <div class="map-picker-marker__dot"></div>
+        <div class="map-picker-marker__shadow"></div>
       </div>
     `,
     className: "",

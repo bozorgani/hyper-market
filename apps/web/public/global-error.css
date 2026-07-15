@@ -1,0 +1,57 @@
+/* Standalone fallback styles for global-error.tsx.
+ * This stylesheet is loaded from the same origin so it remains compatible
+ * with the production CSP without inline style attributes.
+ */
+
+.global-error-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 1rem;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: system-ui, -apple-system, sans-serif;
+  text-align: right;
+}
+
+.global-error-card {
+  width: 100%;
+  max-width: 28rem;
+  padding: 2rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 8%);
+}
+
+.global-error-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.global-error-description {
+  margin: 0.75rem 0 0;
+  color: #475569;
+  line-height: 1.8;
+}
+
+.global-error-retry {
+  min-height: 2.75rem;
+  margin-top: 1.5rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #e11d48;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.global-error-retry:focus-visible {
+  outline: 2px solid #e11d48;
+  outline-offset: 2px;
+}

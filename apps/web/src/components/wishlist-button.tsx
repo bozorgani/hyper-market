@@ -64,8 +64,11 @@ export function WishlistButton({
   if (showLabel) {
     return (
       <button
+        type="button"
         onClick={handleClick}
         disabled={isLoading}
+        aria-pressed={isInWishlist}
+        aria-busy={isLoading}
         className={cn(
           "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition",
           isInWishlist
@@ -88,8 +91,11 @@ export function WishlistButton({
 
   return (
     <button
+      type="button"
       onClick={handleClick}
       disabled={isLoading}
+      aria-pressed={isInWishlist}
+      aria-busy={isLoading}
       className={cn(
         "flex items-center justify-center rounded-full transition",
         sizeClasses[size],

@@ -22,10 +22,9 @@ import type { NextRequest } from 'next/server';
  * CSP Nonce (Issue #17):
  *   - Generates a per-request cryptographic nonce.
  *   - Injects Content-Security-Policy with 'nonce-<value>' + 'strict-dynamic'
- *   - Removes 'unsafe-inline' from script-src in production-capable policy.
+ *   - Removes 'unsafe-inline' from script-src and style-src policies.
  *   - Exposes nonce via 'x-nonce' header for Server Components (headers()).
- *   - Style-src still allows 'unsafe-inline' temporarily (Tailwind runtime),
- *     to be phased out with hashes in Task 23 follow-up.
+ *   - Disables style attributes and authorizes nonce-bearing style elements.
  */
 
 const ACCESS_TOKEN_COOKIE = 'hyper_market_access_token';
@@ -162,9 +161,10 @@ function originFromUrl(value: string | undefined): string | null {
 
 /**
  * Build Content-Security-Policy with a per-request nonce.
- * Production script policy intentionally avoids `unsafe-inline` and broad `https:`
- * script sources. Inline styles remain temporarily allowed because Next.js and
- * the current Tailwind/UI layer still emit style attributes.
+ * Script and stylesheet elements are authorized by nonce or same-origin policy.
+ * Style attributes are disabled explicitly; the UI uses classes/CSS files for
+ * static styling, while runtime CSSOM animations remain available to libraries
+ * such as Framer Motion and Leaflet.
  */
 function buildCsp(nonce: string): string {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -213,9 +213,11 @@ function buildCsp(nonce: string): string {
     "worker-src 'self' blob:",
     "child-src 'self' blob:",
     "font-src 'self' data:",
-    // Inline styles remain temporary until the UI can move to nonce/hash-based styles.
-    "style-src 'self' 'unsafe-inline'",
-    "style-src-elem 'self' 'unsafe-inline'",
+    // Stylesheets and inline style elements require the request nonce; style
+    // attributes are disabled so styling cannot be injected through markup.
+    `style-src 'self' 'nonce-${nonce}'`,
+    `style-src-elem 'self' 'nonce-${nonce}'`,
+    "style-src-attr 'none'",
     `script-src ${scriptSrc}`,
     `script-src-elem ${scriptSrc}`,
     `connect-src ${connectSources.join(' ')}`,

@@ -18,6 +18,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useCategories } from "@/hooks/use-products";
 import { useProductSearch, type SearchResponse } from "@/hooks/use-search";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import { WishlistButton } from "@/components/wishlist-button";
 
 function SearchResultsSkeleton() {
   return (
@@ -195,7 +196,14 @@ function SearchContent({
       {!search.isLoading && !search.isError && hasResults ? (
         <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {(search.data?.items ?? []).map((product) => (
-            <Card key={product.id} className="overflow-hidden text-right">
+            <Card key={product.id} className="relative overflow-hidden text-right">
+              <div className="absolute left-3 top-3 z-10">
+                <WishlistButton
+                  productId={product.id}
+                  size="sm"
+                  className="border border-slate-100/80"
+                />
+              </div>
               <Link href={`/products/${product.id}`} className="block aspect-square bg-slate-100">
                 <div className="flex h-full items-center justify-center text-4xl">🛍️</div>
               </Link>

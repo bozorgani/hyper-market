@@ -6,6 +6,9 @@ import { ReviewRepository } from './review.repository';
 import { ReviewService } from './review.service';
 import { ReviewController, AdminReviewController } from './review.controller';
 import { OrdersModule } from '../orders/orders.module';
+import { ProductsModule } from '../products/products.module';
+import { ReviewImageStorageService } from './review-image-storage.service';
+import { ReviewImageUploadInterceptor } from './review-image-upload.interceptor';
 
 @Module({
   imports: [
@@ -14,9 +17,15 @@ import { OrdersModule } from '../orders/orders.module';
       { name: ReviewHelpfulVote.name, schema: ReviewHelpfulVoteSchema },
     ]),
     OrdersModule,
+    ProductsModule,
   ],
   controllers: [ReviewController, AdminReviewController],
-  providers: [ReviewRepository, ReviewService],
+  providers: [
+    ReviewRepository,
+    ReviewService,
+    ReviewImageStorageService,
+    ReviewImageUploadInterceptor,
+  ],
   exports: [ReviewService, ReviewRepository],
 })
 export class ReviewModule {}

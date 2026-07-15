@@ -10,6 +10,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import {
@@ -25,10 +27,26 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import type { UploadableFile } from '../products/storage/product-image-storage.interface';
+import { ReviewImageStorageService } from './review-image-storage.service';
+import { ReviewImageUploadInterceptor } from './review-image-upload.interceptor';
 
 @Controller('reviews')
 export class ReviewController {
-  constructor(private readonly reviewService: ReviewService) {}
+  constructor(
+    private readonly reviewService: ReviewService,
+    private readonly reviewImageStorageService: ReviewImageStorageService,
+  ) {}
+
+  @Post('images/upload')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(ReviewImageUploadInterceptor)
+  async uploadReviewImage(@UploadedFile() file: UploadableFile) {
+    // Review media is stored by the configured image driver. The returned URL
+    // is persisted in Review.images and served by the existing public image
+    // endpoint, including when the driver is S3-compatible.
+    return this.reviewImageStorageService.saveReviewImage(file);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard)

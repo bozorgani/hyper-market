@@ -138,6 +138,34 @@ a:hover {
 .border-primary { border-color: var(--primary-text); }
 .ring-primary { --tw-ring-color: var(--primary-text); }
 
+/* CSP-safe static styles for components that previously used inline styles. */
+.auth-grid-pattern {
+  background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+.review-progress-0 { width: 0%; }
+.review-progress-5 { width: 5%; }
+.review-progress-10 { width: 10%; }
+.review-progress-15 { width: 15%; }
+.review-progress-20 { width: 20%; }
+.review-progress-25 { width: 25%; }
+.review-progress-30 { width: 30%; }
+.review-progress-35 { width: 35%; }
+.review-progress-40 { width: 40%; }
+.review-progress-45 { width: 45%; }
+.review-progress-50 { width: 50%; }
+.review-progress-55 { width: 55%; }
+.review-progress-60 { width: 60%; }
+.review-progress-65 { width: 65%; }
+.review-progress-70 { width: 70%; }
+.review-progress-75 { width: 75%; }
+.review-progress-80 { width: 80%; }
+.review-progress-85 { width: 85%; }
+.review-progress-90 { width: 90%; }
+.review-progress-95 { width: 95%; }
+.review-progress-100 { width: 100%; }
+
 /* Link variant – WCAG AA */
 .link-primary {
   color: var(--color-link);

@@ -6,7 +6,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminAnalyticsDashboard } from "@/features/admin/admin-api";
 import { formatNumber, formatPrice } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion } from "@/components/ui/csp-motion";
 import { DollarSign, Users, TrendingUp, Activity, Search, Eye, ShoppingCart } from "lucide-react";
 
 type AnalyticsDashboard = {
@@ -60,7 +60,7 @@ function MiniBarChart({ items }: { items: Array<{ label: string; value: number }
           <div className="mb-2 text-[10px] font-semibold text-slate-500 opacity-0 transition group-hover:opacity-100">
             {formatNumber(item.value)}
           </div>
-          <div className="w-full flex-1 rounded-t-xl bg-gradient-to-t from-emerald-600 to-emerald-400" style={{ minHeight: "6px" }} />
+          <div className="min-h-[6px] w-full flex-1 rounded-t-xl bg-gradient-to-t from-emerald-600 to-emerald-400" />
           <span className="mt-2 text-[10px] text-slate-400 truncate max-w-full">{item.label}</span>
         </motion.div>
       ))}

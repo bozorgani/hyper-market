@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/components/ui/csp-motion";
 import { Search, Plus, Edit3, Trash2, RefreshCw, Package } from "lucide-react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { ProductStatusBadge } from "@/components/admin/admin-status-badge";

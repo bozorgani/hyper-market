@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "@/components/ui/csp-motion";
 import { type LucideIcon, TrendingDown, TrendingUp } from "lucide-react";
 import { cn, formatNumber } from "@/lib/utils";
 

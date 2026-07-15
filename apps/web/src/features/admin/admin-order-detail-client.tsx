@@ -2,7 +2,7 @@
 
 
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion } from "@/components/ui/csp-motion";
 import { Package, Calendar, MapPin, Clock, ArrowRight } from "lucide-react";
 import { OrderStatusBadge } from "@/components/order/status-badge";
 import { OrderStatusTimeline } from "@/components/admin/order-status-timeline";
