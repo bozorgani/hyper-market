@@ -6,6 +6,7 @@ module.exports = {
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
+  collectCoverage: true,
   collectCoverageFrom: ['src/**/*.(t|j)s'],
   coverageDirectory: 'coverage',
   testEnvironment: 'node',
@@ -14,5 +15,13 @@ module.exports = {
     // `meilisearch` ships ESM; map it to a CJS stub so specs that transitively
     // import ProductsService/SearchIndexer can load under Jest's default config.
     '^meilisearch$': '<rootDir>/src/__mocks__/meilisearch.ts',
+  },
+  coverageThreshold: {
+    global: {
+      branches: 60,
+      functions: 70,
+      lines: 70,
+      statements: 70,
+    },
   },
 };
