@@ -1,5 +1,3 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../src/modules/auth/guards/roles.guard';
@@ -36,83 +34,79 @@ function createMockPermissionsService() {
   };
 }
 
-test('JwtAuthGuard allows requests marked as public', () => {
-  const guard = new JwtAuthGuard(createReflector(true) as never);
+describe('Auth & Permissions Guards', () => {
+  it('JwtAuthGuard allows requests marked as public', () => {
+    const guard = new JwtAuthGuard(createReflector(true) as never);
 
-  assert.equal(guard.canActivate(createContext()), true);
-});
+    expect(guard.canActivate(createContext())).toBe(true);
+  });
 
-test('RolesGuard allows access when no role metadata exists', () => {
-  const guard = new RolesGuard(createReflector(undefined) as never);
+  it('RolesGuard allows access when no role metadata exists', () => {
+    const guard = new RolesGuard(createReflector(undefined) as never);
 
-  assert.equal(guard.canActivate(createContext()), true);
-});
+    expect(guard.canActivate(createContext())).toBe(true);
+  });
 
-test('RolesGuard allows a user with a required role', () => {
-  const guard = new RolesGuard(createReflector([UserRole.ADMIN]) as never);
+  it('RolesGuard allows a user with a required role', () => {
+    const guard = new RolesGuard(createReflector([UserRole.ADMIN]) as never);
 
-  assert.equal(guard.canActivate(createContext({ role: UserRole.ADMIN })), true);
-});
+    expect(guard.canActivate(createContext({ role: UserRole.ADMIN }))).toBe(true);
+  });
 
-test('RolesGuard rejects missing user for protected role metadata', () => {
-  const guard = new RolesGuard(createReflector([UserRole.ADMIN]) as never);
+  it('RolesGuard rejects missing user for protected role metadata', () => {
+    const guard = new RolesGuard(createReflector([UserRole.ADMIN]) as never);
 
-  assert.throws(() => guard.canActivate(createContext()), ForbiddenException);
-});
+    expect(() => guard.canActivate(createContext())).toThrow(ForbiddenException);
+  });
 
-test('RolesGuard rejects users without a required role', () => {
-  const guard = new RolesGuard(createReflector([UserRole.ADMIN]) as never);
+  it('RolesGuard rejects users without a required role', () => {
+    const guard = new RolesGuard(createReflector([UserRole.ADMIN]) as never);
 
-  assert.throws(
-    () => guard.canActivate(createContext({ role: UserRole.CUSTOMER })),
-    ForbiddenException,
-  );
-});
+    expect(() => guard.canActivate(createContext({ role: UserRole.CUSTOMER }))).toThrow(ForbiddenException);
+  });
 
-test('PermissionsGuard allows access when no permission metadata exists', async () => {
-  const guard = new PermissionsGuard(
-    createReflector(undefined) as never,
-    createMockPermissionsService() as never,
-  );
+  it('PermissionsGuard allows access when no permission metadata exists', async () => {
+    const guard = new PermissionsGuard(
+      createReflector(undefined) as never,
+      createMockPermissionsService() as never,
+    );
 
-  assert.equal(await guard.canActivate(createContext()), true);
-});
+    expect(await guard.canActivate(createContext())).toBe(true);
+  });
 
-test('PermissionsGuard allows super admin wildcard permissions', async () => {
-  const guard = new PermissionsGuard(
-    createReflector(['unknown.permission']) as never,
-    createMockPermissionsService() as never,
-  );
+  it('PermissionsGuard allows super admin wildcard permissions', async () => {
+    const guard = new PermissionsGuard(
+      createReflector(['unknown.permission']) as never,
+      createMockPermissionsService() as never,
+    );
 
-  assert.equal(await guard.canActivate(createContext({ role: UserRole.SUPER_ADMIN })), true);
-});
+    expect(await guard.canActivate(createContext({ role: UserRole.SUPER_ADMIN }))).toBe(true);
+  });
 
-test('PermissionsGuard allows admin mapped permissions', async () => {
-  const guard = new PermissionsGuard(
-    createReflector(['products.create']) as never,
-    createMockPermissionsService() as never,
-  );
+  it('PermissionsGuard allows admin mapped permissions', async () => {
+    const guard = new PermissionsGuard(
+      createReflector(['products.create']) as never,
+      createMockPermissionsService() as never,
+    );
 
-  assert.equal(await guard.canActivate(createContext({ role: UserRole.ADMIN })), true);
-});
+    expect(await guard.canActivate(createContext({ role: UserRole.ADMIN }))).toBe(true);
+  });
 
-test('PermissionsGuard rejects missing user for protected permission metadata', async () => {
-  const guard = new PermissionsGuard(
-    createReflector(['products.create']) as never,
-    createMockPermissionsService() as never,
-  );
+  it('PermissionsGuard rejects missing user for protected permission metadata', async () => {
+    const guard = new PermissionsGuard(
+      createReflector(['products.create']) as never,
+      createMockPermissionsService() as never,
+    );
 
-  await assert.rejects(() => guard.canActivate(createContext()), ForbiddenException);
-});
+    await expect(guard.canActivate(createContext())).rejects.toThrow(ForbiddenException);
+  });
 
-test('PermissionsGuard rejects users without required permissions', async () => {
-  const guard = new PermissionsGuard(
-    createReflector(['products.create']) as never,
-    createMockPermissionsService() as never,
-  );
+  it('PermissionsGuard rejects users without required permissions', async () => {
+    const guard = new PermissionsGuard(
+      createReflector(['products.create']) as never,
+      createMockPermissionsService() as never,
+    );
 
-  await assert.rejects(
-    () => guard.canActivate(createContext({ role: UserRole.CUSTOMER })),
-    ForbiddenException,
-  );
+    await expect(guard.canActivate(createContext({ role: UserRole.CUSTOMER }))).rejects.toThrow(ForbiddenException);
+  });
 });

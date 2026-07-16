@@ -39,27 +39,11 @@ function loadEnvFile(filePath) {
 for (const f of BACKEND_ENV_FILES) loadEnvFile(f);
 
 // Keep in sync with apps/backend-api/src/modules/permissions/role-permissions.constant.ts
-const ROLE_PERMISSIONS = {
-  super_admin: ['*'],
-  admin: [
-    'products.create',
-    'products.update',
-    'products.delete',
-    'categories.create',
-    'categories.update',
-    'categories.delete',
-    'orders.cancel',
-    'orders.read',
-    'orders.update',
-    'users.read',
-    'users.ban',
-    'payments.read',
-    'analytics.read',
-  ],
-  vendor: [],
-  delivery: [],
-  customer: [],
-};
+const constantPath = path.resolve(ROOT, 'apps', 'backend-api', 'dist', 'src', 'modules', 'permissions', 'role-permissions.constant.js');
+if (!fs.existsSync(constantPath)) {
+  throw new Error(`Compiled role-permissions constant not found at ${constantPath}. Run 'npm run backend:build' first.`);
+}
+const { ROLE_PERMISSIONS } = require(constantPath);
 
 const PermissionSchema = new mongoose.Schema(
   {
