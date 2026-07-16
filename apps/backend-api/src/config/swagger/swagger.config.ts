@@ -6,8 +6,7 @@ export function setupSwagger(app: INestApplication) {
   // explicit opt-in via SWAGGER_ENABLED=true; otherwise disable in prod.
   const explicitlyEnabled = process.env.SWAGGER_ENABLED === 'true';
   const explicitlyDisabled = process.env.SWAGGER_ENABLED === 'false';
-  const isProduction =
-    process.env.APP_ENV === 'production' || process.env.NODE_ENV === 'production';
+  const isProduction = process.env.APP_ENV === 'production';
 
   if (explicitlyDisabled || (isProduction && !explicitlyEnabled)) {
     return;
