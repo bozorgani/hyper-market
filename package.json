@@ -23,6 +23,7 @@
     "e2e:infra:down": "docker compose -f docker-compose.test.yml down -v --remove-orphans",
     "backend:test:e2e": "npm run test:e2e --workspace=apps/backend-api -- --runInBand",
     "web:e2e": "npx playwright test --config apps/web/playwright.config.ts",
+    "web:e2e:fullstack": "npx playwright test --config apps/web/playwright.fullstack.config.ts",
     "web:e2e:headed": "npx playwright test --config apps/web/playwright.config.ts --headed"
   },
   "engines": {

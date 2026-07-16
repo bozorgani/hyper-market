@@ -17,6 +17,7 @@ const responsiveViewports = [
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/fullstack.spec.ts',
   timeout: 30_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,
