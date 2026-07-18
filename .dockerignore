@@ -12,7 +12,7 @@
 node_modules
 **/node_modules
 
-# Build outputs
+# Build outputs (recreated during build)
 **/dist
 **/build
 **/out
@@ -34,7 +34,6 @@ pnpm-debug.log*
 # Env / secrets
 .env
 .env.*
-!.env.example
 *.pem
 
 # Runtime uploads / data
@@ -43,3 +42,26 @@ uploads
 mongo-data
 redis-data
 meili-data
+
+# Documentation (not needed in build context)
+docs/
+*.md
+
+# Docker compose files (not needed inside images)
+docker-compose*.yml
+
+# Git leak detection config
+.gitleaks.toml
+
+# Playwright / test configs
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/playwright.config.ts
+apps/web/playwright.fullstack.config.ts
+**/playwright-report/
+
+# Test directories and files (not needed for production build)
+apps/backend-api/test/
+apps/backend-api/jest.config.js
+apps/backend-api/src/__mocks__/
+apps/web/e2e/
