@@ -26,6 +26,7 @@ export function AdminProductEditClient() {
       ) : null}
       {product.data ? (
         <ProductForm
+          key={product.data._id}
           initialProduct={product.data}
           loading={updateProduct.isPending}
           error={updateProduct.error instanceof Error ? updateProduct.error.message : undefined}

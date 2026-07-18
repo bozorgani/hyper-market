@@ -378,6 +378,7 @@ GET    /analytics/search    [Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)]
 ### apps/backend-api/src/modules/auth/controllers/auth.controller.ts
 
 ```text
+GET    /auth/csrf-token    [Public()]
 POST   /auth/forgot-password    [Public()]
 POST   /auth/login    [Public()]
 POST   /auth/logout    [Public()]

@@ -123,6 +123,13 @@ export class AuthController {
     return this.authService.getCurrentUser(user);
   }
 
+  @Get('csrf-token')
+  @Public()
+  getCsrfToken(@Res({ passthrough: true }) response: Response) {
+    this.setCsrfCookie(response);
+    return { success: true };
+  }
+
   @Post('verify-otp')
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60000 }, auth: { limit: 5, ttl: 60000 } })

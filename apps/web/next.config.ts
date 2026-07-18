@@ -43,7 +43,7 @@ const securityHeaders = [
   // Prevent IE from opening downloads in site context
   { key: "X-Download-Options", value: "noopen" },
   // Prevent XSS in older browsers (modern browsers use CSP)
-  { key: "X-XSS-Protection", value: "1; mode=block" },
+  { key: "X-XSS-Protection", value: "0" },
   // Control cross-origin behavior
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "Cross-Origin-Resource-Policy", value: "same-site" },
