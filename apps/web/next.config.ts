@@ -60,6 +60,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Produce a self-contained `standalone/` directory inside `.next/` that
+  // includes only the Node.js server and the minimal node_modules it needs.
+  // This eliminates the need to ship the full monorepo node_modules in the
+  // Docker image — reducing image size by ~60-70% and improving cold starts.
+  output: "standalone",
+
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

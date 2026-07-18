@@ -1,5 +1,14 @@
 name: hyper-market
 
+# ── Network Architecture ──────────────────────────────────────────────────────
+# frontend: web ↔ backend (public-facing traffic)
+# backend:  backend, worker ↔ mongo, redis, meilisearch (internal services)
+#
+# web only reaches backend via the frontend network.
+# mongo, redis, meilisearch are isolated on the backend network — unreachable
+# from the web container or from the host (unless ports are explicitly published
+# for local development).
+
 x-backend-env: &backend-env
   APP_ENV: ${APP_ENV:-development}
   NODE_ENV: production
@@ -57,6 +66,7 @@ x-backend-env: &backend-env
   SMS_IR_VERIFY_PARAMETER_NAME: ${SMS_IR_VERIFY_PARAMETER_NAME:-Code}
 
 services:
+  # ── Infrastructure ──────────────────────────────────────────────────────────
   mongo:
     image: ${MONGO_IMAGE:-mongo:7}
     restart: unless-stopped
@@ -65,6 +75,8 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    networks:
+      - backend
     healthcheck:
       test:
         [
@@ -84,6 +96,8 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    networks:
+      - backend
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -101,7 +115,16 @@ services:
       - "7700:7700"
     volumes:
       - meili-data:/meili_data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--spider", "http://127.0.0.1:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
 
+  # ── Application Services ────────────────────────────────────────────────────
   backend:
     image: hyper-market-backend:local
     build:
@@ -118,23 +141,16 @@ services:
       - "3001:3001"
     volumes:
       - backend-uploads:/app/uploads/product-images
+    networks:
+      - frontend
+      - backend
     depends_on:
       mongo:
         condition: service_healthy
       redis:
         condition: service_healthy
       meilisearch:
-        condition: service_started
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "node -e \"require('http').get('http://127.0.0.1:3001/health/live', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""
-        ]
-      interval: 15s
-      timeout: 5s
-      retries: 20
-      start_period: 20s
+        condition: service_healthy
 
   worker:
     image: hyper-market-backend:local
@@ -151,13 +167,25 @@ services:
       SKIP_MIGRATIONS: "true"
     volumes:
       - backend-uploads:/app/uploads/product-images
+    networks:
+      - backend
     depends_on:
       mongo:
         condition: service_healthy
       redis:
         condition: service_healthy
       meilisearch:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"const http=require('http'); const req=http.get('http://127.0.0.1:3001/health/live', r => process.exit(r.statusCode === 200 ? 0 : 1)); req.on('error', () => process.exit(1)); req.setTimeout(5000, () => process.exit(1));\""
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   web:
     image: hyper-market-web:local
@@ -179,19 +207,11 @@ services:
       SERVER_API_BASE_URL: ${SERVER_API_BASE_URL:-http://backend:3001/api/v1}
     ports:
       - "3000:3000"
+    networks:
+      - frontend
     depends_on:
       backend:
         condition: service_healthy
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "node -e \"const req=require('http').get('http://127.0.0.1:3000/health', r => { r.resume(); r.on('end', () => process.exit(r.statusCode === 200 ? 0 : 1)); }); req.on('error', () => process.exit(1));\""
-        ]
-      interval: 15s
-      timeout: 5s
-      retries: 20
-      start_period: 20s
 
 volumes:
   mongo-data:
@@ -199,4 +219,8 @@ volumes:
   meili-data:
   backend-uploads:
 
-
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge

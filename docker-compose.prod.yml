@@ -1,11 +1,42 @@
 name: hyper-market-production
 
-# Production Docker Compose with Resource Limits
-# Use this file for production deployments:
-# docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Production Docker Compose override.
+# Use with the base compose file:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Requirements:
+#   1. Create a .env file with all required secrets (see docs/secrets.md)
+#   2. Or use Docker secrets (see secrets: section below)
+#   3. For TLS termination, place a reverse proxy (nginx/traefik) in front
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+    tag: "{{.Name}}"
+
+# ── Docker Secrets ────────────────────────────────────────────────────────────
+# Uncomment and configure the secrets section below to use Docker secrets
+# instead of environment variables for sensitive values.
+# secrets:
+#   jwt_access_secret:
+#     file: ./secrets/jwt_access_secret.txt
+#   jwt_refresh_secret:
+#     file: ./secrets/jwt_refresh_secret.txt
+#   password_pepper:
+#     file: ./secrets/password_pepper.txt
+#   otp_hash_secret:
+#     file: ./secrets/otp_hash_secret.txt
+#   meili_master_key:
+#     file: ./secrets/meili_master_key.txt
 
 services:
   mongo:
+    # In production, do NOT publish ports to host — only accessible within Docker networks
+    ports: !override []
+    logging: *default-logging
     deploy:
       resources:
         limits:
@@ -16,7 +47,10 @@ services:
           memory: 512M
 
   redis:
+    # In production, do NOT publish ports to host
+    ports: !override []
     command: ["redis-server", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    logging: *default-logging
     deploy:
       resources:
         limits:
@@ -27,6 +61,13 @@ services:
           memory: 128M
 
   meilisearch:
+    # In production, do NOT publish ports to host
+    ports: !override []
+    environment:
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?MEILI_MASTER_KEY is required in production}
+    logging: *default-logging
     deploy:
       resources:
         limits:
@@ -37,6 +78,12 @@ services:
           memory: 256M
 
   backend:
+    environment:
+      APP_ENV: production
+      NODE_ENV: production
+      WORKERS_ENABLED: "false"
+      SWAGGER_ENABLED: "false"
+    logging: *default-logging
     deploy:
       resources:
         limits:
@@ -45,28 +92,14 @@ services:
         reservations:
           cpus: "0.5"
           memory: 256M
-    environment:
-      APP_ENV: production
-      NODE_ENV: production
-      WORKERS_ENABLED: "false"
-      SWAGGER_ENABLED: "false"
 
   worker:
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: 768M
-        reservations:
-          cpus: "0.25"
-          memory: 128M
     environment:
       APP_ENV: production
       NODE_ENV: production
       WORKERS_ENABLED: "true"
       SKIP_MIGRATIONS: "true"
-
-  web:
+    logging: *default-logging
     deploy:
       resources:
         limits:
@@ -75,6 +108,17 @@ services:
         reservations:
           cpus: "0.25"
           memory: 128M
+
+  web:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
