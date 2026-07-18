@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { cookies } from "next/headers";
 import { backendFetch } from "./backend";
+import { ACCESS_TOKEN_COOKIE } from "@/lib/constants";
+import { isAdminRole } from "@/lib/auth";
 import type { DeliveryAddress, DeliveryWindow, Order, Payment } from "@/types/domain";
 import type { CouponValidationResult } from "@/hooks/use-coupons";
 
@@ -80,7 +83,39 @@ export async function createPaymentAction(input: CreatePaymentActionInput): Prom
   return payment;
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+    const jsonPayload = decodeURIComponent(
+      atob(base64 + padding)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
+async function validateAdminRole(): Promise<void> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+  if (!token) {
+    throw new Error("unauthorized");
+  }
+  const payload = decodeJwtPayload(token);
+  const role = payload?.role;
+  if (!role || !isAdminRole(role)) {
+    throw new Error("unauthorized");
+  }
+}
+
 export async function updateOrderStatusAction(input: { orderId: string; status: string }): Promise<Order> {
+  await validateAdminRole();
   const order = await backendFetch<Order>(`/orders/${input.orderId}/status`, {
     method: "PATCH",
     body: JSON.stringify({ status: input.status }),
