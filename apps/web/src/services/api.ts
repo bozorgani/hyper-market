@@ -153,7 +153,23 @@ export const api = axios.create({
 });
 
 
-api.interceptors.request.use((config) => {
+async function fetchCsrfToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/auth/csrf-token`, {
+      method: "GET",
+      credentials: "include",
+    });
+    if (response.ok) {
+      return getCookieValue(CSRF_TOKEN_COOKIE);
+    }
+  } catch (err) {
+    console.error("Failed to fetch CSRF token", err);
+  }
+  return null;
+}
+
+api.interceptors.request.use(async (config) => {
   if (isBrowserFormData(config.data)) {
     // Let the browser/axios set multipart/form-data with the correct boundary.
     // Keeping the default application/json header makes Multer receive an empty file.
@@ -162,7 +178,10 @@ api.interceptors.request.use((config) => {
 
   const method = config.method?.toLowerCase() ?? "get";
   if (!CSRF_SAFE_METHODS.has(method)) {
-    const csrfToken = getCookieValue(CSRF_TOKEN_COOKIE);
+    let csrfToken = getCookieValue(CSRF_TOKEN_COOKIE);
+    if (!csrfToken) {
+      csrfToken = await fetchCsrfToken();
+    }
     if (csrfToken) {
       config.headers[CSRF_TOKEN_HEADER] = csrfToken;
     }
@@ -175,6 +194,28 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<{ message?: string | string[]; error?: string }>) => {
     const originalRequest = error.config as RetriableRequestConfig | undefined;
+
+    const isCsrfError = error.response?.status === 403 &&
+      (String(error.response?.data?.message || "").toLowerCase().includes("csrf") ||
+       String(error.response?.data?.error || "").toLowerCase().includes("csrf"));
+
+    if (
+      typeof window !== "undefined" &&
+      isCsrfError &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+      try {
+        const csrfToken = await fetchCsrfToken();
+        if (csrfToken) {
+          originalRequest.headers[CSRF_TOKEN_HEADER] = csrfToken;
+          return api(originalRequest);
+        }
+      } catch (csrfError) {
+        return Promise.reject(csrfError);
+      }
+    }
 
     if (
       typeof window !== "undefined" &&

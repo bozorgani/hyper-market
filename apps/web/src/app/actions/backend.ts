@@ -27,7 +27,28 @@ function getSiteOrigin(): string {
  */
 async function validateCsrfToken(): Promise<string> {
   const cookieStore = await cookies();
-  const csrfToken = cookieStore.get(CSRF_TOKEN_COOKIE)?.value;
+  let csrfToken = cookieStore.get(CSRF_TOKEN_COOKIE)?.value;
+  
+  if (!csrfToken) {
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/auth/csrf-token`, {
+        method: "GET",
+      });
+      const setCookieHeader = response.headers.get("set-cookie");
+      if (setCookieHeader) {
+        const match = setCookieHeader.match(/hyper_market_csrf_token=([^;]+)/);
+        if (match) {
+          csrfToken = match[1];
+          cookieStore.set(CSRF_TOKEN_COOKIE, csrfToken, {
+            httpOnly: false,
+            path: "/",
+          });
+        }
+      }
+    } catch (err) {
+      console.error("[SECURITY] Failed to recover CSRF token in Server Action", err);
+    }
+  }
   
   if (!csrfToken) {
     throw new Error("CSRF token missing - please refresh the page and try again");
