@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Heart, Trash2, ShoppingBag } from "lucide-react";
 import { LinkButton } from "@/components/ui/link-button";
@@ -23,7 +24,7 @@ export function WishlistPageClient() {
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
 
-  const { data, isLoading } = useWishlist(page, limit, Boolean(hydrated && user));
+  const { data, isLoading, isError, error, refetch } = useWishlist(page, limit, Boolean(hydrated && user));
   const clearMutation = useClearWishlist();
   const addToCartMutation = useAddToCart();
 
@@ -95,8 +96,26 @@ export function WishlistPageClient() {
           </div>
         )}
 
+        {/* Error State */}
+        {!isLoading && isError && (
+          <div className="mt-5">
+            <ErrorState
+              title="بارگذاری علاقه‌مندی‌ها انجام نشد"
+              description={error instanceof Error ? error.message : "دریافت علاقه‌مندی‌ها ناموفق بود."}
+              actions={
+                <>
+                  <Button type="button" variant="outline" onClick={() => refetch()}>
+                    تلاش مجدد
+                  </Button>
+                  <LinkButton href="/products">مشاهده محصولات</LinkButton>
+                </>
+              }
+            />
+          </div>
+        )}
+
         {/* Empty State */}
-        {!isLoading && products.length === 0 && (
+        {!isLoading && !isError && products.length === 0 && (
           <EmptyState
             icon={Heart}
             title="علاقه‌مندی‌های شما خالی است"
@@ -111,7 +130,7 @@ export function WishlistPageClient() {
         )}
 
         {/* Products Grid */}
-        {!isLoading && products.length > 0 && (
+        {!isLoading && !isError && products.length > 0 && (
           <>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product: WishlistProduct, index: number) => (
