@@ -13,10 +13,12 @@ import { LinkButton } from "@/components/ui/link-button";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useToast } from "@/components/ui/toast";
 import { useAuthStore } from "@/store/auth-store";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function WishlistPageClient() {
   const [page, setPage] = useState(1);
   const limit = 12;
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const { showToast } = useToast();
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
@@ -40,9 +42,12 @@ export function WishlistPageClient() {
     }
   };
 
-  const handleClearWishlist = () => {
-    if (confirm("آیا از پاک کردن تمام علاقه‌مندی‌ها اطمینان دارید؟")) {
-      clearMutation.mutate();
+  const handleClearWishlist = async () => {
+    try {
+      await clearMutation.mutateAsync();
+      setClearDialogOpen(false);
+    } catch {
+      // Error is handled by the mutation
     }
   };
 
@@ -66,7 +71,7 @@ export function WishlistPageClient() {
           {products.length > 0 && (
             <Button
               variant="outline"
-              onClick={handleClearWishlist}
+              onClick={() => setClearDialogOpen(true)}
               disabled={clearMutation.isPending}
               className="flex items-center gap-2"
             >
@@ -175,6 +180,18 @@ export function WishlistPageClient() {
             )}
           </>
         )}
+
+        <ConfirmDialog
+          open={clearDialogOpen}
+          title="پاک کردن علاقه‌مندی‌ها"
+          description="همه آیتم‌های لیست علاقه‌مندی‌ها حذف می‌شوند. مطمئن هستید که می‌خواهید ادامه دهید؟"
+          confirmText="بله، پاک شود"
+          cancelText="بازگشت"
+          destructive
+          loading={clearMutation.isPending}
+          onCancel={() => setClearDialogOpen(false)}
+          onConfirm={handleClearWishlist}
+        />
       </div>
     </ProtectedRoute>
   );

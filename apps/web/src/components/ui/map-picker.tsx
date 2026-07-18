@@ -62,6 +62,10 @@ export function MapPicker({
     lng: number;
   } | null>(null);
 
+  const lastGeocodedLocRef = useRef<{ lat: number; lng: number } | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isAddressLoading, setIsAddressLoading] = useState(false);
+
   const startLat = initialLat ?? TEHRAN_CENTER[0];
   const startLng = initialLng ?? TEHRAN_CENTER[1];
 
@@ -89,6 +93,58 @@ export function MapPicker({
     },
     [],
   );
+
+  const triggerLocationChange = useCallback(
+    (lat: number, lng: number, immediate = false) => {
+      const lastLat = lastGeocodedLocRef.current?.lat;
+      const lastLng = lastGeocodedLocRef.current?.lng;
+      if (lastLat !== undefined && lastLng !== undefined) {
+        if (Math.abs(lat - lastLat) < 1e-6 && Math.abs(lng - lastLng) < 1e-6) {
+          return;
+        }
+      }
+
+      setSelectedLoc({ lat, lng });
+
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      setIsAddressLoading(true);
+
+      const performGeocode = async () => {
+        lastGeocodedLocRef.current = { lat, lng };
+        try {
+          const result = await reverseGeocode(lat, lng);
+          setSelectedAddr(result.address);
+          setSelectedProvince(result.province);
+          setSelectedCity(result.city);
+        } finally {
+          setIsAddressLoading(false);
+        }
+      };
+
+      if (immediate) {
+        void performGeocode();
+      } else {
+        debounceTimerRef.current = setTimeout(performGeocode, 900);
+      }
+    },
+    [reverseGeocode],
+  );
+
+  const triggerLocationChangeRef = useRef(triggerLocationChange);
+  useEffect(() => {
+    triggerLocationChangeRef.current = triggerLocationChange;
+  }, [triggerLocationChange]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -137,22 +193,14 @@ export function MapPicker({
       draggable: true,
     }).addTo(map);
 
-    marker.on("dragend", async () => {
+    marker.on("dragend", () => {
       const pos = marker.getLatLng();
-      setSelectedLoc({ lat: pos.lat, lng: pos.lng });
-      const result = await reverseGeocode(pos.lat, pos.lng);
-      setSelectedAddr(result.address);
-      setSelectedProvince(result.province);
-      setSelectedCity(result.city);
+      triggerLocationChangeRef.current(pos.lat, pos.lng, false);
     });
 
-    map.on("click", async (e: L.LeafletMouseEvent) => {
+    map.on("click", (e: L.LeafletMouseEvent) => {
       marker.setLatLng(e.latlng);
-      setSelectedLoc({ lat: e.latlng.lat, lng: e.latlng.lng });
-      const result = await reverseGeocode(e.latlng.lat, e.latlng.lng);
-      setSelectedAddr(result.address);
-      setSelectedProvince(result.province);
-      setSelectedCity(result.city);
+      triggerLocationChangeRef.current(e.latlng.lat, e.latlng.lng, false);
     });
 
     L.control.zoom({ position: "bottomleft" }).addTo(map);
@@ -178,6 +226,9 @@ export function MapPicker({
       cancelled = true;
       window.clearTimeout(readyFallbackTimeout);
       window.clearTimeout(invalidateSizeTimeout);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
       tileLayer.off("load", markMapReady);
       tileLayer.off("tileerror", markMapError);
       mapInstanceRef.current?.remove();
@@ -195,12 +246,7 @@ export function MapPicker({
         const { latitude, longitude } = pos.coords;
         mapInstanceRef.current?.setView([latitude, longitude], 16);
         markerRef.current?.setLatLng([latitude, longitude]);
-        setSelectedLoc({ lat: latitude, lng: longitude });
-        reverseGeocode(latitude, longitude).then((result) => {
-          setSelectedAddr(result.address);
-          setSelectedProvince(result.province);
-          setSelectedCity(result.city);
-        });
+        triggerLocationChange(latitude, longitude, true);
         setIsLocating(false);
       },
       () => setIsLocating(false),
@@ -277,9 +323,13 @@ export function MapPicker({
           <div className="flex-1 min-w-0">
             <p className="text-[10px] text-slate-400 mb-0.5">آدرس انتخاب شده</p>
             <p className="text-sm font-medium text-slate-900 leading-6">
-              {selectedAddr || "نقشه را لمس کنید یا مارکر را جابجا کنید..."}
+              {isAddressLoading ? (
+                <span className="text-slate-400 animate-pulse">در حال دریافت آدرس...</span>
+              ) : (
+                selectedAddr || "نقشه را لمس کنید یا مارکر را جابجا کنید..."
+              )}
             </p>
-            {(selectedProvince || selectedCity) ? (
+            {!isAddressLoading && (selectedProvince || selectedCity) ? (
               <p className="text-xs text-emerald-600 font-semibold mt-1">
                 {selectedProvince && selectedCity ? `${selectedProvince}، ${selectedCity}` : selectedProvince || selectedCity}
               </p>
@@ -299,15 +349,15 @@ export function MapPicker({
             });
             onClose();
           }}
-          disabled={!selectedLoc || !selectedAddr}
+          disabled={!selectedLoc || !selectedAddr || isAddressLoading}
           className={cn(
             "w-full h-12 rounded-xl text-sm font-bold transition-all",
-            selectedLoc
+            selectedLoc && !isAddressLoading
               ? "bg-rose-600 hover:bg-rose-500 text-white shadow-sm"
               : "bg-slate-100 text-slate-400 cursor-not-allowed",
           )}
         >
-          تأیید آدرس روی نقشه
+          {isAddressLoading ? "در حال دریافت آدرس..." : "تأیید آدرس روی نقشه"}
           <MapPin className="w-4 h-4 inline mr-1.5" />
         </button>
       </div>

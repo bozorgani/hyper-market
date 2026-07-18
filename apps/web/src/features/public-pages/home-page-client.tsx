@@ -2,7 +2,7 @@
 
 import { motion } from "@/components/ui/csp-motion";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { 
   Truck, ShieldCheck, RotateCcw, Headphones, Zap, ArrowLeft, 
   Clock, Percent, Star 
@@ -48,6 +48,21 @@ export function HomePageClient({
   const products = useProducts(1, undefined, undefined, initialProducts);
   const categories = useCategories(initialCategories);
   const user = useAuthStore((s) => s.user);
+
+  const [shouldAnimate, setShouldAnimate] = useState(true);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = () => {
+      setShouldAnimate(!mediaQuery.matches);
+    };
+    const timeout = setTimeout(handler, 0);
+    mediaQuery.addEventListener("change", handler);
+    return () => {
+      clearTimeout(timeout);
+      mediaQuery.removeEventListener("change", handler);
+    };
+  }, []);
 
   // Deduplicate products by _id to prevent duplicates across sections
   const uniqueItems = useMemo(() => {
@@ -206,19 +221,24 @@ export function HomePageClient({
           <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">مشاهده همه</Link>
         </div>
 
-        <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <motion.div
+          initial={shouldAnimate ? { opacity: 0, y: 15 } : false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+        >
           {products.isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-full rounded-3xl border bg-white p-3"><Skeleton className="aspect-square w-full rounded-2xl" /></div>
             ))
           ) : bestSellers.length > 0 ? (
             bestSellers.map((product, index) => (
-              <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="h-full">
+              <div key={product._id} className="h-full">
                 <ProductCard product={product} priority={index < 6} fetchPriority={index < 4 ? "high" : "auto"} />
-              </motion.div>
+              </div>
             ))
           ) : null}
-        </div>
+        </motion.div>
       </section>
 
       {/* ==================== FLASH SALE (همیشه نمایش داده می‌شود) ==================== */}
@@ -236,13 +256,18 @@ export function HomePageClient({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <motion.div
+          initial={shouldAnimate ? { opacity: 0 } : false}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+        >
           {(discounted.length > 0 ? discounted : uniqueItems.slice(0, 6)).map((product, index) => (
-            <motion.div key={product._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.04 }} className="h-full">
+            <div key={product._id} className="h-full">
               <ProductCard product={product} priority={index < 2} />
-            </motion.div>
+            </div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* ==================== NEW ARRIVALS ==================== */}
@@ -255,17 +280,24 @@ export function HomePageClient({
           <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">همه محصولات جدید</Link>
         </div>
 
-        <div className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        <motion.div
+          initial={shouldAnimate ? { opacity: 0, y: 15 } : false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+        >
           {newArrivals.length > 0 ? newArrivals.map((product) => (
-            <motion.div key={product._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="h-full">
+            <div key={product._id} className="h-full">
               <ProductCard product={product} priority={false} />
-            </motion.div>
+            </div>
           )) : (
             uniqueItems.slice(0, 6).map((product, index) => (
-              <ProductCard key={product._id} product={product} priority={index < 2} />
+              <div key={product._id} className="h-full">
+                <ProductCard product={product} priority={index < 2} />
+              </div>
             ))
           )}
-        </div>
+        </motion.div>
       </section>
 
       {/* ==================== FINAL CTA ==================== */}

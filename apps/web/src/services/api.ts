@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { CSRF_TOKEN_COOKIE, CSRF_TOKEN_HEADER, API_TIMEOUT_MS } from "@/lib/constants";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -7,8 +8,6 @@ declare module "axios" {
 }
 
 
-const CSRF_TOKEN_COOKIE = "hyper_market_csrf_token";
-const CSRF_TOKEN_HEADER = "x-csrf-token";
 const CSRF_SAFE_METHODS = new Set(["get", "head", "options"]);
 
 function getCookieValue(name: string): string | null {
@@ -103,7 +102,13 @@ function getApiBaseUrl(): string {
 
 function redirectToLogin(): void {
   if (typeof window !== "undefined") {
-    window.location.href = "/login";
+    const { pathname, search } = window.location;
+    if (pathname && pathname !== "/login" && pathname !== "/register" && pathname !== "/verify-otp" && pathname !== "/forgot-password") {
+      const redirectPath = pathname + search;
+      window.location.href = `/login?redirect=${encodeURIComponent(redirectPath)}`;
+    } else {
+      window.location.href = "/login";
+    }
   }
 }
 
@@ -140,7 +145,7 @@ async function refreshSessionCookie(): Promise<void> {
 
 export const api = axios.create({
   baseURL: getApiBaseUrl(),
-  timeout: 15000,
+  timeout: API_TIMEOUT_MS,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,7 +15,7 @@ import type { Product } from "@/types/domain";
 // i18n – Issue #24
 import { t, tf } from "@/i18n";
 
-export function ProductCard({
+export const ProductCard = memo(function ProductCard({
   product,
   priority = false,
   fetchPriority,
@@ -141,4 +142,4 @@ export function ProductCard({
       </div>
     </div>
   );
-}
+});
