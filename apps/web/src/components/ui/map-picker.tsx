@@ -73,7 +73,7 @@ export function MapPicker({
     async (lat: number, lng: number): Promise<{ address: string; province: string; city: string }> => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=fa`,
+          `/api/geocode/reverse?lat=${lat}&lon=${lng}`,
         );
         const data = await res.json();
         if (data.address) {
