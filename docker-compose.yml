@@ -160,7 +160,7 @@ services:
       args:
         NODE_IMAGE: ${NODE_IMAGE:-node:20-bookworm-slim}
     restart: unless-stopped
-    command: ["node", "apps/backend-api/dist/src/worker.js"]
+    command: ["node", "apps/backend-api/dist/worker.js"]
     environment:
       <<: *backend-env
       WORKERS_ENABLED: "true"

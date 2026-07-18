@@ -56,4 +56,4 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 \
     CMD node -e "require('http').get('http://127.0.0.1:3001/health/live', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 VOLUME ["/app/uploads/product-images"]
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "apps/backend-api/dist/src/main.js"]
+CMD ["node", "apps/backend-api/dist/main.js"]

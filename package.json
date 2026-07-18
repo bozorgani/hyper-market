@@ -13,7 +13,7 @@
     "backend:build": "npm run build --workspace=apps/backend-api",
     "backend:test": "npm run test --workspace=apps/backend-api",
     "sync:state": "node scripts/sync-project-state.js",
-    "prepare": "husky",
+    "prepare": "if [ -d .git ]; then husky; fi",
     "search:reindex": "node scripts/reindex-products-search.js",
     "seed:products": "node scripts/seed-products.js",
     "seed:permissions": "node scripts/seed-permissions.js",
