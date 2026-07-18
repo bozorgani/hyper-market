@@ -47,8 +47,14 @@ export class CouponRepository {
     return this.couponModel.findOneAndUpdate({ _id: id, deletedAt: null }, { deletedAt: new Date(), active: false }, { returnDocument: 'after' }).exec();
   }
 
-  async incrementUsedCount(id: string): Promise<void> {
-    await this.couponModel.updateOne({ _id: id }, { $inc: { usedCount: 1 } }).exec();
+  async incrementUsedCount(id: string, usageLimit?: number | null): Promise<Coupon | null> {
+    const filter: any = { _id: new Types.ObjectId(id) };
+    if (usageLimit !== null && usageLimit !== undefined && usageLimit > 0) {
+      filter.usedCount = { $lt: usageLimit };
+    }
+    return this.couponModel
+      .findOneAndUpdate(filter, { $inc: { usedCount: 1 } }, { returnDocument: 'after', new: true })
+      .exec();
   }
 
   async countUsageForUser(couponId: string, userId: string): Promise<number> {
