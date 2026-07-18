@@ -15,6 +15,30 @@ import { useAuthStore } from "@/store/auth-store";
 import { isAdminRole } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
+function isSafeRedirectUrl(url: string): boolean {
+  try {
+    if (url.startsWith("//") || url.includes("..") || url.includes("@")) {
+      return false;
+    }
+
+    if (url.startsWith("/")) {
+      return true;
+    }
+
+    if (typeof window !== "undefined") {
+      const redirectUrl = new URL(url, window.location.origin);
+      if (redirectUrl.origin === window.location.origin) {
+        if (redirectUrl.protocol === "http:" || redirectUrl.protocol === "https:") {
+          return true;
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
 export function LoginPageClient() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
@@ -46,7 +70,7 @@ export function LoginPageClient() {
       await login(normalizedIdentifier.includes("@") ? { email: normalizedIdentifier, password } : { phoneNumber: normalizedIdentifier, password });
       const loggedInUser = useAuthStore.getState().user;
       const redirect = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null;
-      const safeRedirect = redirect?.startsWith("/") && !redirect.startsWith("//") ? redirect : null;
+      const safeRedirect = redirect && isSafeRedirectUrl(redirect) ? redirect : null;
       showToast({ type: "success", title: "با موفقیت وارد شدید" });
       router.push(safeRedirect ?? (isAdminRole(loggedInUser?.role) ? "/admin" : "/profile"));
     } catch (err) {
