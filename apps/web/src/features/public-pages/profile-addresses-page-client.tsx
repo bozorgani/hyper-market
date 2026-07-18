@@ -228,6 +228,7 @@ export function ProfileAddressesPageClient() {
                   onChange={(e) => setForm({ ...form, province: e.target.value, city: "" })}
                   disabled={isSubmitting}
                   required
+                  aria-label="استان"
                   className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
                 >
                   <option value="">انتخاب استان</option>
@@ -251,6 +252,7 @@ export function ProfileAddressesPageClient() {
                   onChange={(e) => setForm({ ...form, city: e.target.value })}
                   disabled={isSubmitting || !form.province}
                   required
+                  aria-label="شهر"
                   className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
                 >
                   <option value="">انتخاب شهر</option>

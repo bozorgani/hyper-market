@@ -82,7 +82,7 @@ export function AdminUsersClient() {
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="جستجو بر اساس شناسه، ایمیل یا شماره..." className="pr-10" />
           </div>
-          <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }} className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm">
+          <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }} aria-label="فیلتر نقش کاربر" className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm">
             <option value="all">همه نقش‌ها</option>
             <option value="customer">مشتری</option>
             <option value="admin">مدیر</option>
@@ -90,7 +90,7 @@ export function AdminUsersClient() {
             <option value="vendor">فروشنده</option>
             <option value="delivery">ارسال‌کننده</option>
           </select>
-          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm">
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} aria-label="فیلتر وضعیت کاربر" className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm">
             <option value="all">همه وضعیت‌ها</option>
             <option value="active">فعال</option>
             <option value="suspended">مسدود</option>

@@ -323,6 +323,7 @@ export function CheckoutPageClient() {
                   value={deliveryWindow.timeSlot}
                   onChange={(e) => setDeliveryWindow({ ...deliveryWindow, timeSlot: e.target.value })}
                   disabled={isSubmitting}
+                  aria-label="بازه زمانی تحویل"
                   className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
                 >
                   {deliveryTimeSlots.map((slot) => (

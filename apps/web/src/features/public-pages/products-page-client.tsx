@@ -92,6 +92,7 @@ export function ProductsPageClient({
               setCategoryId(e.target.value || undefined);
               setPage(1);
             }}
+            aria-label="دسته‌بندی"
             className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
           >
             <option value="">همه دسته‌بندی‌ها</option>

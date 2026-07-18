@@ -171,7 +171,7 @@ export function AdminCouponsClient() {
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
           <div className="flex items-center gap-2"><Gift className="h-4 w-4 text-slate-400" /> <span className="text-sm font-semibold text-slate-700">فهرست کوپن‌ها</span></div>
-          <select value={activeFilter} onChange={(e) => { setActiveFilter(e.target.value as typeof activeFilter); setPage(1); }} className="h-10 rounded-xl border border-slate-200 px-3 text-sm">
+          <select value={activeFilter} onChange={(e) => { setActiveFilter(e.target.value as typeof activeFilter); setPage(1); }} aria-label="فیلتر وضعیت کوپن" className="h-10 rounded-xl border border-slate-200 px-3 text-sm">
             <option value="all">همه</option>
             <option value="active">فعال</option>
             <option value="inactive">غیرفعال</option>

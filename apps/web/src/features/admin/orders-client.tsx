@@ -155,6 +155,7 @@ export function AdminOrdersClient() {
                       <select
                         value={order.status}
                         onChange={(e) => setPendingStatusChange({ orderId: order._id, nextStatus: e.target.value })}
+                        aria-label="تغییر وضعیت سفارش"
                         className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                       >
                         {statuses.filter((item) => item.value !== "all").map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}

@@ -83,7 +83,7 @@ export function AdminProductsClient() {
           </div>
           <Input value={minStock} onChange={(e) => { setMinStock(e.target.value); setPage(1); }} type="number" placeholder="حداقل موجودی" />
           <Input value={maxPrice} onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }} type="number" placeholder="حداکثر قیمت" />
-          <select value={statusFilter} disabled={isSearchMode} onChange={(e) => { setStatusFilter(e.target.value as typeof statusFilter); setPage(1); }} className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm disabled:bg-slate-50 disabled:text-slate-400">
+          <select value={statusFilter} disabled={isSearchMode} onChange={(e) => { setStatusFilter(e.target.value as typeof statusFilter); setPage(1); }} aria-label="فیلتر وضعیت محصول" className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm disabled:bg-slate-50 disabled:text-slate-400">
             <option value="all">همه وضعیت‌ها</option>
             <option value="active">فقط فعال</option>
             <option value="inactive">فقط غیرفعال</option>
