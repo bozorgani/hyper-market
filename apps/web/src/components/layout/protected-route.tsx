@@ -11,7 +11,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const hydrated = useAuthStore((state) => state.hydrated);
 
   useEffect(() => {
-    if (hydrated && !user) router.replace("/login");
+    if (hydrated && !user) {
+      const redirectPath = window.location.pathname + window.location.search;
+      router.replace(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+    }
   }, [hydrated, router, user]);
 
   if (!hydrated) return <PageLoader title="در حال بررسی وضعیت ورود..." />;
