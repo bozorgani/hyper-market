@@ -15,8 +15,8 @@ const ROOT = path.resolve(__dirname, '..');
 const DOC_PATH = path.join(ROOT, 'docs', 'PROJECT_STATE.md');
 const BACKEND_SRC = path.join(ROOT, 'apps', 'backend-api', 'src');
 const MODULES_DIR = path.join(BACKEND_SRC, 'modules');
-const FRONTEND_APP_DIR = path.join(ROOT, 'apps', 'frontend', 'src', 'app');
-const FRONTEND_WEB_APP_DIR = path.join(ROOT, 'apps', 'frontend-web', 'app');
+const FRONTEND_APP_DIR = path.join(ROOT, 'apps', 'web', 'src', 'app');
+const FRONTEND_WEB_APP_DIR = path.join(ROOT, 'apps', 'web', 'src', 'app');
 
 const TARGET_SECTIONS = {
   backend: 'Backend Status',
@@ -113,7 +113,7 @@ function getAffectedSections(changedFiles) {
       affected.add(TARGET_SECTIONS.api);
     }
 
-    if (file.startsWith('apps/frontend/') || file.startsWith('apps/frontend-web/')) {
+    if (file.startsWith('apps/web/') || file.startsWith('apps/web/')) {
       affected.add(TARGET_SECTIONS.frontend);
       affected.add(TARGET_SECTIONS.completed);
       affected.add(TARGET_SECTIONS.missing);
@@ -269,8 +269,8 @@ function detectMissingAndBroken(endpoints) {
   }
 
   const frontendText = [
-    readFileSafe(path.join(ROOT, 'apps/frontend/src/store/auth-store.ts')),
-    readFileSafe(path.join(ROOT, 'apps/frontend/src/services/api.ts')),
+    readFileSafe(path.join(ROOT, 'apps/web/src/store/auth-store.ts')),
+    readFileSafe(path.join(ROOT, 'apps/web/src/services/api.ts')),
   ].join('\n');
   if (frontendText.includes('/auth/refresh-token') && !endpointSet.has('POST /auth/refresh-token')) {
     missing.push('Frontend calls `POST /auth/refresh-token`, but backend exposes `POST /auth/refresh`. Silent refresh is currently mismatched.');
@@ -295,7 +295,7 @@ function detectMissingAndBroken(endpoints) {
 }
 
 function findTodoComments() {
-  const sourceRoots = [path.join(ROOT, 'apps/backend-api/src'), path.join(ROOT, 'apps/frontend/src'), path.join(ROOT, 'apps/frontend-web')];
+  const sourceRoots = [path.join(ROOT, 'apps/backend-api/src'), path.join(ROOT, 'apps/web/src'), path.join(ROOT, 'apps/web')];
   const todos = [];
 
   for (const root of sourceRoots) {
@@ -369,14 +369,14 @@ Infrastructure/core detected:
 }
 
 function renderFrontendStatus() {
-  const frontendDeps = getPackageDeps('apps/frontend/package.json');
-  const frontendWebDeps = getPackageDeps('apps/frontend-web/package.json');
+  const frontendDeps = getPackageDeps('apps/web/package.json');
+  const frontendWebDeps = getPackageDeps('apps/web/package.json');
   const frontendRoutes = getFrontendRoutes(FRONTEND_APP_DIR);
   const frontendWebRoutes = getFrontendRoutes(FRONTEND_WEB_APP_DIR);
 
   return `## 3. Frontend Status (frontend + frontend-web)
 
-## 3.1 Main frontend: \`apps/frontend\`
+## 3.1 Main frontend: \`apps/web\`
 
 Detected dependencies:
 
@@ -400,7 +400,7 @@ Detected characteristics from code:
 - Customer-facing pages exist for auth, products, search, cart, checkout, orders, and profile
 - Admin panel exists under \`/admin/*\`
 
-## 3.2 Secondary frontend: \`apps/frontend-web\`
+## 3.2 Secondary frontend: \`apps/web\`
 
 Detected dependencies:
 
@@ -460,8 +460,8 @@ function renderCompletedFeatures() {
   const features = [];
 
   if (exists('apps/backend-api')) features.push('Backend API application exists under `apps/backend-api`.');
-  if (exists('apps/frontend')) features.push('Main frontend application exists under `apps/frontend`.');
-  if (exists('apps/frontend-web')) features.push('Secondary frontend application exists under `apps/frontend-web`.');
+  if (exists('apps/web')) features.push('Main frontend application exists under `apps/web`.');
+  if (exists('apps/web')) features.push('Secondary frontend application exists under `apps/web`.');
   if (modules.has('auth')) features.push('Auth module exists with JWT/OTP-related services, guards, strategies, DTOs, and schemas.');
   if (modules.has('products')) features.push('Products module exists with controller, service, repository, DTOs, and schema.');
   if (modules.has('categories')) features.push('Categories module exists with list controller, service, repository, and schema.');

@@ -147,18 +147,59 @@ Infrastructure/core detected:
 
 ## 3. Frontend Status (frontend + frontend-web)
 
-## 3.1 Main frontend: `apps/frontend`
+## 3.1 Main frontend: `apps/web`
 
 Detected dependencies:
 
 ```text
-
+@tanstack/react-query
+@types/leaflet
+axios
+clsx
+date-fns
+framer-motion
+leaflet
+lucide-react
+next
+react
+react-dom
+tailwind-merge
+tw-animate-css
+zod
+zustand
 ```
 
 Detected App Router routes:
 
 ```text
-
+/(main)
+/(main)/cart
+/(main)/categories
+/(main)/checkout
+/(main)/order/success
+/(main)/orders
+/(main)/products
+/(main)/products/[id]
+/(main)/profile
+/(main)/profile/addresses
+/(main)/search
+/(main)/wishlist
+/admin
+/admin/analytics
+/admin/categories
+/admin/coupons
+/admin/orders
+/admin/orders/[id]
+/admin/payments
+/admin/products
+/admin/products/[id]
+/admin/products/new
+/admin/roles
+/admin/users
+/forgot-password
+/login
+/register
+/verify-otp
 ```
 
 Detected characteristics from code:
@@ -171,18 +212,59 @@ Detected characteristics from code:
 - Customer-facing pages exist for auth, products, search, cart, checkout, orders, and profile
 - Admin panel exists under `/admin/*`
 
-## 3.2 Secondary frontend: `apps/frontend-web`
+## 3.2 Secondary frontend: `apps/web`
 
 Detected dependencies:
 
 ```text
-
+@tanstack/react-query
+@types/leaflet
+axios
+clsx
+date-fns
+framer-motion
+leaflet
+lucide-react
+next
+react
+react-dom
+tailwind-merge
+tw-animate-css
+zod
+zustand
 ```
 
 Detected App Router routes:
 
 ```text
-
+/(main)
+/(main)/cart
+/(main)/categories
+/(main)/checkout
+/(main)/order/success
+/(main)/orders
+/(main)/products
+/(main)/products/[id]
+/(main)/profile
+/(main)/profile/addresses
+/(main)/search
+/(main)/wishlist
+/admin
+/admin/analytics
+/admin/categories
+/admin/coupons
+/admin/orders
+/admin/orders/[id]
+/admin/payments
+/admin/products
+/admin/products/[id]
+/admin/products/new
+/admin/roles
+/admin/users
+/forgot-password
+/login
+/register
+/verify-otp
 ```
 
 Detected characteristics from code:
@@ -651,6 +733,8 @@ action
 ## 6. Completed Features
 
 - Backend API application exists under `apps/backend-api`.
+- Main frontend application exists under `apps/web`.
+- Secondary frontend application exists under `apps/web`.
 - Auth module exists with JWT/OTP-related services, guards, strategies, DTOs, and schemas.
 - Products module exists with controller, service, repository, DTOs, and schema.
 - Categories module exists with list controller, service, repository, and schema.
