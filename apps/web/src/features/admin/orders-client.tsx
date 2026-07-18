@@ -7,6 +7,7 @@ import { Search, Eye, RefreshCw, Package } from "lucide-react";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { OrderStatusBadge } from "@/components/admin/admin-status-badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ export function AdminOrdersClient() {
   const [status, setStatus] = useState<OrderStatus | "all">("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{ orderId: string; nextStatus: string } | null>(null);
   const orders = useAdminOrders(page, status === "all" ? undefined : status, PAGE_SIZE, query.trim() || undefined);
   const updateStatus = useUpdateOrderStatus();
   const { showToast } = useToast();
@@ -41,10 +43,12 @@ export function AdminOrdersClient() {
   const totalPages = orders.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
   const errorMessage = orders.error instanceof Error ? orders.error.message : "دریافت سفارش‌ها ناموفق بود.";
 
-  async function handleStatusChange(orderId: string, nextStatus: string) {
+  async function confirmStatusChange() {
+    if (!pendingStatusChange) return;
     try {
-      await updateStatus.mutateAsync({ orderId, status: nextStatus });
-      showToast({ type: "success", title: "وضعیت سفارش به‌روزرسانی شد", description: `وضعیت جدید: ${translateOrderStatus(nextStatus)}` });
+      await updateStatus.mutateAsync({ orderId: pendingStatusChange.orderId, status: pendingStatusChange.nextStatus });
+      showToast({ type: "success", title: "وضعیت سفارش به‌روزرسانی شد", description: `وضعیت جدید: ${translateOrderStatus(pendingStatusChange.nextStatus)}` });
+      setPendingStatusChange(null);
     } catch (error) {
       showToast({ type: "error", title: "تغییر وضعیت سفارش ناموفق بود", description: error instanceof Error ? error.message : undefined });
     }
@@ -150,7 +154,8 @@ export function AdminOrdersClient() {
                     <td className="px-5 py-3.5">
                       <select
                         value={order.status}
-                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                        onChange={(e) => setPendingStatusChange({ orderId: order._id, nextStatus: e.target.value })}
+                        aria-label="تغییر وضعیت سفارش"
                         className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                       >
                         {statuses.filter((item) => item.value !== "all").map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
@@ -195,6 +200,16 @@ export function AdminOrdersClient() {
           {!orders.isLoading && paginatedOrders.length > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={totalItems} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingStatusChange)}
+        title="تغییر وضعیت سفارش"
+        description={pendingStatusChange ? `آیا از تغییر وضعیت سفارش #${pendingStatusChange.orderId.slice(-8)} به «${translateOrderStatus(pendingStatusChange.nextStatus)}» مطمئن هستید؟` : ""}
+        confirmText="تغییر وضعیت"
+        loading={updateStatus.isPending}
+        onConfirm={confirmStatusChange}
+        onCancel={() => setPendingStatusChange(null)}
+      />
     </div>
   );
 }

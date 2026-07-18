@@ -126,7 +126,7 @@ function SearchContent({
         />
 
         <div className="mt-5 grid gap-3 md:grid-cols-5">
-          <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1); }} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm">
+          <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1); }} aria-label="دسته‌بندی" className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm">
             <option value="">همه دسته‌بندی‌ها</option>
             {(categories.data ?? []).map((category) => (
               <option key={category._id} value={category._id}>
@@ -136,7 +136,7 @@ function SearchContent({
           </select>
           <Input value={minPrice} onChange={(e) => { setMinPrice(e.target.value); setPage(1); }} placeholder="حداقل قیمت" type="number" />
           <Input value={maxPrice} onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }} placeholder="حداکثر قیمت" type="number" />
-          <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm">
+          <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} aria-label="مرتب‌سازی" className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm">
             <option value="createdAt:desc">جدیدترین</option>
             <option value="price:asc">ارزان‌ترین</option>
             <option value="price:desc">گران‌ترین</option>

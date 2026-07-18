@@ -59,6 +59,7 @@ export function AdminPaymentsClient() {
           <select
             value={statusFilter}
             onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }}
+            aria-label="فیلتر وضعیت پرداخت"
             className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm"
           >
             <option value="all">همه وضعیت‌ها</option>
