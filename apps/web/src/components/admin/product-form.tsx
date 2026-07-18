@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { StatusMessage } from "@/components/ui/status-message";
+import { firstValidationError } from "@/lib/validation/auth";
+import { productFormSchema } from "@/lib/validation/product";
 import type { Product } from "@/types/domain";
 import type { ProductFormInput } from "@/features/admin/admin-api";
 import { useAdminCategories } from "@/features/admin/admin-api";
@@ -68,28 +70,9 @@ export function ProductForm({
     event.preventDefault();
     setValidationError("");
 
-    if (form.name.trim().length < 2) {
-      setValidationError("نام محصول باید حداقل ۲ کاراکتر باشد.");
-      return;
-    }
-    if (!form.description.trim()) {
-      setValidationError("توضیحات محصول الزامی است.");
-      return;
-    }
-    if (!form.categoryId) {
-      setValidationError("انتخاب دسته‌بندی الزامی است.");
-      return;
-    }
-    if (!Number.isFinite(form.price) || form.price < 0) {
-      setValidationError("قیمت محصول باید عددی صفر یا بزرگ‌تر باشد.");
-      return;
-    }
-    if (form.discountPrice !== undefined && (form.discountPrice < 0 || form.discountPrice > form.price)) {
-      setValidationError("قیمت تخفیفی باید بین صفر و قیمت اصلی باشد.");
-      return;
-    }
-    if (!Number.isFinite(form.stock) || form.stock < 0) {
-      setValidationError("موجودی محصول باید عددی صفر یا بزرگ‌تر باشد.");
+    const validation = productFormSchema.safeParse(form);
+    if (!validation.success) {
+      setValidationError(firstValidationError(validation.error));
       return;
     }
 

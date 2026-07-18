@@ -18,6 +18,8 @@ import {
   useUpdateCoupon,
 } from "@/features/admin/admin-api";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import { firstValidationError } from "@/lib/validation/auth";
+import { couponFormSchema } from "@/lib/validation/coupon";
 import type { Coupon } from "@/types/domain";
 
 const PAGE_SIZE = 10;
@@ -75,28 +77,9 @@ export function AdminCouponsClient() {
     event.preventDefault();
     setFormError("");
 
-    if (!/^[A-Za-z0-9_-]{1,40}$/.test(form.code.trim())) {
-      setFormError("کد کوپن باید فقط شامل حروف انگلیسی، عدد، خط تیره یا زیرخط باشد.");
-      return;
-    }
-    if (!Number.isFinite(form.percent) || form.percent < 0 || form.percent > 100) {
-      setFormError("درصد تخفیف باید بین صفر تا صد باشد.");
-      return;
-    }
-    if ((form.minSubtotal ?? 0) < 0 || (form.maxDiscountAmount ?? 0) < 0) {
-      setFormError("مقادیر مالی کوپن نمی‌توانند منفی باشند.");
-      return;
-    }
-    if (form.usageLimit !== null && form.usageLimit !== undefined && form.usageLimit < 1) {
-      setFormError("سقف استفاده کل باید حداقل یک باشد.");
-      return;
-    }
-    if (form.perUserLimit !== null && form.perUserLimit !== undefined && form.perUserLimit < 1) {
-      setFormError("سقف استفاده هر کاربر باید حداقل یک باشد.");
-      return;
-    }
-    if (form.startsAt && form.endsAt && form.startsAt > form.endsAt) {
-      setFormError("تاریخ پایان باید بعد از تاریخ شروع باشد.");
+    const validation = couponFormSchema.safeParse(form);
+    if (!validation.success) {
+      setFormError(firstValidationError(validation.error));
       return;
     }
 

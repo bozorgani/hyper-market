@@ -19,6 +19,14 @@ import {
 } from "@/hooks/use-addresses";
 import type { Address } from "@/types/domain";
 import { useAuthStore } from "@/store/auth-store";
+import { firstValidationError } from "@/lib/validation/auth";
+import {
+  addressFormSchema,
+  addressLineSchema,
+  addressPhoneNumberSchema,
+  addressPostalCodeSchema,
+  addressRecipientNameSchema,
+} from "@/lib/validation/address";
 
 const MapPicker = lazy(() =>
   import("@/components/ui/map-picker").then((m) => ({ default: m.MapPicker }))
@@ -39,29 +47,32 @@ const emptyAddress: AddressInput = {
 
 function getAddressErrors(address: AddressInput) {
   const errors: Record<string, string> = {};
-  if (address.recipientName.trim().length > 0 && address.recipientName.trim().length < 2) {
-    errors.recipientName = "نام تحویل‌گیرنده حداقل ۲ کاراکتر باشد.";
+
+  const recipientName = addressRecipientNameSchema.safeParse(address.recipientName);
+  if (address.recipientName.trim().length > 0 && !recipientName.success) {
+    errors.recipientName = firstValidationError(recipientName.error);
   }
-  if (address.phoneNumber.trim().length > 0 && !/^09\d{9}$/.test(address.phoneNumber.trim())) {
-    errors.phoneNumber = "شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد.";
+
+  const phoneNumber = addressPhoneNumberSchema.safeParse(address.phoneNumber);
+  if (address.phoneNumber.trim().length > 0 && !phoneNumber.success) {
+    errors.phoneNumber = firstValidationError(phoneNumber.error);
   }
-  if (address.addressLine.trim().length > 0 && address.addressLine.trim().length < 10) {
-    errors.addressLine = "آدرس باید حداقل ۱۰ کاراکتر باشد.";
+
+  const addressLine = addressLineSchema.safeParse(address.addressLine);
+  if (address.addressLine.trim().length > 0 && !addressLine.success) {
+    errors.addressLine = firstValidationError(addressLine.error);
   }
-  if (address.postalCode?.trim() && !/^\d{10}$/.test(address.postalCode.trim())) {
-    errors.postalCode = "کد پستی باید دقیقاً ۱۰ رقم باشد.";
+
+  const postalCode = addressPostalCodeSchema.safeParse(address.postalCode ?? "");
+  if (address.postalCode?.trim() && !postalCode.success) {
+    errors.postalCode = firstValidationError(postalCode.error);
   }
+
   return errors;
 }
 
 function isAddressValid(address: AddressInput) {
-  return (
-    address.recipientName.trim().length >= 2 &&
-    /^09\d{9}$/.test(address.phoneNumber.trim()) &&
-    address.province.trim().length >= 2 &&
-    address.city.trim().length >= 2 &&
-    address.addressLine.trim().length >= 10
-  );
+  return addressFormSchema.safeParse(address).success;
 }
 
 export function ProfileAddressesPageClient() {
