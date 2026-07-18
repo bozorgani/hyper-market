@@ -86,13 +86,26 @@ export class OrdersService {
             throw new BadRequestException('Cart is empty');
           }
 
+          // Batch fetch all products to eliminate N+1 queries
+          const productIds = Array.from(
+            new Set(cart.items.map((item: any) => getEntityId(item.productId))),
+          );
+          const productsBatch = await this.productsService.getProductsByIds(productIds);
+          const productMap = new Map<string, any>();
+          for (const product of productsBatch) {
+            productMap.set(product._id.toString(), product);
+          }
+
           const orderItems: OrderItem[] = [];
           let subtotalPrice = 0;
 
           for (const item of cart.items) {
             const productId = getEntityId(item.productId);
+            const product = productMap.get(productId);
 
-            const product = await this.productsService.getProductById(productId, session);
+            if (!product) {
+              throw new BadRequestException(`Product "${productId}" not found`);
+            }
 
             if (!product.isActive) {
               throw new BadRequestException(`Product "${product.name}" is not active`);
