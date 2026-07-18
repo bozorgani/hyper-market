@@ -67,17 +67,18 @@ export class OrdersService {
     }
 
     try {
+      // Critical inventory section: read state, validate, reserve atomically
       const existingOrder = await this.findRecentDuplicateOrder(userId);
-      if (existingOrder) {
-        this.logger.warn(
-          `Duplicate order creation prevented for user ${userId}. Returning existing order ${getEntityId(existingOrder)}.`,
-        );
-        return existingOrder;
-      }
+        if (existingOrder) {
+          this.logger.warn(
+            `Duplicate order creation prevented for user ${userId}. Returning existing order ${getEntityId(existingOrder)}.`,
+          );
+          return existingOrder;
+        }
 
-      const reducedItems: Array<{ productId: string; quantity: number }> = [];
+        const reducedItems: Array<{ productId: string; quantity: number }> = [];
 
-      const order = await this.databaseTransactionService.executeWithCompensation({
+        const order = await this.databaseTransactionService.executeWithCompensation({
         execute: async (session) => {
           const cart = await this.cartService.getCartByUserId(userId, session);
 
@@ -246,7 +247,7 @@ export class OrdersService {
 
       return order;
     } finally {
-      // Release the distributed lock
+      // Release the distributed user lock
       try {
         await this.redisService.delete(lockKey);
       } catch {
