@@ -1,5 +1,6 @@
 import { api } from "@/services/api";
 import { useAuthStore } from "@/store/auth-store";
+import { DEVICE_KEY, MAX_ANALYTICS_THROTTLE_ENTRIES as MAX_THROTTLE_ENTRIES } from "@/lib/constants";
 
 export type AnalyticsEventType =
   | "PRODUCT_VIEW"
@@ -16,13 +17,10 @@ type AnalyticsPayload = {
   metadata?: Record<string, unknown>;
 };
 
-const DEVICE_KEY = "hyper_market_device_id";
-
 // Stores the absolute timestamp until which an event key is suppressed.
 // Using an expiry (instead of a "last sent" timestamp) lets us purge entries
 // that can no longer suppress anything, which is what bounds the map size.
 const throttleExpiresAt = new Map<string, number>();
-const MAX_THROTTLE_ENTRIES = 1000;
 
 function getThrottleWindowMs(type: AnalyticsEventType): number {
   switch (type) {

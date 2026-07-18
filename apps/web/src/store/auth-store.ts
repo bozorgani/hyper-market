@@ -3,15 +3,7 @@
 import { create } from "zustand";
 import { api } from "@/services/api";
 import type { User } from "@/types/domain";
-
-const DEVICE_KEY = "hyper_market_device_id";
-
-// Legacy keys – cleaned once on hydrate to remove XSS-able sessionStorage data
-const LEGACY_KEYS = [
-  "hyper_market_access_token",
-  "hyper_market_refresh_token",
-  "hyper_market_user",
-];
+import { DEVICE_KEY, LEGACY_STORAGE_KEYS } from "@/lib/constants";
 
 let hydrationPromise: Promise<void> | null = null;
 
@@ -49,7 +41,7 @@ function getDeviceId(): string | null {
 function clearLegacyAuthStorage(): void {
   if (typeof window === "undefined") return;
   try {
-    LEGACY_KEYS.forEach((key) => {
+    LEGACY_STORAGE_KEYS.forEach((key) => {
       window.sessionStorage.removeItem(key);
       window.localStorage.removeItem(key);
     });

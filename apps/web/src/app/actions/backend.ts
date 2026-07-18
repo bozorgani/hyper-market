@@ -1,9 +1,7 @@
 "use server";
 
 import { cookies, headers } from "next/headers";
-
-const CSRF_TOKEN_COOKIE = "hyper_market_csrf_token";
-const CSRF_TOKEN_HEADER = "x-csrf-token";
+import { CSRF_TOKEN_COOKIE, CSRF_TOKEN_HEADER } from "@/lib/constants";
 
 function getApiBaseUrl(): string {
   const configured = process.env.SERVER_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.PUBLIC_API_BASE_URL;

@@ -16,9 +16,7 @@ import { useToast } from "@/components/ui/toast";
 import { emailSchema, firstValidationError, normalizePhoneNumber, normalizeOtpCode, passwordSchema, phoneNumberSchema, verifyOtpSchema } from "@/lib/validation/auth";
 import { api } from "@/services/api";
 import { cn } from "@/lib/utils";
-
-const OTP_LENGTH = 6;
-const RESEND_COOLDOWN = 60;
+import { OTP_LENGTH, RESEND_COOLDOWN_SECONDS as RESEND_COOLDOWN } from "@/lib/constants";
 
 type OtpVerificationType = "phone_verify" | "email_verify" | "password_reset";
 

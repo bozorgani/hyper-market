@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { ACCESS_TOKEN_COOKIE, ADMIN_ROLES } from './lib/constants';
 
 /**
  * Admin route protection proxy + CSP nonce hardening (Issue #17).
@@ -27,8 +28,6 @@ import type { NextRequest } from 'next/server';
  *   - Disables style attributes and authorizes nonce-bearing style elements.
  */
 
-const ACCESS_TOKEN_COOKIE = 'hyper_market_access_token';
-const ADMIN_ROLES = new Set(['ADMIN', 'SUPER_ADMIN', 'admin', 'super_admin']);
 const ADMIN_PATHS = ['/admin'];
 // Customer PII routes – require any authenticated user
 const CUSTOMER_PROTECTED_PATHS = [
