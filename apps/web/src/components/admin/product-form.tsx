@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { ProductImageManager } from "@/components/admin/product-image-manager";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,46 +25,24 @@ export function ProductForm({
 }) {
   const categories = useAdminCategories();
   const [form, setForm] = useState<ProductFormInput>({
-    name: "",
-    description: "",
-    price: 0,
-    discountPrice: undefined,
-    stock: 0,
-    images: [],
-    categoryId: "",
-    isActive: true,
-    brand: "",
-    sku: "",
-    unit: "",
-    weight: undefined,
-    tags: [],
+    name: initialProduct?.name ?? "",
+    description: initialProduct?.description ?? "",
+    price: initialProduct?.price ?? 0,
+    discountPrice: initialProduct?.discountPrice ?? undefined,
+    stock: initialProduct?.stock ?? 0,
+    images: initialProduct?.images ?? [],
+    categoryId: initialProduct ? String(initialProduct.categoryId) : "",
+    isActive: initialProduct?.isActive ?? true,
+    brand: initialProduct?.brand ?? "",
+    sku: initialProduct?.sku ?? "",
+    unit: initialProduct?.unit ?? "",
+    weight: initialProduct?.weight ?? undefined,
+    tags: initialProduct?.tags ?? [],
   });
 
   // Tags input state
   const [tagInput, setTagInput] = useState("");
   const [validationError, setValidationError] = useState("");
-
-  useEffect(() => {
-    if (initialProduct) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setForm({
-        name: initialProduct.name,
-        description: initialProduct.description,
-        price: initialProduct.price,
-        discountPrice: initialProduct.discountPrice ?? undefined,
-        stock: initialProduct.stock,
-        images: initialProduct.images ?? [],
-        categoryId: String(initialProduct.categoryId),
-        isActive: initialProduct.isActive,
-        brand: initialProduct.brand ?? "",
-        sku: initialProduct.sku ?? "",
-        unit: initialProduct.unit ?? "",
-        weight: initialProduct.weight ?? undefined,
-        tags: initialProduct.tags ?? [],
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialProduct?._id]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
