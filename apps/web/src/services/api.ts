@@ -102,7 +102,13 @@ function getApiBaseUrl(): string {
 
 function redirectToLogin(): void {
   if (typeof window !== "undefined") {
-    window.location.href = "/login";
+    const { pathname, search } = window.location;
+    if (pathname && pathname !== "/login" && pathname !== "/register" && pathname !== "/verify-otp" && pathname !== "/forgot-password") {
+      const redirectPath = pathname + search;
+      window.location.href = `/login?redirect=${encodeURIComponent(redirectPath)}`;
+    } else {
+      window.location.href = "/login";
+    }
   }
 }
 
