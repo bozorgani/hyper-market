@@ -108,7 +108,7 @@ async function validateAdminRole(): Promise<void> {
     throw new Error("unauthorized");
   }
   const payload = decodeJwtPayload(token);
-  const role = payload?.role;
+  const role = typeof payload?.role === "string" ? payload.role : undefined;
   if (!role || !isAdminRole(role)) {
     throw new Error("unauthorized");
   }

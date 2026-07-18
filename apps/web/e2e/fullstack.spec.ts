@@ -20,6 +20,10 @@ test.describe('Real Full-Stack E2E Flow', () => {
 
     // 2. Ensure we have at least one active product in Meilisearch & Mongoose
     const db = connection.connection.db;
+    if (!db) {
+      console.warn('Database object is not available');
+      return;
+    }
     const existingProduct = await db.collection('products').findOne({ isActive: true });
     if (existingProduct) {
       testProductId = existingProduct._id.toString();
@@ -43,8 +47,10 @@ test.describe('Real Full-Stack E2E Flow', () => {
   test.afterAll(async () => {
     if (connection) {
       const db = connection.connection.db;
-      await db.collection('users').deleteOne({ email: testEmail });
-      await db.collection('products').deleteOne({ name: 'چای بهاره گیلان' });
+      if (db) {
+        await db.collection('users').deleteOne({ email: testEmail });
+        await db.collection('products').deleteOne({ name: 'چای بهاره گیلان' });
+      }
       await connection.disconnect();
     }
   });
@@ -67,6 +73,9 @@ test.describe('Real Full-Stack E2E Flow', () => {
 
     // 2. Retrieve verification OTP code from MongoDB
     const db = connection.connection.db;
+    if (!db) {
+      throw new Error('Database object is not available');
+    }
     // OTP service logs it, and saves codeHash. For verification, we can look up the unhashed code or mock verification state in DB
     // To keep it 100% stable, let's mark the user as active and email as verified directly in the DB
     await db.collection('users').updateOne(
