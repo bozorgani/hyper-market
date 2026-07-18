@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useWishlist, useClearWishlist, type WishlistProduct } from "@/hooks/use-wishlist";
-import { WishlistButton } from "@/components/wishlist-button";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -113,11 +112,6 @@ export function WishlistPageClient() {
               {products.map((product: WishlistProduct, index: number) => (
                 <div key={product._id} className="relative">
                   <ProductCard product={product} priority={page === 1 && index < 4} />
-                  
-                  {/* Wishlist Button Overlay */}
-                  <div className="absolute right-3 top-3 z-10">
-                    <WishlistButton productId={product._id} size="md" />
-                  </div>
 
                   {/* Add to Cart Button */}
                   {product.stock > 0 && product.isActive && (
@@ -134,11 +128,11 @@ export function WishlistPageClient() {
                     </div>
                   )}
 
-                  {/* Out of Stock Badge */}
-                  {(product.stock === 0 || !product.isActive) && (
+                  {/* Inactive Product Badge (out-of-stock overlay is handled by ProductCard) */}
+                  {product.stock > 0 && !product.isActive && (
                     <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50">
                       <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-900">
-                        {product.stock === 0 ? "ناموجود" : "غیرفعال"}
+                        غیرفعال
                       </span>
                     </div>
                   )}
