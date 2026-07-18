@@ -28,7 +28,6 @@ const PAGE_SIZE = 8;
 export function AdminCategoriesClient() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  const categories = useAdminCategories(page, PAGE_SIZE, query.trim() || undefined);
   const allCategories = useAdminCategories();
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
@@ -41,9 +40,28 @@ export function AdminCategoriesClient() {
 
   const isSubmitting = createCategory.isPending || updateCategory.isPending;
 
-  const paginatedCategories = categories.data?.items ?? [];
-  const totalItems = categories.data?.total ?? 0;
-  const totalPages = categories.data?.meta?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const allItems = allCategories.data?.items;
+
+  // Client-side search/filter
+  const filteredItems = useMemo(() => {
+    const items = allItems ?? [];
+    if (!query.trim()) return items;
+    const lowerQuery = query.trim().toLowerCase();
+    return items.filter(
+      (cat) =>
+        cat.name.toLowerCase().includes(lowerQuery) ||
+        cat.slug.toLowerCase().includes(lowerQuery)
+    );
+  }, [allItems, query]);
+
+  // Client-side pagination
+  const totalItems = filteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+
+  const paginatedCategories = useMemo(() => {
+    const startIndex = (page - 1) * PAGE_SIZE;
+    return filteredItems.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredItems, page]);
 
   // Build parent category options (root categories only, excluding current editing)
   const rootCategories = useMemo(() => {
@@ -251,11 +269,11 @@ export function AdminCategoriesClient() {
         </div>
       </div>
 
-      {categories.isError ? (
-        <ErrorState title="امکان دریافت دسته‌بندی‌ها نیست" description="لطفاً دوباره تلاش کنید." actions={<Button type="button" variant="outline" onClick={() => categories.refetch()}>تلاش مجدد</Button>} />
+      {allCategories.isError ? (
+        <ErrorState title="امکان دریافت دسته‌بندی‌ها نیست" description="لطفاً دوباره تلاش کنید." actions={<Button type="button" variant="outline" onClick={() => allCategories.refetch()}>تلاش مجدد</Button>} />
       ) : null}
 
-      {!categories.isError && (
+      {!allCategories.isError && (
         <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
             <div className="flex items-center gap-2">
@@ -280,8 +298,8 @@ export function AdminCategoriesClient() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {categories.isLoading ? Array.from({ length: 4 }).map((_, index) => <tr key={index}><td className="p-5" colSpan={7}><Skeleton className="h-12 w-full rounded-xl" /></td></tr>) : null}
-                {!categories.isLoading && paginatedCategories.map((category) => (
+                {allCategories.isLoading ? Array.from({ length: 4 }).map((_, index) => <tr key={index}><td className="p-5" colSpan={7}><Skeleton className="h-12 w-full rounded-xl" /></td></tr>) : null}
+                {!allCategories.isLoading && paginatedCategories.map((category) => (
                   <motion.tr key={category._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="transition hover:bg-slate-50/50">
                     <td className="px-5 py-3.5 text-2xl">{category.icon ?? "📦"}</td>
                     <td className="px-5 py-3.5 font-bold text-slate-800">{category.name}</td>
@@ -313,8 +331,8 @@ export function AdminCategoriesClient() {
 
           {/* Mobile Cards */}
           <div className="lg:hidden divide-y divide-slate-50">
-            {categories.isLoading ? Array.from({ length: 3 }).map((_, index) => <div key={index} className="p-4"><Skeleton className="h-16 w-full rounded-xl" /></div>) : null}
-            {!categories.isLoading && paginatedCategories.map((category) => (
+            {allCategories.isLoading ? Array.from({ length: 3 }).map((_, index) => <div key={index} className="p-4"><Skeleton className="h-16 w-full rounded-xl" /></div>) : null}
+            {!allCategories.isLoading && paginatedCategories.map((category) => (
               <div key={category._id} className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{category.icon ?? "📦"}</span>
@@ -339,10 +357,10 @@ export function AdminCategoriesClient() {
             ))}
           </div>
 
-          {!categories.isLoading && totalItems === 0 ? (
+          {!allCategories.isLoading && totalItems === 0 ? (
             <div className="p-8"><EmptyState title="دسته‌بندی‌ای یافت نشد" description="عبارت جستجو را تغییر دهید یا دسته‌بندی جدید بسازید." actions={<Button type="button" onClick={() => { setQuery(""); setPage(1); }}>پاک‌کردن</Button>} /></div>
           ) : null}
-          {!categories.isLoading && totalItems > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={totalItems} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
+          {!allCategories.isLoading && totalItems > 0 ? <AdminPagination page={page} totalPages={totalPages} totalItems={totalItems} pageSize={PAGE_SIZE} onPageChange={setPage} /> : null}
         </div>
       )}
 
