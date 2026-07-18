@@ -1,5 +1,7 @@
 # Docker / Compose راه‌اندازی محلی
 
+> 📖 For the complete English Docker guide, see [docker-guide.md](docker-guide.md).
+
 این پروژه اکنون با Docker Compose سرویس‌های زیر را بالا می‌آورد:
 
 - `web` — Next.js روی `http://localhost:3000`
@@ -9,9 +11,23 @@
 - `redis` — Redis 7
 - `meilisearch` — Meilisearch روی `http://localhost:7700`
 
+## معماری شبکه
+
+دو شبکه Docker جداگانه:
+
+- `frontend` — ارتباط web ↔ backend
+- `backend` — ارتباط backend, worker ↔ mongo, redis, meilisearch
+
+کانتینر `web` نمی‌تواند مستقیماً به MongoDB، Redis یا Meilisearch دسترسی داشته باشد.
+
 ## اجرا
 
 ```bash
+# ۱. ساخت فایل محیطی
+cp .env.docker .env
+# مقادیر امن را تنظیم کنید
+
+# ۲. اجرای کل استک
 docker compose up --build
 ```
 
@@ -55,10 +71,31 @@ NEXT_PUBLIC_SITE_URL=https://your-domain.com
 
 در production، backend وقتی `APP_ENV=production` باشد cookieها را با `secure=true` تنظیم می‌کند؛ بنابراین برای auth واقعی باید پشت HTTPS اجرا شود. Compose پیش‌فرض با `APP_ENV=development` تنظیم شده تا login روی `localhost` و HTTP کار کند.
 
+## اجرای Production
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+فایل `docker-compose.prod.yml` شامل:
+- محدودیت منابع (CPU و حافظه)
+- لاگ‌گیری با چرخش (rotation)
+- عدم انتشار پورت‌های داخلی
+- تنظیمات امنیتی production
+
 ## توقف و حذف volumeها
 
 ```bash
 docker compose down
 # حذف دیتای Mongo/Redis/Meilisearch/uploads
- docker compose down -v
+docker compose down -v
 ```
+
+## فایل‌های Docker Compose
+
+| فایل | استفاده |
+|------|---------|
+| `docker-compose.yml` | اجرای کامل استک (توسعه) |
+| `docker-compose.prod.yml` | overlay production |
+| `docker-compose.infra.yml` | فقط زیرساخت (برای توسعه محلی) |
+| `docker-compose.test.yml` | زیرساخت تست E2E |
