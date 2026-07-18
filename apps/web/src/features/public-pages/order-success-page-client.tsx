@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { LinkButton } from "@/components/ui/link-button";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Clock, MapPin, PackageCheck, ReceiptText, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,14 +20,26 @@ type OrderItemSnapshot = {
 };
 
 function OrderSuccessContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId") ?? "";
+
+  useEffect(() => {
+    if (!orderId) {
+      router.replace("/orders");
+    }
+  }, [orderId, router]);
+
   const shortOrderId = orderId ? orderId.slice(-8) : null;
   const order = useOrder(orderId);
   const payment = usePayment(orderId);
   const isLoadingDetails = Boolean(orderId) && (order.isLoading || payment.isLoading);
   const detailError = order.error instanceof Error ? order.error.message : payment.error instanceof Error ? payment.error.message : "دریافت وضعیت سفارش ناموفق بود.";
   const paymentIsPaid = payment.data?.status === "paid";
+
+  if (!orderId) {
+    return null;
+  }
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl items-center px-4 py-10">
