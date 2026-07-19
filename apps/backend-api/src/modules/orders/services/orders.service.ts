@@ -93,7 +93,7 @@ export class OrdersService {
           const productsBatch = await this.productsService.getProductsByIds(productIds);
           const productMap = new Map<string, any>();
           for (const product of productsBatch) {
-            productMap.set(product._id.toString(), product);
+            productMap.set(getEntityId(product), product);
           }
 
           const orderItems: OrderItem[] = [];
