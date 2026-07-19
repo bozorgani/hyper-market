@@ -69,7 +69,7 @@ export function Pagination({
               aria-current={item === page ? "page" : undefined}
               className={cn(
                 "flex h-10 min-w-10 items-center justify-center rounded-xl px-2 text-sm font-semibold transition",
-                item === page ? "bg-emerald-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100",
+                item === page ? "bg-rose-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100",
               )}
             >
               {formatNumber(item)}

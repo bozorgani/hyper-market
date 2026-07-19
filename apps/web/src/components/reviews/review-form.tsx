@@ -223,7 +223,7 @@ export function ReviewForm({
           rows={5}
           maxLength={1000}
           disabled={isSubmitting}
-          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-50"
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-50"
         />
         <p className="mt-1 text-xs text-slate-500">
           {comment.length}/1000 کاراکتر (حداقل 10 کاراکتر)
@@ -242,16 +242,16 @@ export function ReviewForm({
         </div>
         <label
           htmlFor="review-images"
-          className="flex min-h-24 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-emerald-400 hover:bg-emerald-50 disabled:cursor-not-allowed"
+          className="flex min-h-24 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-rose-400 hover:bg-rose-50 disabled:cursor-not-allowed"
         >
           {isUploadingImages ? (
             <>
-              <Loader2 className="h-5 w-5 animate-spin text-emerald-600" aria-hidden="true" />
+              <Loader2 className="h-5 w-5 animate-spin text-rose-600" aria-hidden="true" />
               در حال آپلود تصویر...
             </>
           ) : (
             <>
-              <ImagePlus className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+              <ImagePlus className="h-5 w-5 text-rose-600" aria-hidden="true" />
               انتخاب تصویر
             </>
           )}

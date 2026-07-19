@@ -60,7 +60,7 @@ export function AdminPagination({
               className={cn(
                 "flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold transition",
                 p === page
-                  ? "bg-emerald-500 text-white shadow-md shadow-emerald-200"
+                  ? "bg-rose-500 text-white shadow-md shadow-rose-200"
                   : "text-slate-600 hover:bg-slate-100",
               )}
             >

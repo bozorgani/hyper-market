@@ -61,7 +61,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-rose-500 border-t-transparent" />
           <p className="text-sm text-slate-400">در حال بررسی دسترسی...</p>
         </div>
       </div>
@@ -76,9 +76,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-full flex-col">
       {/* Logo Section */}
       <div className="relative overflow-hidden p-5 pb-4">
-        <div className="absolute inset-0 bg-gradient-to-bl from-emerald-600/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-bl from-rose-600/20 via-transparent to-transparent" />
         <div className="relative flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/25">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 shadow-lg shadow-rose-500/25">
             <Shield className="h-6 w-6 text-white" />
           </div>
           <AnimatePresence>
@@ -114,14 +114,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 active
-                  ? "bg-emerald-500/15 text-emerald-400"
+                  ? "bg-rose-500/15 text-rose-400"
                   : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
               )}
             >
               {active && (
                 <motion.div
                   layoutId="admin-active-tab"
-                  className="absolute inset-0 rounded-xl bg-emerald-500/10"
+                  className="absolute inset-0 rounded-xl bg-rose-500/10"
                   transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                 />
               )}
@@ -136,7 +136,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 </motion.span>
               )}
               {active && (!collapsed || mobileOpen) && (
-                <ChevronLeft className="relative z-10 mr-auto h-4 w-4 text-emerald-400" />
+                <ChevronLeft className="relative z-10 mr-auto h-4 w-4 text-rose-400" />
               )}
             </Link>
           );
@@ -239,8 +239,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
           {/* Quick Stats */}
           <div className="hidden items-center gap-2 md:flex">
-            <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">
+              <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
               سیستم فعال
             </div>
           </div>

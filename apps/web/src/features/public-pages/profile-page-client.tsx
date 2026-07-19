@@ -21,7 +21,7 @@ import {
 import type { OrderStatus } from "@/types/domain";
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; Icon: typeof CheckCircle2 }> = {
-  delivered: { label: "تحویل شده", color: "text-emerald-600", bg: "bg-emerald-50", Icon: CheckCircle2 },
+  delivered: { label: "تحویل شده", color: "text-rose-600", bg: "bg-rose-50", Icon: CheckCircle2 },
   shipped: { label: "ارسال شده", color: "text-blue-600", bg: "bg-blue-50", Icon: Truck },
   processing: { label: "در حال پردازش", color: "text-violet-600", bg: "bg-violet-50", Icon: Package },
   paid: { label: "پرداخت‌شده", color: "text-sky-600", bg: "bg-sky-50", Icon: CheckCircle2 },
@@ -36,7 +36,7 @@ function getStatusConfig(status: OrderStatus) {
 const menuItems = [
   { icon: Package, label: "سفارش‌های من", href: "/orders", color: "text-blue-600", bg: "bg-blue-50" },
   { icon: Heart, label: "علاقه‌مندی‌ها", href: "/wishlist", color: "text-rose-600", bg: "bg-rose-50" },
-  { icon: MapPin, label: "آدرس‌های من", href: "/profile/addresses", color: "text-emerald-600", bg: "bg-emerald-50" },
+  { icon: MapPin, label: "آدرس‌های من", href: "/profile/addresses", color: "text-rose-600", bg: "bg-rose-50" },
   { icon: Gift, label: "کد هدیه و تخفیف", href: "/checkout", color: "text-amber-600", bg: "bg-amber-50" },
   { icon: Bell, label: "اعلان‌ها", href: "#", color: "text-purple-600", bg: "bg-purple-50" },
   { icon: Shield, label: "حریم خصوصی", href: "#", color: "text-slate-600", bg: "bg-slate-100" },

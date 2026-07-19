@@ -114,7 +114,7 @@ export function DesktopSearch() {
               }}
               onMouseEnter={() => setActiveSuggestionIndex(index)}
               className={`flex items-center gap-3 rounded-xl p-3 hover:bg-slate-50 ${
-                isActive ? "bg-emerald-50 ring-1 ring-emerald-100" : ""
+                isActive ? "bg-rose-50 ring-1 ring-rose-100" : ""
               }`}
             >
               <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-slate-100">
@@ -135,7 +135,7 @@ export function DesktopSearch() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold text-slate-900">{item.name}</p>
-                <p className="text-xs text-emerald-600 font-medium">{formatPrice(item.price)}</p>
+                <p className="text-xs text-rose-600 font-medium">{formatPrice(item.price)}</p>
               </div>
             </Link>
           );

@@ -108,7 +108,7 @@ export function RegisterPageClient() {
                 "h-12 w-full rounded-xl border bg-white pr-10 pl-4 text-left text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
                 error
                   ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
-                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+                  : "border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-50",
               )}
             />
           </div>
@@ -130,7 +130,7 @@ export function RegisterPageClient() {
                 "h-12 w-full rounded-xl border bg-white pr-10 pl-4 text-right text-sm text-slate-900 outline-none transition placeholder:text-slate-400 font-mono",
                 error
                   ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
-                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+                  : "border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-50",
               )}
             />
           </div>
@@ -152,14 +152,14 @@ export function RegisterPageClient() {
                 "h-12 w-full rounded-xl border bg-white pr-10 pl-10 text-right text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
                 error
                   ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
-                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+                  : "border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-50",
               )}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 transition hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-emerald-100"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 transition hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-rose-100"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -169,7 +169,7 @@ export function RegisterPageClient() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-medium text-slate-400">قدرت رمز عبور</span>
-                <span className={`text-[10px] font-semibold ${passwordStrength.level === 3 ? "text-emerald-600" : passwordStrength.level === 2 ? "text-amber-600" : "text-red-600"}`}>
+                <span className={`text-[10px] font-semibold ${passwordStrength.level === 3 ? "text-rose-600" : passwordStrength.level === 2 ? "text-amber-600" : "text-red-600"}`}>
                   {passwordStrength.label}
                 </span>
               </div>
@@ -225,7 +225,7 @@ export function RegisterPageClient() {
       {/* Footer */}
       <p className="mt-5 text-center text-sm leading-6 text-slate-500">
         حساب دارید؟{" "}
-        <Link href="/login" className="font-bold text-emerald-600 transition hover:text-emerald-700">وارد شوید</Link>
+        <Link href="/login" className="font-bold text-rose-600 transition hover:text-rose-700">وارد شوید</Link>
       </p>
     </AuthShell>
   );

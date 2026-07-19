@@ -106,7 +106,7 @@ export function ForgotPasswordPageClient() {
                 "h-12 w-full rounded-xl border bg-white pr-10 pl-4 text-right text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
                 error
                   ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
-                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+                  : "border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-50",
               )}
             />
           </div>
@@ -134,10 +134,10 @@ export function ForgotPasswordPageClient() {
       </form>
 
       <div className="mt-5 flex flex-col gap-2 text-center text-sm sm:flex-row sm:items-center sm:justify-between">
-        <Link href="/login" className="font-bold text-emerald-600 hover:text-emerald-700">
+        <Link href="/login" className="font-bold text-rose-600 hover:text-rose-700">
           بازگشت به ورود
         </Link>
-        <Link href="/register" className="text-slate-500 hover:text-emerald-600">
+        <Link href="/register" className="text-slate-500 hover:text-rose-600">
           ساخت حساب جدید
         </Link>
       </div>

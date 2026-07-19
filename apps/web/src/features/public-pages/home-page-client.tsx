@@ -16,7 +16,7 @@ import { fallbackCategories, getCategoryProductsHref } from "@/lib/category-util
 import type { Category, ProductListResponse } from "@/types/domain";
 
 const features = [
-  { icon: <Truck className="h-5 w-5" />, label: "ارسال سریع", desc: "در کمتر از ۲ ساعت", color: "text-emerald-600 bg-emerald-100" },
+  { icon: <Truck className="h-5 w-5" />, label: "ارسال سریع", desc: "در کمتر از ۲ ساعت", color: "text-rose-600 bg-rose-100" },
   { icon: <ShieldCheck className="h-5 w-5" />, label: "تضمین اصالت", desc: "۱۰۰٪ اورجینال", color: "text-blue-600 bg-blue-100" },
   { icon: <RotateCcw className="h-5 w-5" />, label: "بازگشت آسان", desc: "۷ روز ضمانت", color: "text-violet-600 bg-violet-100" },
   { icon: <Headphones className="h-5 w-5" />, label: "پشتیبانی ۲۴/۷", desc: "همیشه در دسترس", color: "text-amber-600 bg-amber-100" },
@@ -27,7 +27,7 @@ const promoBanners = [
   {
     title: "تخفیف تا ۵۰٪",
     subtitle: "محصولات لبنی و پروتئینی",
-    color: "from-emerald-600 to-emerald-700",
+    color: "from-rose-600 to-rose-700",
     href: "/products?discount=true",
   },
   {
@@ -90,7 +90,7 @@ export function HomePageClient({
   return (
     <main className="pb-0 lg:pb-10 bg-slate-50">
       {/* ==================== HERO ==================== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-700 to-blue-700 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-rose-600 via-rose-700 to-blue-700 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] bg-[length:4px_4px]" />
         
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:py-16 lg:py-20">
@@ -109,7 +109,7 @@ export function HomePageClient({
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
-              <LinkButton href="/products" className="rounded-2xl bg-white px-8 py-4 text-lg font-bold text-emerald-700 shadow-xl hover:bg-emerald-50">
+              <LinkButton href="/products" className="rounded-2xl bg-white px-8 py-4 text-lg font-bold text-rose-700 shadow-xl hover:bg-rose-50">
                 شروع خرید
                 <ArrowLeft className="h-5 w-5" />
               </LinkButton>
@@ -154,7 +154,7 @@ export function HomePageClient({
             <h2 className="text-2xl font-black text-slate-900">دسته‌بندی‌ها</h2>
             <p className="text-sm text-slate-500">آنچه نیاز دارید را سریع پیدا کنید</p>
           </div>
-          <Link href="/categories" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+          <Link href="/categories" className="text-sm font-semibold text-rose-600 hover:text-rose-700">
             همه دسته‌ها →
           </Link>
         </div>
@@ -172,12 +172,12 @@ export function HomePageClient({
               <Link
                 key={cat._id}
                 href={cat.href}
-                className="group flex flex-col items-center rounded-3xl border border-slate-200 bg-white p-4 text-center transition hover:border-emerald-200 hover:shadow-md"
+                className="group flex flex-col items-center rounded-3xl border border-slate-200 bg-white p-4 text-center transition hover:border-rose-200 hover:shadow-md"
               >
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-3xl transition group-hover:scale-110">
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-3xl transition group-hover:scale-110">
                   {cat.icon || "🛒"}
                 </div>
-                <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-700">
+                <span className="text-sm font-semibold text-slate-700 group-hover:text-rose-700">
                   {cat.name}
                 </span>
               </Link>
@@ -210,15 +210,15 @@ export function HomePageClient({
       <section className="mx-auto max-w-7xl px-4 pt-12">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
-              <Star className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100">
+              <Star className="h-5 w-5 text-rose-600" />
             </div>
             <div>
               <h2 className="text-2xl font-black text-slate-900">پرفروش‌ترین‌ها</h2>
               <p className="text-sm text-slate-500">محبوب‌ترین محصولات هفته</p>
             </div>
           </div>
-          <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">مشاهده همه</Link>
+          <Link href="/products" className="text-sm font-semibold text-rose-600 hover:text-rose-700">مشاهده همه</Link>
         </div>
 
         <motion.div
@@ -277,7 +277,7 @@ export function HomePageClient({
             <h2 className="text-2xl font-black text-slate-900">جدیدترین محصولات</h2>
             <p className="text-sm text-slate-500">تازه به فروشگاه اضافه شده‌اند</p>
           </div>
-          <Link href="/products" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">همه محصولات جدید</Link>
+          <Link href="/products" className="text-sm font-semibold text-rose-600 hover:text-rose-700">همه محصولات جدید</Link>
         </div>
 
         <motion.div
@@ -308,7 +308,7 @@ export function HomePageClient({
             <p className="mt-3 text-slate-300">
               {user ? "سفارش‌های خود را دنبال کنید" : "همین حالا ثبت‌نام کنید و از تخفیف‌های اختصاصی بهره‌مند شوید"}
             </p>
-            <LinkButton href={user ? "/orders" : "/register"} className="mt-6 rounded-2xl bg-emerald-500 px-8 py-3.5 font-bold text-white shadow-lg hover:bg-emerald-600">
+            <LinkButton href={user ? "/orders" : "/register"} className="mt-6 rounded-2xl bg-rose-500 px-8 py-3.5 font-bold text-white shadow-lg hover:bg-rose-600">
               {user ? "مشاهده سفارش‌ها" : "ثبت‌نام رایگان"}
             </LinkButton>
           </div>

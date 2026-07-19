@@ -33,7 +33,7 @@ export function AdminStatCard({
       {/* Decorative gradient blob */}
       <div className={cn(
         "absolute -left-6 -top-6 h-24 w-24 rounded-full opacity-10 blur-2xl transition-transform group-hover:scale-125",
-        gradient ?? "bg-emerald-500",
+        gradient ?? "bg-rose-500",
       )} />
 
       <div className="relative flex items-start justify-between">
@@ -46,7 +46,7 @@ export function AdminStatCard({
           {trend && (
             <div className="mt-2.5 flex items-center gap-1.5">
               {isUp ? (
-                <div className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600">
+                <div className="flex items-center gap-1 rounded-lg bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-600">
                   <TrendingUp className="h-3 w-3" />
                   {trend.value}%
                 </div>
@@ -67,7 +67,7 @@ export function AdminStatCard({
             gradient === "bg-blue-500" && "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-200",
             gradient === "bg-amber-500" && "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-200",
             gradient === "bg-violet-500" && "bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-200",
-            !gradient && "bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-200",
+            !gradient && "bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-lg shadow-rose-200",
           )}>
             <Icon className="h-6 w-6" />
           </div>

@@ -43,7 +43,7 @@ const funnelLabels: Record<string, string> = {
   "Payment Success": "پرداخت موفق",
 };
 
-const funnelColors = ["bg-emerald-500", "bg-blue-500", "bg-violet-500", "bg-amber-500"];
+const funnelColors = ["bg-rose-500", "bg-blue-500", "bg-violet-500", "bg-amber-500"];
 
 function MiniBarChart({ items }: { items: Array<{ label: string; value: number }> }) {
   const maxValue = Math.max(...items.map((item) => item.value), 1);
@@ -60,7 +60,7 @@ function MiniBarChart({ items }: { items: Array<{ label: string; value: number }
           <div className="mb-2 text-[10px] font-semibold text-slate-500 opacity-0 transition group-hover:opacity-100">
             {formatNumber(item.value)}
           </div>
-          <div className="min-h-[6px] w-full flex-1 rounded-t-xl bg-gradient-to-t from-emerald-600 to-emerald-400" />
+          <div className="min-h-[6px] w-full flex-1 rounded-t-xl bg-gradient-to-t from-rose-600 to-rose-400" />
           <span className="mt-2 text-[10px] text-slate-400 truncate max-w-full">{item.label}</span>
         </motion.div>
       ))}
@@ -85,7 +85,7 @@ function FunnelChart({ items }: { items: Array<{ name: string; count: number }> 
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max(widthPercent, 5)}%` }}
                 transition={{ delay: 0.4 + idx * 0.1, duration: 0.6, ease: "easeOut" }}
-                className={`absolute inset-y-0 right-0 rounded-xl ${funnelColors[idx] ?? "bg-emerald-500"}`}
+                className={`absolute inset-y-0 right-0 rounded-xl ${funnelColors[idx] ?? "bg-rose-500"}`}
               />
             </div>
             {idx < items.length - 1 && items[idx + 1] && (
@@ -115,7 +115,7 @@ function ProgressList({ items, valueFormatter }: { items: Array<{ key: string; l
               initial={{ width: 0 }}
               animate={{ width: `${(item.value / maxValue) * 100}%` }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="h-full rounded-full bg-gradient-to-l from-emerald-500 to-emerald-400"
+              className="h-full rounded-full bg-gradient-to-l from-rose-500 to-rose-400"
             />
           </div>
           {item.subtitle && <p className="mt-1 text-xs text-slate-400">{item.subtitle}</p>}
@@ -163,7 +163,7 @@ export function AdminAnalyticsClient() {
         <>
           {/* Stat Cards */}
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <AdminStatCard title="درآمد امروز" value={formatPrice(data?.revenue?.dailyRevenue ?? 0)} icon={DollarSign} gradient="bg-emerald-500" delay={0} />
+            <AdminStatCard title="درآمد امروز" value={formatPrice(data?.revenue?.dailyRevenue ?? 0)} icon={DollarSign} gradient="bg-rose-500" delay={0} />
             <AdminStatCard title="درآمد هفتگی" value={formatPrice(data?.revenue?.weeklyRevenue ?? 0)} icon={TrendingUp} gradient="bg-blue-500" delay={0.08} />
             <AdminStatCard title="درآمد ماهانه" value={formatPrice(data?.revenue?.monthlyRevenue ?? 0)} icon={Activity} gradient="bg-amber-500" delay={0.16} />
             <AdminStatCard title="کاربران فعال" value={data?.activeUsers ?? 0} icon={Users} gradient="bg-violet-500" delay={0.24} />
@@ -178,8 +178,8 @@ export function AdminAnalyticsClient() {
               className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
             >
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50">
-                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50">
+                  <TrendingUp className="h-4 w-4 text-rose-600" />
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-900">روند درآمد روزانه</h2>
@@ -264,8 +264,8 @@ export function AdminAnalyticsClient() {
               className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
             >
               <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50">
-                  <TrendingUp className="h-4 w-4 text-emerald-600" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50">
+                  <TrendingUp className="h-4 w-4 text-rose-600" />
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-900">نرخ تبدیل محصولات</h2>

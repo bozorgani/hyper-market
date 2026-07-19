@@ -182,7 +182,7 @@ export function ProfileAddressesPageClient() {
     <ProtectedRoute>
       <div className="mx-auto max-w-4xl px-4 py-8 text-right">
         <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
             <MapPin className="h-5 w-5" />
           </div>
           <div>
@@ -199,7 +199,7 @@ export function ProfileAddressesPageClient() {
                 type="button"
                 onClick={() => setShowMap(true)}
                 disabled={isSubmitting}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-500 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-500 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
               >
                 <Navigation className="h-4 w-4" />
                 انتخاب از روی نقشه
@@ -229,7 +229,7 @@ export function ProfileAddressesPageClient() {
             {/* Province Select — locked when from map */}
             <div>
               {addressFromMap ? (
-                <div className="flex h-12 items-center rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 text-sm font-semibold text-emerald-700">
+                <div className="flex h-12 items-center rounded-xl border border-rose-200 bg-rose-50/50 px-3 text-sm font-semibold text-rose-700">
                   <MapPin className="ml-2 h-4 w-4" />
                   {form.province || "ثبت شده از نقشه"}
                 </div>
@@ -240,7 +240,7 @@ export function ProfileAddressesPageClient() {
                   disabled={isSubmitting}
                   required
                   aria-label="استان"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
                 >
                   <option value="">انتخاب استان</option>
                   {IRAN_PROVINCES.map((item) => (
@@ -253,7 +253,7 @@ export function ProfileAddressesPageClient() {
             {/* City Select — locked when from map */}
             <div>
               {addressFromMap ? (
-                <div className="flex h-12 items-center rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 text-sm font-semibold text-emerald-700">
+                <div className="flex h-12 items-center rounded-xl border border-rose-200 bg-rose-50/50 px-3 text-sm font-semibold text-rose-700">
                   <MapPin className="ml-2 h-4 w-4" />
                   {form.city || "ثبت شده از نقشه"}
                 </div>
@@ -264,7 +264,7 @@ export function ProfileAddressesPageClient() {
                   disabled={isSubmitting || !form.province}
                   required
                   aria-label="شهر"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
                 >
                   <option value="">انتخاب شهر</option>
                   {IRAN_PROVINCES.find((item) => item.province === form.province)?.cities.map((city) => (
@@ -282,7 +282,7 @@ export function ProfileAddressesPageClient() {
                   placeholder="نشانی کامل"
                   required
                   disabled={isSubmitting}
-                  className="min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-right text-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
+                  className="min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-right text-sm outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-100 disabled:bg-slate-100"
                 />
                 {fieldErrors.addressLine && <p className="mt-1 text-[11px] leading-5 text-rose-500">{fieldErrors.addressLine}</p>}
               </div>

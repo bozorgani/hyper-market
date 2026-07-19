@@ -209,7 +209,7 @@ function SearchContent({
               </Link>
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <Badge className={product.stock > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}>
+                  <Badge className={product.stock > 0 ? "bg-rose-50 text-rose-700" : "bg-red-50 text-red-700"}>
                     {product.stock > 0 ? "موجود" : "ناموجود"}
                   </Badge>
                   <Link href={`/products/${product.id}`} className="line-clamp-2 flex-1 font-bold leading-7 text-slate-900">

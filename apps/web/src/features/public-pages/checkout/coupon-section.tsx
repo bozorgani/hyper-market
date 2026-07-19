@@ -88,10 +88,10 @@ export function CouponSection({
       ) : null}
 
       {appliedDiscount ? (
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
           <Gift className="h-4 w-4" />
           {appliedDiscount.code} — {formatNumber(appliedDiscount.percent)}٪ تخفیف
-          <button type="button" onClick={() => setAppliedDiscount(null)} className="mr-auto text-emerald-500 hover:text-red-500">
+          <button type="button" onClick={() => setAppliedDiscount(null)} className="mr-auto text-rose-500 hover:text-red-500">
             <X className="h-4 w-4" />
           </button>
         </div>

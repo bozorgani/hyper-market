@@ -125,11 +125,11 @@ export function OrdersPageClient() {
         ) : null}
 
         {!orders.isLoading && !orders.isError && latestOrder ? (
-          <Card className="mt-5 border-emerald-100 bg-emerald-50/60 p-4">
+          <Card className="mt-5 border-rose-100 bg-rose-50/60 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-black text-emerald-900">آخرین سفارش شما</p>
-                <p className="mt-1 text-sm leading-7 text-emerald-700">
+                <p className="text-sm font-black text-rose-900">آخرین سفارش شما</p>
+                <p className="mt-1 text-sm leading-7 text-rose-700">
                   سفارش #{latestOrder._id.slice(-8)} با مبلغ {formatNumber(latestOrder.totalPrice)} تومان ثبت شده است.
                 </p>
               </div>

@@ -120,7 +120,7 @@ export function LoginPageClient() {
                 "h-12 w-full rounded-xl border bg-white pr-10 pl-4 text-right text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
                 error
                   ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
-                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+                  : "border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-50",
               )}
             />
           </div>
@@ -130,7 +130,7 @@ export function LoginPageClient() {
         <div>
           <div className="mb-1.5 flex items-center justify-between">
             <label htmlFor="login-password" className="text-xs font-semibold text-slate-600">رمز عبور</label>
-            <Link href="/forgot-password" className="text-xs font-medium text-emerald-600 transition hover:text-emerald-700">
+            <Link href="/forgot-password" className="text-xs font-medium text-rose-600 transition hover:text-rose-700">
               فراموشی رمز عبور
             </Link>
           </div>
@@ -152,14 +152,14 @@ export function LoginPageClient() {
                 "h-12 w-full rounded-xl border bg-white pr-10 pl-10 text-right text-sm text-slate-900 outline-none transition placeholder:text-slate-400",
                 error
                   ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-50"
-                  : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50",
+                  : "border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-50",
               )}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "مخفی کردن رمز عبور" : "نمایش رمز عبور"}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 transition hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-emerald-100"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 transition hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-rose-100"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -198,8 +198,8 @@ export function LoginPageClient() {
 
       {/* Footer */}
       <div className="mt-5 flex flex-col gap-3 text-center text-sm leading-6 text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:text-right">
-        <span>حساب ندارید؟{" "}<Link href="/register" className="font-bold text-emerald-600 transition hover:text-emerald-700">ثبت‌نام کنید</Link></span>
-        <Link href="/verify-otp" className="font-medium text-slate-500 transition hover:text-emerald-600">تأیید کد پیامکی / ایمیلی</Link>
+        <span>حساب ندارید؟{" "}<Link href="/register" className="font-bold text-rose-600 transition hover:text-rose-700">ثبت‌نام کنید</Link></span>
+        <Link href="/verify-otp" className="font-medium text-slate-500 transition hover:text-rose-600">تأیید کد پیامکی / ایمیلی</Link>
       </div>
     </AuthShell>
   );
