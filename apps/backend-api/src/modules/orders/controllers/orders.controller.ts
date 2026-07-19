@@ -34,7 +34,7 @@ export class OrdersController {
     const result = await this.idempotencyService.execute(
       `orders:create:${user.sub}`,
       idempotencyKey,
-      { userId: user.sub, ...dto },
+      { userId: user.sub, role: user.role, ...dto },
       () => this.ordersService.createOrder(user.sub, dto),
     );
 
