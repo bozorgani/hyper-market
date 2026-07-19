@@ -54,7 +54,7 @@ export class SanitizePipe implements PipeTransform {
     this.purify = createDOMPurify(sharedWindow);
   }
 
-  transform(value: any, metadata: ArgumentMetadata) {
+  transform(value: unknown, metadata: ArgumentMetadata): unknown {
     if (metadata.type === 'body' || metadata.type === 'query') {
       if (typeof value === 'string') {
         return this.sanitizeString(value);
@@ -119,7 +119,7 @@ export class SanitizePipe implements PipeTransform {
   /**
    * Recursively sanitizes all string values in an object
    */
-  private sanitizeObject(obj: any): any {
+  private sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
     if (obj === null || obj === undefined) {
       return obj;
     }
@@ -131,7 +131,7 @@ export class SanitizePipe implements PipeTransform {
     
     // Handle objects
     if (typeof obj === 'object') {
-      const sanitized: any = {};
+      const sanitized: Record<string, unknown> = {};
       
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
