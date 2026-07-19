@@ -74,3 +74,13 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.pre('validate', function (this: UserDocument, next: (err?: any) => void) {
+  const doc = this;
+  if (!doc.email && !doc.phoneNumber) {
+    const err = new Error('At least one contact method (email or phoneNumber) is required') as any;
+    err.name = 'ValidationError';
+    return next(err);
+  }
+  next();
+});
