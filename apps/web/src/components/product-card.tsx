@@ -110,7 +110,7 @@ export const ProductCard = memo(function ProductCard({
       </Link>
 
       <div className="flex flex-1 flex-col p-3.5 sm:p-4">
-        <Link href={`/products/${product._id}`} className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5 text-slate-900 transition-colors group-hover:text-emerald-700">
+        <Link href={`/products/${product._id}`} className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5 text-slate-900 transition-colors group-hover:text-rose-700">
           {product.name}
         </Link>
 
@@ -134,7 +134,7 @@ export const ProductCard = memo(function ProductCard({
           onClick={handleAddToCart}
           disabled={product.stock < 1 || addToCart.isPending}
           aria-label={tf('product.addToCartAriaLabel', { name: product.name })}
-          className="mt-3 flex min-h-[var(--touch-target-min)] w-full items-center justify-center gap-1.5 rounded-2xl bg-emerald-50 py-[9px] text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-100 active:bg-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-3 flex min-h-[var(--touch-target-min)] w-full items-center justify-center gap-1.5 rounded-2xl bg-rose-50 py-[9px] text-xs font-bold text-rose-700 transition-all hover:bg-rose-100 active:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ShoppingCart className="h-3.5 w-3.5" aria-hidden="true" />
           {addToCart.isPending ? t('common.adding') : t('common.addToCart')}

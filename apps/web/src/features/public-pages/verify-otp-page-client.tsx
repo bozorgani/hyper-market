@@ -250,8 +250,8 @@ function VerifyOtpContent() {
       <div className="space-y-6">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100">
-            <ShieldCheck className="h-7 w-7 text-emerald-600" />
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100">
+            <ShieldCheck className="h-7 w-7 text-rose-600" />
           </div>
           <h1 className="text-2xl font-black text-slate-900">تأیید هویت</h1>
           <p className="mt-1.5 text-sm text-slate-500">
@@ -289,7 +289,7 @@ function VerifyOtpContent() {
                 }}
                 className={cn(
                   "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 font-medium transition-all",
-                  active ? "bg-white text-emerald-700 shadow-sm" : "text-slate-500 hover:text-slate-700",
+                  active ? "bg-white text-rose-700 shadow-sm" : "text-slate-500 hover:text-slate-700",
                   Boolean(detectedTargetType) && opt.value !== detectedTargetType && opt.value !== "password_reset" ? "cursor-not-allowed opacity-40 hover:text-slate-500" : ""
                 )}
               >
@@ -308,7 +308,7 @@ function VerifyOtpContent() {
               type="button"
               onClick={handleResend}
               disabled={resendLoading || resendCooldown > 0 || !target.trim()}
-              className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 transition hover:text-emerald-700 disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 transition hover:text-rose-700 disabled:opacity-50"
             >
               {resendLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : resendCooldown > 0 ? <Clock className="h-3.5 w-3.5" /> : <RefreshCw className="h-3.5 w-3.5" />}
               {resendCooldown > 0 ? `ارسال مجدد (${resendCooldown}s)` : resendLoading ? "در حال ارسال..." : "ارسال مجدد کد"}
@@ -335,8 +335,8 @@ function VerifyOtpContent() {
                   className={cn(
                     "h-12 w-9 sm:h-16 sm:w-12 rounded-2xl border-2 text-center text-2xl font-bold tracking-[2px] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2",
                     error ? "border-red-300 bg-red-50/50 focus:border-red-500 focus:ring-red-200"
-                    : isFilled ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-inner"
-                    : "border-slate-200 bg-white hover:border-slate-300 focus:border-emerald-500 focus:ring-emerald-200"
+                    : isFilled ? "border-rose-400 bg-rose-50 text-rose-700 shadow-inner"
+                    : "border-slate-200 bg-white hover:border-slate-300 focus:border-rose-500 focus:ring-rose-200"
                   )}
                   aria-label={`رقم ${index + 1}`}
                 />
@@ -368,8 +368,8 @@ function VerifyOtpContent() {
         {/* Feedback */}
         <AnimatePresence>
           {success && (
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">
+              <CheckCircle2 className="h-5 w-5 text-rose-600" />
               <span className="text-sm font-medium">{success}</span>
             </motion.div>
           )}
@@ -387,7 +387,7 @@ function VerifyOtpContent() {
           disabled={loading || !canSubmit}
           className={cn(
             "group flex h-12 w-full items-center justify-center gap-2 rounded-2xl font-bold transition-all active:scale-[0.985]",
-            canSubmit ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700" : "bg-slate-200 text-slate-400 cursor-not-allowed"
+            canSubmit ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30 hover:bg-rose-700" : "bg-slate-200 text-slate-400 cursor-not-allowed"
           )}
         >
           {loading ? (
@@ -399,14 +399,14 @@ function VerifyOtpContent() {
 
         <div className="flex justify-center">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-[11px] text-slate-500">
-            <ShieldCheck className="h-3 w-3 text-emerald-500" /> کد فقط ۱۰ دقیقه معتبر است
+            <ShieldCheck className="h-3 w-3 text-rose-500" /> کد فقط ۱۰ دقیقه معتبر است
           </div>
         </div>
 
         <div className="flex flex-col items-center gap-y-2 pt-1 text-sm sm:flex-row sm:gap-x-4">
-          <Link href="/login" className="font-medium text-slate-500 hover:text-emerald-600">بازگشت به ورود</Link>
+          <Link href="/login" className="font-medium text-slate-500 hover:text-rose-600">بازگشت به ورود</Link>
           <span className="hidden text-slate-300 sm:block">•</span>
-          <Link href="/" className="font-medium text-slate-500 hover:text-emerald-600">بازگشت به فروشگاه</Link>
+          <Link href="/" className="font-medium text-slate-500 hover:text-rose-600">بازگشت به فروشگاه</Link>
         </div>
       </div>
     </AuthShell>

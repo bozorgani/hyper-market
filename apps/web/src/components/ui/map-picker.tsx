@@ -330,7 +330,7 @@ export function MapPicker({
               )}
             </p>
             {!isAddressLoading && (selectedProvince || selectedCity) ? (
-              <p className="text-xs text-emerald-600 font-semibold mt-1">
+              <p className="text-xs text-rose-600 font-semibold mt-1">
                 {selectedProvince && selectedCity ? `${selectedProvince}، ${selectedCity}` : selectedProvince || selectedCity}
               </p>
             ) : null}

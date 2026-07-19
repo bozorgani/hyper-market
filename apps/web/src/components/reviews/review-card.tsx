@@ -47,8 +47,8 @@ export function ReviewCard({ review, onHelpful, className }: ReviewCardProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           {/* User Avatar */}
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-            <User className="h-5 w-5 text-emerald-600" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100">
+            <User className="h-5 w-5 text-rose-600" />
           </div>
 
           {/* User Info */}
@@ -58,7 +58,7 @@ export function ReviewCard({ review, onHelpful, className }: ReviewCardProps) {
                 {review.userId.name}
               </p>
               {review.isVerifiedPurchase && (
-                <div className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                <div className="flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
                   <CheckCircle className="h-3 w-3" />
                   <span>خرید تأیید شده</span>
                 </div>
@@ -110,7 +110,7 @@ export function ReviewCard({ review, onHelpful, className }: ReviewCardProps) {
             onClick={() => onHelpful?.(review._id, true)}
             disabled={!onHelpful}
             title={!onHelpful ? "برای ثبت رأی ابتدا وارد شوید" : undefined}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ThumbsUp className="h-4 w-4" />
             <span>مفید ({review.helpfulCount})</span>

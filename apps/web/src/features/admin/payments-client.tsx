@@ -145,7 +145,7 @@ export function AdminPaymentsClient() {
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-sm font-semibold text-slate-700">{formatPrice(payment.order?.totalPrice ?? payment.amount)}</span>
-                    <button type="button" onClick={() => setSelectedOrderId(orderId)} className="text-xs font-semibold text-emerald-600">جزئیات</button>
+                    <button type="button" onClick={() => setSelectedOrderId(orderId)} className="text-xs font-semibold text-rose-600">جزئیات</button>
                   </div>
                 </div>
               );
@@ -169,7 +169,7 @@ export function AdminPaymentsClient() {
 function PaymentStatusBadgeInline({ status }: { status?: string }) {
   const styles: Record<string, string> = {
     pending: "bg-amber-50 text-amber-700",
-    paid: "bg-emerald-50 text-emerald-700",
+    paid: "bg-rose-50 text-rose-700",
     failed: "bg-red-50 text-red-600",
     cancelled: "bg-slate-100 text-slate-500",
   };

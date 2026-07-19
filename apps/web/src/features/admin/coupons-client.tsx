@@ -172,7 +172,7 @@ export function AdminCouponsClient() {
                   <td>{formatPrice(coupon.minSubtotal ?? 0)}</td>
                   <td>{coupon.maxDiscountAmount ? formatPrice(coupon.maxDiscountAmount) : "—"}</td>
                   <td>{formatNumber(coupon.usedCount ?? 0)} / {coupon.usageLimit ? formatNumber(coupon.usageLimit) : "∞"}</td>
-                  <td><span className={coupon.active ? "text-emerald-600" : "text-slate-400"}>{coupon.active ? "فعال" : "غیرفعال"}</span></td>
+                  <td><span className={coupon.active ? "text-rose-600" : "text-slate-400"}>{coupon.active ? "فعال" : "غیرفعال"}</span></td>
                   <td className="space-x-2 space-x-reverse">
                     <Button type="button" variant="outline" onClick={() => startEdit(coupon)}><Pencil className="h-4 w-4" /> ویرایش</Button>
                     <Button type="button" variant="destructive" onClick={() => setDeleteTarget(coupon)}><Trash2 className="h-4 w-4" /> حذف</Button>

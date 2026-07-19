@@ -153,7 +153,7 @@ export function AdminCategoriesClient() {
       {/* Add/Edit Form */}
       <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center gap-2">
-          {editingCategory ? <Edit3 className="h-4 w-4 text-emerald-600" /> : <Plus className="h-4 w-4 text-emerald-600" />}
+          {editingCategory ? <Edit3 className="h-4 w-4 text-rose-600" /> : <Plus className="h-4 w-4 text-rose-600" />}
           <span className="text-sm font-bold text-slate-700">{editingCategory ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی جدید"}</span>
         </div>
         {formError ? <div className="mb-4"><StatusMessage variant="error">{formError}</StatusMessage></div> : null}
@@ -244,7 +244,7 @@ export function AdminCategoriesClient() {
 
           {/* ── Actions ───────────────── */}
           <div className="flex items-center gap-2 md:col-span-2">
-            <button type="submit" disabled={isSubmitting} className="flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-600 disabled:opacity-60">
+            <button type="submit" disabled={isSubmitting} className="flex items-center gap-1.5 rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-200 transition hover:bg-rose-600 disabled:opacity-60">
               {isSubmitting ? "..." : editingCategory ? "ذخیره تغییرات" : "افزودن دسته‌بندی"}
             </button>
             {editingCategory && (
@@ -308,7 +308,7 @@ export function AdminCategoriesClient() {
                     <td className="px-5 py-3.5 text-sm text-slate-600">{category.sortOrder ?? 0}</td>
                     <td className="px-5 py-3.5">
                       {category.isActive !== false ? (
-                        <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"><Eye className="h-3 w-3" /> فعال</span>
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700"><Eye className="h-3 w-3" /> فعال</span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500"><EyeOff className="h-3 w-3" /> غیرفعال</span>
                       )}
@@ -346,7 +346,7 @@ export function AdminCategoriesClient() {
                 </div>
                 <div className="flex items-center gap-2">
                   {category.isActive !== false ? (
-                    <span className="rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">فعال</span>
+                    <span className="rounded-lg bg-rose-50 px-2 py-1 text-[10px] font-bold text-rose-700">فعال</span>
                   ) : (
                     <span className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">غیرفعال</span>
                   )}

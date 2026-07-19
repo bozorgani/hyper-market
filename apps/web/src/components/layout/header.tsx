@@ -55,10 +55,10 @@ export function Header() {
         <div className="flex h-16 items-center gap-3">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-md text-white font-black text-base">H</div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 shadow-md text-white font-black text-base">H</div>
             <div className="hidden sm:block">
               <p className="text-sm font-black text-slate-900 leading-none">هایپرمارکت</p>
-              <p className="text-[10px] text-emerald-600 font-medium tracking-wide">همه چیز برای همه</p>
+              <p className="text-[10px] text-rose-600 font-medium tracking-wide">همه چیز برای همه</p>
             </div>
           </Link>
 
@@ -85,11 +85,11 @@ export function Header() {
                 className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 bg-slate-50 rounded-xl hover:bg-slate-100 hover:text-slate-700 transition"
                 aria-label="مدیریت آدرس‌ها"
               >
-                <MapPin className="h-3.5 w-3.5 text-emerald-500" /> آدرس‌های من
+                <MapPin className="h-3.5 w-3.5 text-rose-500" /> آدرس‌های من
               </Link>
             ) : (
               <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 bg-slate-50 rounded-xl">
-                <MapPin className="h-3.5 w-3.5 text-emerald-500" /> ارسال به آدرس شما
+                <MapPin className="h-3.5 w-3.5 text-rose-500" /> ارسال به آدرس شما
               </div>
             )}
 
@@ -101,7 +101,7 @@ export function Header() {
               <ShoppingCart className="h-5 w-5" aria-hidden="true" />
               {cartCount > 0 && (
                 <span
-                  className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow ring-1 ring-white px-1"
+                  className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow ring-1 ring-white px-1"
                   aria-label={`${cartCount} مورد در سبد خرید`}
                 >
                   {cartCount > 9 ? "۹+" : cartCount.toLocaleString("fa-IR")}

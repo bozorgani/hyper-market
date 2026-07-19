@@ -64,11 +64,11 @@ export function OrderSummaryCard({
 
         {discountAmount > 0 && (
           <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-1 text-emerald-600">
+            <span className="flex items-center gap-1 text-rose-600">
               <span>✨</span>
               تخفیف ({formatNumber(appliedDiscount?.percent ?? 0)}٪)
             </span>
-            <span className="font-semibold text-emerald-600">-{formatPrice(discountAmount)}</span>
+            <span className="font-semibold text-rose-600">-{formatPrice(discountAmount)}</span>
           </div>
         )}
 
@@ -79,7 +79,7 @@ export function OrderSummaryCard({
           </span>
         </div>
         {shippingQuote.data?.freeShippingApplied ? (
-          <p className="text-xs text-emerald-600">ارسال رایگان برای این سفارش اعمال شد.</p>
+          <p className="text-xs text-rose-600">ارسال رایگان برای این سفارش اعمال شد.</p>
         ) : null}
 
         {/* Total divider */}
@@ -91,12 +91,12 @@ export function OrderSummaryCard({
         </div>
       </div>
 
-      <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+      <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 p-4">
         <div className="flex items-center gap-2">
           <span className="text-lg">📦</span>
-          <p className="font-bold text-emerald-800">پرداخت در محل</p>
+          <p className="font-bold text-rose-800">پرداخت در محل</p>
         </div>
-        <p className="mt-2 text-sm leading-6 text-emerald-700">
+        <p className="mt-2 text-sm leading-6 text-rose-700">
           مبلغ سفارش هنگام تحویل توسط پیک دریافت می‌شود. پس از ثبت سفارش، تأیید پرداخت خودکار انجام می‌شود.
         </p>
       </div>

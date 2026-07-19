@@ -7,8 +7,8 @@
 *
 /* ── Color Palette: DigiKala / SnapMarket Inspired ────────────── */
 /* Primary brand color: vibrant red (#e11d48) replaces previous green.
-   All --color-emerald-* tokens now hold rose/red values so existing
-   Tailwind classes (bg-emerald-600, text-emerald-700, etc.) pick up
+   All --color-rose-* tokens now hold rose/red values so existing
+   Tailwind classes (bg-rose-600, text-rose-700, etc.) pick up
    the new palette without renaming.
 */
 
@@ -23,17 +23,17 @@
   --font-sans: var(--font-vazirmatn), "Vazirmatn", Tahoma, Arial, sans-serif;
 
   /* Rose/Red Palette – WCAG AA 4.5:1 on white */
-  --color-emerald-50: #fff1f2;
-  --color-emerald-100: #ffe4e6;
-  --color-emerald-200: #fecdd3;
-  --color-emerald-300: #fda4af;
-  --color-emerald-400: #fb7185;
-  --color-emerald-500: #e11d48;  /* main brand red */
-  --color-emerald-600: #be123c;
-  --color-emerald-700: #9f1239;
-  --color-emerald-800: #881337;
-  --color-emerald-900: #4c0519;
-  --color-emerald-950: #2d000a;
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-200: #fecdd3;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #e11d48;  /* main brand red */
+  --color-rose-600: #be123c;
+  --color-rose-700: #9f1239;
+  --color-rose-800: #881337;
+  --color-rose-900: #4c0519;
+  --color-rose-950: #2d000a;
 }
 
 :root {

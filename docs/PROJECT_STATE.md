@@ -178,6 +178,7 @@ Detected App Router routes:
 /(main)/checkout
 /(main)/order/success
 /(main)/orders
+/(main)/orders/[id]/tracking
 /(main)/products
 /(main)/products/[id]
 /(main)/profile
@@ -243,6 +244,7 @@ Detected App Router routes:
 /(main)/checkout
 /(main)/order/success
 /(main)/orders
+/(main)/orders/[id]/tracking
 /(main)/products
 /(main)/products/[id]
 /(main)/profile

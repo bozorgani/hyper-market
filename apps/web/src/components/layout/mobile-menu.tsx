@@ -78,7 +78,7 @@ function MobileMenuContent({ open, onClose }: MobileMenuProps) {
           <Link
             href="/login"
             onClick={onClose}
-            className="block rounded-xl bg-emerald-600 px-3 py-3 text-center text-white transition hover:bg-emerald-700"
+            className="block rounded-xl bg-rose-600 px-3 py-3 text-center text-white transition hover:bg-rose-700"
           >
             ورود
           </Link>

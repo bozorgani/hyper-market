@@ -62,6 +62,12 @@ export class CouponsService {
   }): Promise<void> {
     if (!input.couponId || !input.code || input.discountAmount <= 0) return;
     try {
+      const couponDoc = await this.couponRepository.findById(input.couponId);
+      const usageLimit = couponDoc?.usageLimit ?? null;
+      const updated = await this.couponRepository.incrementUsedCount(input.couponId, usageLimit);
+      if (!updated) {
+        throw new BadRequestException('Coupon usage limit reached');
+      }
       await this.couponRepository.createUsage({
         couponId: new Types.ObjectId(input.couponId),
         code: input.code,
@@ -69,8 +75,8 @@ export class CouponsService {
         orderId: new Types.ObjectId(input.orderId),
         discountAmount: input.discountAmount,
       });
-      await this.couponRepository.incrementUsedCount(input.couponId);
-    } catch {
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
       // Coupon usage audit is best-effort; order creation must not fail after payment-critical writes.
     }
   }

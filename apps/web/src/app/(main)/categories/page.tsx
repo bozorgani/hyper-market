@@ -42,7 +42,7 @@ export default async function CategoriesPage() {
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {visibleCategories.map((category) => (
           <Link key={category._id} href={getCategoryProductsHref(category)}>
-            <Card className="flex h-full items-center gap-4 p-5 transition hover:border-emerald-200 hover:shadow-md">
+            <Card className="flex h-full items-center gap-4 p-5 transition hover:border-rose-200 hover:shadow-md">
               <span className="text-3xl">{category.icon || "📦"}</span>
               <div>
                 <h2 className="font-black text-slate-900">{category.name}</h2>

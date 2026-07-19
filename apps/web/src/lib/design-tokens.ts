@@ -72,7 +72,7 @@ export const tw = {
   button: "rounded-xl",
   buttonLg: "rounded-2xl",
   input: "rounded-xl",
-  focusRing: "focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 focus-visible:outline-offset-2",
+  focusRing: "focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-700 focus-visible:outline-offset-2",
 } as const;
 
 /**

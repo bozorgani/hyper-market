@@ -115,7 +115,7 @@ export function ProductDetailPageClient({
       </Card>
       <section className="rounded-3xl bg-white p-6 text-right shadow-sm">
         <div className="flex flex-wrap gap-2">
-          <Badge className={item.stock > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}>
+          <Badge className={item.stock > 0 ? "bg-rose-50 text-rose-700" : "bg-red-50 text-red-700"}>
             {item.stock > 0 ? `${formatNumber(item.stock)} ${item.unit ?? "عدد"} موجود` : "ناموجود"}
           </Badge>
           {discountPercent > 0 ? <Badge className="bg-rose-50 text-rose-700">{formatNumber(discountPercent)}٪ تخفیف</Badge> : null}

@@ -39,7 +39,7 @@ export function PaymentDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+            className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-700"
             aria-label="بستن"
           >
             <X className="h-5 w-5" aria-hidden="true" />

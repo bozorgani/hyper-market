@@ -39,7 +39,7 @@ export function OrderStatusTimeline({ status }: { status: OrderStatus }) {
               ) : null}
               <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
                 {completed ? (
-                  <CheckCircle2 className={cn("h-5 w-5", current ? "text-rose-600" : "text-emerald-600")} />
+                  <CheckCircle2 className={cn("h-5 w-5", current ? "text-rose-600" : "text-rose-600")} />
                 ) : (
                   <Circle className="h-4 w-4 text-slate-400" />
                 )}

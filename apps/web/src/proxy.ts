@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ACCESS_TOKEN_COOKIE, ADMIN_ROLES } from './lib/constants';
+import { decodeJwtPayload } from './lib/auth';
 
 /**
  * Admin route protection proxy + CSP nonce hardening (Issue #17).
@@ -91,37 +92,6 @@ function isSafeRedirectUrl(url: string, requestUrl: URL): boolean {
   }
 }
 
-/**
- * Decode the JWT payload without signature verification.
- * Returns null if the token is malformed.
- */
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    // JWT structure: header.payload.signature
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    // Base64url decode the payload (second part)
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const padding = '='.repeat((4 - (base64.length % 4)) % 4);
-    const jsonPayload = decodeURIComponent(
-      atob(base64 + padding)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join(''),
-    );
-
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Extract the user's role from the access token cookie.
- */
 function getRoleFromCookie(request: NextRequest): string | null {
   const token = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   if (!token) {

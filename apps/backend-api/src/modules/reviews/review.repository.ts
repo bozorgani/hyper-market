@@ -19,6 +19,7 @@ export class ReviewRepository {
         reviewId: new Types.ObjectId(reviewId),
         userId: new Types.ObjectId(userId),
       })
+      .lean()
       .exec();
   }
 
@@ -46,6 +47,7 @@ export class ReviewRepository {
     return this.reviewModel
       .findById(id)
       .populate('userId', 'name email')
+      .lean()
       .exec();
   }
 
@@ -85,6 +87,7 @@ export class ReviewRepository {
         .sort({ [sortBy]: sortOrder })
         .skip(skip)
         .limit(limit)
+        .lean()
         .exec(),
       this.reviewModel.countDocuments(filter).exec(),
     ]);
@@ -102,6 +105,7 @@ export class ReviewRepository {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
+        .lean()
         .exec(),
       this.reviewModel.countDocuments({ userId: new Types.ObjectId(userId) }).exec(),
     ]);
@@ -120,6 +124,7 @@ export class ReviewRepository {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
+        .lean()
         .exec(),
       this.reviewModel.countDocuments({ isApproved: false }).exec(),
     ]);

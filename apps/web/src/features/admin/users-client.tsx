@@ -62,7 +62,7 @@ export function AdminUsersClient() {
 
   const roleColors: Record<string, string> = {
     customer: "bg-slate-100 text-slate-600",
-    admin: "bg-emerald-50 text-emerald-700",
+    admin: "bg-rose-50 text-rose-700",
     super_admin: "bg-violet-50 text-violet-700",
     vendor: "bg-blue-50 text-blue-700",
     delivery: "bg-amber-50 text-amber-700",
@@ -152,7 +152,7 @@ export function AdminUsersClient() {
                           disabled={id === "unknown" || isMutationPending}
                           className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                             isSuspended
-                              ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                              ? "bg-rose-50 text-rose-700 hover:bg-rose-100"
                               : "bg-red-50 text-red-600 hover:bg-red-100"
                           }`}
                         >
@@ -182,7 +182,7 @@ export function AdminUsersClient() {
                         <AccountStatusBadge status={user.accountStatus} />
                       </div>
                     </div>
-                    <button onClick={() => setSelectedUser(user)} disabled={id === "unknown" || isMutationPending} className={`mr-3 rounded-lg p-2 transition ${isSuspended ? "text-emerald-600 hover:bg-emerald-50" : "text-red-500 hover:bg-red-50"}`}>
+                    <button onClick={() => setSelectedUser(user)} disabled={id === "unknown" || isMutationPending} className={`mr-3 rounded-lg p-2 transition ${isSuspended ? "text-rose-600 hover:bg-rose-50" : "text-red-500 hover:bg-red-50"}`}>
                       {isSuspended ? <ShieldCheck className="h-5 w-5" /> : <ShieldOff className="h-5 w-5" />}
                     </button>
                   </div>

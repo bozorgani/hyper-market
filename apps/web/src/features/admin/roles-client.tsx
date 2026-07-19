@@ -45,8 +45,8 @@ const ROLE_META: Record<
   admin: {
     label: "مدیر",
     icon: Shield,
-    color: "text-emerald-700",
-    bgClass: "bg-emerald-50",
+    color: "text-rose-700",
+    bgClass: "bg-rose-50",
   },
   customer: {
     label: "مشتری",
@@ -496,7 +496,7 @@ export function AdminRolesClient() {
               <button
                 type="button"
                 onClick={() => setShowAddDialog(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-700"
                 aria-label="بستن"
               >
                 <X className="h-5 w-5" aria-hidden="true" />

@@ -40,9 +40,9 @@ export function AuthShell({
         {/* Background Pattern */}
         <div className="absolute inset-0">
           {/* Gradient orbs */}
-          <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-emerald-500/20 blur-[100px]" />
-          <div className="absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-emerald-600/15 blur-[120px]" />
-          <div className="absolute left-1/2 top-1/3 h-48 w-48 rounded-full bg-emerald-500/10 blur-[80px]" />
+          <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-rose-500/20 blur-[100px]" />
+          <div className="absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-rose-600/15 blur-[120px]" />
+          <div className="absolute left-1/2 top-1/3 h-48 w-48 rounded-full bg-rose-500/10 blur-[80px]" />
           {/* Grid pattern */}
           <div className="auth-grid-pattern absolute inset-0 opacity-[0.03]" />
         </div>
@@ -56,18 +56,18 @@ export function AuthShell({
           >
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/30">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 shadow-lg shadow-rose-500/30">
                 <ShoppingCart className="h-6 w-6 text-white" />
               </div>
               <div>
                 <h2 className="text-lg font-black text-white">هایپرمارکت</h2>
-                <p className="text-xs text-emerald-400">Hyper Market</p>
+                <p className="text-xs text-rose-400">Hyper Market</p>
               </div>
             </div>
 
             {/* Title */}
             <div className="mt-12">
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-4 py-1.5 text-xs font-semibold text-emerald-400 backdrop-blur">
+              <div className="inline-flex items-center gap-2 rounded-full bg-rose-500/15 px-4 py-1.5 text-xs font-semibold text-rose-400 backdrop-blur">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 {eyebrow}
               </div>
@@ -87,7 +87,7 @@ export function AuthShell({
               transition={{ delay: 0.2 + idx * 0.08, duration: 0.4 }}
               className="flex items-start gap-3.5 rounded-2xl bg-white/5 p-3.5 backdrop-blur transition hover:bg-white/[0.08]"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
                 {feature.icon ?? <ArrowLeftRight className="h-5 w-5" />}
               </div>
               <div className="min-w-0">
@@ -104,7 +104,7 @@ export function AuthShell({
         {/* Mobile Header */}
         <div className="border-b border-slate-100 bg-white px-4 py-3 sm:px-5 sm:py-4 lg:hidden">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 shadow-lg shadow-rose-500/20">
               <ShoppingCart className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -124,7 +124,7 @@ export function AuthShell({
           >
             {/* Desktop: show eyebrow badge */}
             <div className="hidden lg:block mb-6">
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-700">
+              <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-4 py-1.5 text-xs font-semibold text-rose-700">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 {eyebrow}
               </div>
@@ -139,15 +139,15 @@ export function AuthShell({
             {/* Desktop Trust Badges */}
             <div className="mt-6 hidden flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-400 lg:flex">
               <div className="flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                <ShieldCheck className="h-3.5 w-3.5 text-rose-500" />
                 <span>اتصال امن SSL</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <CreditCard className="h-3.5 w-3.5 text-emerald-500" />
+                <CreditCard className="h-3.5 w-3.5 text-rose-500" />
                 <span>پرداخت مطمئن</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Headphones className="h-3.5 w-3.5 text-emerald-500" />
+                <Headphones className="h-3.5 w-3.5 text-rose-500" />
                 <span>پشتیبانی ۲۴/۷</span>
               </div>
             </div>

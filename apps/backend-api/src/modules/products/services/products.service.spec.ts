@@ -48,7 +48,16 @@ describe('ProductsService', () => {
   let categoriesService: { getCategoryById: jest.Mock };
   let searchIndexer: { indexProduct: jest.Mock; removeProduct: jest.Mock };
   let eventBusService: { emit: jest.Mock };
-  let redisService: { get: jest.Mock; set: jest.Mock; delete: jest.Mock };
+  let redisService: {
+    get: jest.Mock;
+    set: jest.Mock;
+    delete: jest.Mock;
+    client: {
+      sadd: jest.Mock;
+      smembers: jest.Mock;
+      del: jest.Mock;
+    };
+  };
 
   beforeEach(async () => {
     productsRepository = {
@@ -79,6 +88,11 @@ describe('ProductsService', () => {
       get: jest.fn().mockResolvedValue(null),
       set: jest.fn().mockResolvedValue(undefined),
       delete: jest.fn().mockResolvedValue(undefined),
+      client: {
+        sadd: jest.fn().mockResolvedValue(1),
+        smembers: jest.fn().mockResolvedValue([]),
+        del: jest.fn().mockResolvedValue(1),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -257,6 +271,49 @@ describe('ProductsService', () => {
       const result = await service.listProducts();
       expect(result).toEqual(cached);
       expect(productsRepository.findActiveProducts).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('invalidateProductListCaches', () => {
+    it('invalidates list caches on product creation', async () => {
+      const saddSpy = redisService.client.sadd as jest.Mock;
+      const smembersSpy = redisService.client.smembers as jest.Mock;
+      const delSpy = redisService.client.del as jest.Mock;
+      smembersSpy.mockResolvedValue(['products:list:1:20:all:none:any']);
+
+      await service.createProduct({
+        name: 'New',
+        description: 'Test',
+        price: 100,
+        stock: 5,
+        categoryId: CATEGORY_ID,
+      });
+
+      expect(smembersSpy).toHaveBeenCalledWith('products:list:keys');
+      expect(delSpy).toHaveBeenCalledWith('products:list:1:20:all:none:any');
+      expect(delSpy).toHaveBeenCalledWith('products:list:keys');
+    });
+
+    it('invalidates list caches on product update', async () => {
+      const smembersSpy = redisService.client.smembers as jest.Mock;
+      const delSpy = redisService.client.del as jest.Mock;
+      smembersSpy.mockResolvedValue(['products:list:1:20:all:none:any']);
+
+      await service.updateProduct(PRODUCT_ID, { name: 'Updated' });
+
+      expect(smembersSpy).toHaveBeenCalledWith('products:list:keys');
+      expect(delSpy).toHaveBeenCalled();
+    });
+
+    it('invalidates list caches on product deletion', async () => {
+      const smembersSpy = redisService.client.smembers as jest.Mock;
+      const delSpy = redisService.client.del as jest.Mock;
+      smembersSpy.mockResolvedValue([]);
+
+      await service.deleteProduct(PRODUCT_ID);
+
+      expect(smembersSpy).toHaveBeenCalledWith('products:list:keys');
+      expect(delSpy).toHaveBeenCalledWith('products:list:keys');
     });
   });
 

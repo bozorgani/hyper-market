@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  NotFoundException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -67,17 +68,18 @@ export class OrdersService {
     }
 
     try {
+      // Critical inventory section: read state, validate, reserve atomically
       const existingOrder = await this.findRecentDuplicateOrder(userId);
-      if (existingOrder) {
-        this.logger.warn(
-          `Duplicate order creation prevented for user ${userId}. Returning existing order ${getEntityId(existingOrder)}.`,
-        );
-        return existingOrder;
-      }
+        if (existingOrder) {
+          this.logger.warn(
+            `Duplicate order creation prevented for user ${userId}. Returning existing order ${getEntityId(existingOrder)}.`,
+          );
+          return existingOrder;
+        }
 
-      const reducedItems: Array<{ productId: string; quantity: number }> = [];
+        const reducedItems: Array<{ productId: string; quantity: number }> = [];
 
-      const order = await this.databaseTransactionService.executeWithCompensation({
+        const order = await this.databaseTransactionService.executeWithCompensation({
         execute: async (session) => {
           const cart = await this.cartService.getCartByUserId(userId, session);
 
@@ -85,13 +87,26 @@ export class OrdersService {
             throw new BadRequestException('Cart is empty');
           }
 
+          // Batch fetch all products to eliminate N+1 queries
+          const productIds = Array.from(
+            new Set(cart.items.map((item: any) => getEntityId(item.productId))),
+          );
+          const productsBatch = await this.productsService.getProductsByIds(productIds);
+          const productMap = new Map<string, any>();
+          for (const product of productsBatch) {
+            productMap.set(getEntityId(product), product);
+          }
+
           const orderItems: OrderItem[] = [];
           let subtotalPrice = 0;
 
           for (const item of cart.items) {
             const productId = getEntityId(item.productId);
+            const product = productMap.get(productId);
 
-            const product = await this.productsService.getProductById(productId, session);
+            if (!product) {
+              throw new BadRequestException(`Product "${productId}" not found`);
+            }
 
             if (!product.isActive) {
               throw new BadRequestException(`Product "${product.name}" is not active`);
@@ -246,7 +261,7 @@ export class OrdersService {
 
       return order;
     } finally {
-      // Release the distributed lock
+      // Release the distributed user lock
       try {
         await this.redisService.delete(lockKey);
       } catch {
@@ -278,7 +293,7 @@ export class OrdersService {
 
     const order = await this.ordersRepository.findById(orderId);
     if (!order) {
-      throw new BadRequestException('Order not found');
+      throw new NotFoundException('Order not found');
     }
 
     if (!this.isAdminRole(role) && getEntityId(order.userId) !== userId) {

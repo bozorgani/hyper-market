@@ -37,7 +37,7 @@ export function BottomNav() {
               href={href}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 rounded-xl py-1 transition-all active:scale-[0.96]",
-                isActive ? "text-emerald-600 font-bold" : "text-slate-500 hover:text-slate-800"
+                isActive ? "text-rose-600 font-bold" : "text-slate-500 hover:text-slate-800"
               )}
               aria-current={isActive ? "page" : undefined}
             >
@@ -45,7 +45,7 @@ export function BottomNav() {
                 <Icon className="h-5 w-5" aria-hidden="true" />
                 {href === "/cart" && cartCount > 0 && (
                   <span 
-                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-black text-white ring-2 ring-white px-0.5"
+                    className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 text-[9px] font-black text-white ring-2 ring-white px-0.5"
                     aria-label={`${cartCount} مورد در سبد خرید`}
                   >
                     {cartCount > 9 ? "۹+" : cartCount.toLocaleString("fa-IR")}

@@ -9,18 +9,81 @@ export class WishlistRepository {
     @InjectModel(Wishlist.name) private wishlistModel: Model<WishlistDocument>,
   ) {}
 
-  async getWishlist(userId: string): Promise<Wishlist | null> {
-    return this.wishlistModel
-      .findOne({ userId: new Types.ObjectId(userId) })
-      .populate({
-        path: 'products',
-        select: 'name price discountPrice images stock isActive categoryId',
-        populate: {
-          path: 'categoryId',
-          select: 'name',
+  async getWishlist(userId: string, page = 1, limit = 20): Promise<{ products: any[]; pagination: { page: number; limit: number; total: number; totalPages: number; hasNext: boolean; hasPrevious: boolean } } | null> {
+    const pipeline = [
+      { $match: { userId: new Types.ObjectId(userId) } },
+      {
+        $facet: {
+          data: [
+            { $project: { products: 1, _id: 0 } },
+            { $unwind: "$products" },
+            {
+              $lookup: {
+                from: "products",
+                localField: "products",
+                foreignField: "_id",
+                as: "productDetails",
+              },
+            },
+            { $unwind: "$productDetails" },
+            {
+              $replaceRoot: { newRoot: "$productDetails" },
+            },
+            {
+              $lookup: {
+                from: "categories",
+                localField: "categoryId",
+                foreignField: "_id",
+                as: "categoryId",
+              },
+            },
+            { $unwind: { path: "$categoryId", preserveNullAndEmptyArrays: true } },
+            {
+              $project: {
+                "categoryId.name": 1,
+                "categoryId._id": 1,
+                name: 1,
+                price: 1,
+                discountPrice: 1,
+                images: 1,
+                stock: 1,
+                isActive: 1,
+                categoryId: {
+                  $cond: {
+                    if: "$categoryId",
+                    then: { name: "$categoryId.name" },
+                    else: null,
+                  },
+                },
+              },
+            },
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+          ],
+          total: [{ $count: "count" }],
         },
-      })
-      .exec();
+      },
+    ];
+
+    const [result] = await this.wishlistModel.aggregate(pipeline).exec();
+    const data = result?.data || [];
+    const totalCount = result?.total?.[0]?.count || 0;
+
+    if (totalCount === 0) {
+      return null;
+    }
+
+    return {
+      products: data,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNext: page * limit < totalCount,
+        hasPrevious: page > 1,
+      },
+    };
   }
 
   async addToWishlist(userId: string, productId: string): Promise<Wishlist> {

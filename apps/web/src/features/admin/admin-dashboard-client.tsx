@@ -132,7 +132,7 @@ export function AdminDashboardClient() {
           <p className="mt-1 text-sm text-slate-500">
             نمای کلی فروش، سفارش‌ها و موجودی فروشگاه
             {analytics.data ? (
-              <span className="mr-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+              <span className="mr-2 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700">
                 Analytics API
               </span>
             ) : null}
@@ -141,7 +141,7 @@ export function AdminDashboardClient() {
         <div className="flex gap-2">
           <Link
             href="/admin/orders"
-            className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-200"
+            className="flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-200 transition hover:bg-rose-600 hover:shadow-lg hover:shadow-rose-200"
           >
             <ReceiptText className="h-4 w-4" />
             مدیریت سفارشات
@@ -156,7 +156,7 @@ export function AdminDashboardClient() {
           title="کل سفارش‌ها"
           value={isLoadingStats ? "…" : totalOrders}
           icon={ShoppingCart}
-          gradient="bg-emerald-500"
+          gradient="bg-rose-500"
           delay={0}
           trend={{ value: 12.5, label: "نسبت هفته قبل" }}
         />
@@ -213,7 +213,7 @@ export function AdminDashboardClient() {
                 {analytics.isLoading ? "در حال بارگذاری…" : "درآمد ۷ روز اخیر"}
               </p>
             </div>
-            <div className="flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+            <div className="flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">
               <TrendingUp className="h-3.5 w-3.5" />
               {analytics.data ? "Analytics" : "رشد مثبت"}
             </div>
@@ -239,7 +239,7 @@ export function AdminDashboardClient() {
                       initial={{ height: 0 }}
                       animate={{ height: `${Math.max(heightPercent, 3)}%` }}
                       transition={{ delay: 0.4 + index * 0.06, duration: 0.6, ease: "easeOut" }}
-                      className="min-h-2 w-full rounded-xl bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-md shadow-emerald-100"
+                      className="min-h-2 w-full rounded-xl bg-gradient-to-t from-rose-600 to-rose-400 shadow-md shadow-rose-100"
                     />
                   </div>
                   {/* Day label */}
@@ -264,7 +264,7 @@ export function AdminDashboardClient() {
                 {orders.isLoading ? "در حال بارگذاری..." : `${recentOrders.length} سفارش اخیر`}
               </p>
             </div>
-            <Link href="/admin/orders" className="text-xs font-semibold text-emerald-600 transition hover:text-emerald-700">
+            <Link href="/admin/orders" className="text-xs font-semibold text-rose-600 transition hover:text-rose-700">
               مشاهده همه
             </Link>
           </div>
@@ -317,7 +317,7 @@ export function AdminDashboardClient() {
       {/* Quick Action Cards */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "ثبت محصول جدید", href: "/admin/products/new", icon: Boxes, color: "from-emerald-500 to-emerald-700", shadow: "shadow-emerald-200" },
+          { label: "ثبت محصول جدید", href: "/admin/products/new", icon: Boxes, color: "from-rose-500 to-rose-700", shadow: "shadow-rose-200" },
           { label: "بررسی سفارشات", href: "/admin/orders", icon: ReceiptText, color: "from-blue-500 to-indigo-600", shadow: "shadow-blue-200" },
           { label: "مدیریت کاربران", href: "/admin/users", icon: Users, color: "from-violet-500 to-purple-600", shadow: "shadow-violet-200" },
           { label: "مشاهده آنالیتیکس", href: "/admin/analytics", icon: TrendingUp, color: "from-amber-500 to-orange-600", shadow: "shadow-amber-200" },

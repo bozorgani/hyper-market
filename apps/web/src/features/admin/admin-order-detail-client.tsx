@@ -25,7 +25,7 @@ export function AdminOrderDetailClient() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <Link href="/admin/orders" className="flex items-center gap-1 text-sm text-slate-400 transition hover:text-emerald-600">
+            <Link href="/admin/orders" className="flex items-center gap-1 text-sm text-slate-400 transition hover:text-rose-600">
               <ArrowRight className="h-4 w-4" />
               سفارش‌ها
             </Link>
@@ -70,7 +70,7 @@ export function AdminOrderDetailClient() {
                 <Package className="h-4 w-4" />
                 <span className="text-xs font-medium">مبلغ کل</span>
               </div>
-              <p className="mt-3 text-lg font-bold text-emerald-600">{formatPrice(order.totalPrice)}</p>
+              <p className="mt-3 text-lg font-bold text-rose-600">{formatPrice(order.totalPrice)}</p>
             </motion.div>
           </div>
 

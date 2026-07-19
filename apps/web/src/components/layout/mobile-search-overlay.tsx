@@ -43,7 +43,7 @@ export function MobileSearchOverlay({
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
               placeholder="جستجو..."
-              className="h-11 w-full rounded-2xl border bg-slate-50 pr-12 pl-10 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+              className="h-11 w-full rounded-2xl border bg-slate-50 pr-12 pl-10 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
               aria-label="جستجو در محصولات"
             />
             <button

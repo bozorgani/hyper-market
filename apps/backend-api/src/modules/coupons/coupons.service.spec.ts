@@ -43,7 +43,7 @@ describe('CouponsService', () => {
       update: jest.fn().mockResolvedValue(mockCoupon),
       softDelete: jest.fn().mockResolvedValue(mockCoupon),
       createUsage: jest.fn().mockResolvedValue({}),
-      incrementUsedCount: jest.fn().mockResolvedValue({}),
+      incrementUsedCount: jest.fn().mockResolvedValue(mockCoupon),
       countUsageForUser: jest.fn().mockResolvedValue(0),
       list: jest.fn().mockResolvedValue({ items: [mockCoupon], total: 1 }),
       getAnalytics: jest.fn().mockResolvedValue({}),
@@ -151,6 +151,61 @@ describe('CouponsService', () => {
     it('should throw NotFoundException if coupon is not found for deletion', async () => {
       repository.softDelete.mockResolvedValue(null);
       await expect(service.deleteCoupon(COUPON_ID)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('recordUsage', () => {
+    it('should successfully increment coupon usage count atomically', async () => {
+      repository.findById.mockResolvedValue(mockCoupon);
+      repository.incrementUsedCount.mockResolvedValue(mockCoupon);
+      repository.createUsage.mockResolvedValue({});
+
+      await service.recordUsage({
+        couponId: COUPON_ID,
+        code: 'SUMMER50',
+        userId: '507f1f77bcf86cd799439013',
+        orderId: '507f1f77bcf86cd799439014',
+        discountAmount: 20,
+      });
+
+      expect(repository.incrementUsedCount).toHaveBeenCalledWith(COUPON_ID, 100);
+      expect(repository.createUsage).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when usage limit is reached', async () => {
+      repository.findById.mockResolvedValue(mockCoupon);
+      repository.incrementUsedCount.mockResolvedValue(null);
+
+      await expect(
+        service.recordUsage({
+          couponId: COUPON_ID,
+          code: 'SUMMER50',
+          userId: '507f1f77bcf86cd799439013',
+          orderId: '507f1f77bcf86cd799439014',
+          discountAmount: 20,
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should prevent concurrent usage from exceeding limit', async () => {
+      repository.findById.mockResolvedValue({ ...mockCoupon, usedCount: 99, usageLimit: 100 });
+      repository.incrementUsedCount.mockResolvedValueOnce({ ...mockCoupon, usedCount: 100 });
+      repository.incrementUsedCount.mockResolvedValueOnce(null);
+
+      await service.recordUsage({ couponId: COUPON_ID, code: 'SUMMER50', userId: '507f1f77bcf86cd799439013', orderId: '507f1f77bcf86cd799439014', discountAmount: 20 });
+      await expect(
+        service.recordUsage({ couponId: COUPON_ID, code: 'SUMMER50', userId: '507f1f77bcf86cd799439015', orderId: '507f1f77bcf86cd799439016', discountAmount: 20 }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should allow increment without usage limit', async () => {
+      const noLimitCoupon = { ...mockCoupon, usageLimit: null };
+      repository.findById.mockResolvedValue(noLimitCoupon);
+      repository.incrementUsedCount.mockResolvedValue(noLimitCoupon);
+      repository.createUsage.mockResolvedValue({});
+
+      await service.recordUsage({ couponId: COUPON_ID, code: 'SUMMER50', userId: '507f1f77bcf86cd799439013', orderId: '507f1f77bcf86cd799439014', discountAmount: 10 });
+      expect(repository.incrementUsedCount).toHaveBeenCalledWith(COUPON_ID, null);
     });
   });
 });

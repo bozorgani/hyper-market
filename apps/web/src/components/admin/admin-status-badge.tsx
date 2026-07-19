@@ -18,10 +18,10 @@ export function ProductStatusBadge({ isActive }: { isActive?: boolean }) {
     <span className={cn(
       "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ring-1",
       isActive
-        ? "bg-emerald-50 text-emerald-700 ring-emerald-200/50"
+        ? "bg-rose-50 text-rose-700 ring-rose-200/50"
         : "bg-slate-100 text-slate-500 ring-slate-200/50",
     )}>
-      <span className={cn("h-1.5 w-1.5 rounded-full", isActive ? "bg-emerald-500" : "bg-slate-400")} />
+      <span className={cn("h-1.5 w-1.5 rounded-full", isActive ? "bg-rose-500" : "bg-slate-400")} />
       {isActive ? "فعال" : "غیرفعال"}
     </span>
   );
@@ -30,14 +30,14 @@ export function ProductStatusBadge({ isActive }: { isActive?: boolean }) {
 export function AccountStatusBadge({ status }: { status?: string }) {
   const styles: Record<string, string> = {
     pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-200/50",
-    active: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50",
+    active: "bg-rose-50 text-rose-700 ring-1 ring-rose-200/50",
     suspended: "bg-red-50 text-red-600 ring-1 ring-red-200/50",
     deactivated: "bg-slate-100 text-slate-500 ring-1 ring-slate-200/50",
     banned: "bg-red-100 text-red-800 ring-1 ring-red-200/50",
   };
   const dotColors: Record<string, string> = {
     pending: "bg-amber-500",
-    active: "bg-emerald-500",
+    active: "bg-rose-500",
     suspended: "bg-red-500",
     deactivated: "bg-slate-400",
     banned: "bg-red-600",

@@ -84,7 +84,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
               onClick={() => setSelectedIndex(index)}
               className={`relative aspect-square overflow-hidden rounded-2xl border bg-slate-100 transition-all duration-150 ${
                 index === selectedIndex 
-                  ? "border-emerald-500 ring-2 ring-emerald-200 scale-[1.015]" 
+                  ? "border-rose-500 ring-2 ring-rose-200 scale-[1.015]" 
                   : "border-slate-200 hover:border-slate-300"
               }`}
               aria-label={`نمایش تصویر ${index + 1} از ${safeImages.length}`}

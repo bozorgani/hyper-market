@@ -44,14 +44,14 @@ function OrderSuccessContent() {
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl items-center px-4 py-10">
       <Card className="w-full p-8 text-center">
-        <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" />
+        <CheckCircle2 className="mx-auto h-16 w-16 text-rose-500" />
         <h1 className="mt-5 text-3xl font-black">سفارش شما ثبت شد</h1>
         <p className="mt-3 leading-7 text-slate-500">
           سفارش شما با موفقیت ثبت شد و پرداخت در محل تأیید گردید.
         </p>
 
         {shortOrderId ? (
-          <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+          <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
             شماره پیگیری سفارش: {shortOrderId}
           </div>
         ) : (
@@ -78,7 +78,7 @@ function OrderSuccessContent() {
           <>
             <div className="mt-6 grid gap-3 text-right sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                <ReceiptText className="mb-3 h-5 w-5 text-emerald-600" />
+                <ReceiptText className="mb-3 h-5 w-5 text-rose-600" />
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-black text-slate-900">جزئیات سفارش</p>
                   <Badge className="bg-blue-50 text-blue-700">{translateOrderStatus(order.data.status)}</Badge>
@@ -92,7 +92,7 @@ function OrderSuccessContent() {
                 <PackageCheck className="mb-3 h-5 w-5 text-rose-600" />
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-black text-slate-900">وضعیت پرداخت</p>
-                  <Badge className={paymentIsPaid ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}>
+                  <Badge className={paymentIsPaid ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}>
                     {translatePaymentStatus(payment.data?.status)}
                   </Badge>
                 </div>

@@ -20,7 +20,7 @@ import type { OrderStatus } from "@/types/domain";
 const statuses: Array<{ value: OrderStatus | "all"; label: string; color: string }> = [
   { value: "all", label: "همه", color: "bg-slate-100 text-slate-600" },
   { value: "pending", label: "در انتظار", color: "bg-amber-50 text-amber-700" },
-  { value: "paid", label: "پرداخت‌شده", color: "bg-emerald-50 text-emerald-700" },
+  { value: "paid", label: "پرداخت‌شده", color: "bg-rose-50 text-rose-700" },
   { value: "processing", label: "در حال پردازش", color: "bg-blue-50 text-blue-700" },
   { value: "shipped", label: "ارسال‌شده", color: "bg-violet-50 text-violet-700" },
   { value: "delivered", label: "تحویل‌شده", color: "bg-slate-100 text-slate-600" },
@@ -156,7 +156,7 @@ export function AdminOrdersClient() {
                         value={order.status}
                         onChange={(e) => setPendingStatusChange({ orderId: order._id, nextStatus: e.target.value })}
                         aria-label="تغییر وضعیت سفارش"
-                        className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 transition focus:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                        className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 transition focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100"
                       >
                         {statuses.filter((item) => item.value !== "all").map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
                       </select>

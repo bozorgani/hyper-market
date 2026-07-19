@@ -175,7 +175,7 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <MessageSquare className="h-6 w-6 text-emerald-600" />
+          <MessageSquare className="h-6 w-6 text-rose-600" />
           <h2 className="text-2xl font-black text-slate-900">
             نظرات و امتیازات
           </h2>
@@ -241,7 +241,7 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
                     className={cn(
                       "flex w-full items-center gap-3 rounded-lg px-3 py-2 transition",
                       ratingFilter === rating
-                        ? "bg-emerald-50"
+                        ? "bg-rose-50"
                         : "hover:bg-slate-50"
                     )}
                   >
@@ -281,7 +281,7 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
               onChange={(e) =>
                 setRatingFilter(e.target.value ? Number(e.target.value) : undefined)
               }
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-emerald-400"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-rose-400"
             >
               <option value="">همه امتیازات</option>
               <option value="5">5 ستاره</option>
@@ -303,7 +303,7 @@ export function ProductReviews({ productId, orderId }: ProductReviewsProps) {
                 setSortBy(newSortBy as "createdAt" | "rating" | "helpfulCount");
                 setSortOrder(newSortOrder as "asc" | "desc");
               }}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-emerald-400"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-rose-400"
             >
               <option value="createdAt-desc">جدیدترین</option>
               <option value="createdAt-asc">قدیمی‌ترین</option>

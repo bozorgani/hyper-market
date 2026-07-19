@@ -234,8 +234,16 @@ export class ProductsService {
       result = await this.productsRepository.findActiveProducts(safePage, safeLimit, search, isActive);
     }
 
-    // Store in cache
-    void this.redisService.set(cacheKey, result, PRODUCT_LIST_CACHE_TTL).catch(() => undefined);
+    // Store in cache and track key for efficient invalidation
+    try {
+      void this.redisService.set(cacheKey, result, PRODUCT_LIST_CACHE_TTL).catch(() => undefined);
+      const rawClient = (this.redisService as any).client;
+      if (rawClient && typeof rawClient.sadd === 'function') {
+        await rawClient.sadd('products:list:keys', cacheKey);
+      }
+    } catch {
+      // Cache tracking failure must not break the read path
+    }
 
     return result;
   }
@@ -252,20 +260,13 @@ export class ProductsService {
 
   private async invalidateProductListCaches(): Promise<void> {
     try {
-      // Delete all product list cache keys using a scan pattern
       const rawClient = (this.redisService as any).client;
-      if (rawClient) {
-        const stream = rawClient.scanStream({ match: 'products:list:*', count: 100 });
-        const keys: string[] = [];
-        stream.on('data', (foundKeys: string[]) => keys.push(...foundKeys));
-        await new Promise<void>((resolve) => {
-          stream.on('end', async () => {
-            if (keys.length > 0) {
-              await rawClient.del(...keys);
-            }
-            resolve();
-          });
-        });
+      if (rawClient && typeof rawClient.smembers === 'function') {
+        const members: string[] = await rawClient.smembers('products:list:keys');
+        if (members.length > 0) {
+          await rawClient.del(...members);
+        }
+        await rawClient.del('products:list:keys');
       }
     } catch {
       // Best-effort invalidation
