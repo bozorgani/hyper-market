@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { RedisService } from '../../../infrastructure/cache/redis.service';
@@ -586,6 +586,6 @@ describe('OrdersService — getMyOrders and getOrderById', () => {
 
     await expect(
       service.getOrderById(ORDER_ID, 'user-1', 'CUSTOMER'),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(NotFoundException);
   });
 });

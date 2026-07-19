@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  NotFoundException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -292,7 +293,7 @@ export class OrdersService {
 
     const order = await this.ordersRepository.findById(orderId);
     if (!order) {
-      throw new BadRequestException('Order not found');
+      throw new NotFoundException('Order not found');
     }
 
     if (!this.isAdminRole(role) && getEntityId(order.userId) !== userId) {
