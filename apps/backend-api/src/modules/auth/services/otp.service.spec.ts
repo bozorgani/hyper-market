@@ -72,6 +72,34 @@ describe('OtpService', () => {
   });
   });
 
+describe('getOtpHashSecret', () => {
+    let originalEnv: NodeJS.ProcessEnv;
+
+    beforeEach(() => {
+      originalEnv = { ...process.env };
+    });
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it('should work when OTP_HASH_SECRET is configured', async () => {
+      process.env = { ...originalEnv, OTP_HASH_SECRET: 'test-secret' };
+      mockOtpRepository.create.mockResolvedValue({});
+      mockRedisService.set.mockResolvedValue('OK');
+      await service.createVerificationOtp('user-id', 'test@example.com', OtpType.EMAIL_VERIFY);
+      expect(mockOtpRepository.create).toHaveBeenCalled();
+    });
+
+    it('should throw error when OTP_HASH_SECRET is missing', async () => {
+      process.env = { ...originalEnv, OTP_HASH_SECRET: '' };
+      delete process.env.OTP_HASH_SECRET;
+      await expect(
+        service.createVerificationOtp('user-id', 'test@example.com', OtpType.EMAIL_VERIFY),
+      ).rejects.toThrow('OTP_HASH_SECRET environment variable must be configured');
+    });
+  });
+
   describe('verifyOtpCode', () => {
     it('should throw BadRequestException for invalid OTP', async () => {
       mockOtpRepository.findLatestForVerification.mockResolvedValue(null);
