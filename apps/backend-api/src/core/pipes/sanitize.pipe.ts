@@ -119,7 +119,7 @@ export class SanitizePipe implements PipeTransform {
   /**
    * Recursively sanitizes all string values in an object
    */
-  private sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
+  private sanitizeObject(obj: unknown): unknown {
     if (obj === null || obj === undefined) {
       return obj;
     }
@@ -128,14 +128,15 @@ export class SanitizePipe implements PipeTransform {
     if (Array.isArray(obj)) {
       return obj.map((item) => this.transform(item, { type: 'body' }));
     }
-    
+
     // Handle objects
-    if (typeof obj === 'object') {
+    if (typeof obj === 'object' && obj !== null) {
       const sanitized: Record<string, unknown> = {};
-      
-      for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          const value = obj[key];
+      const recordObj = obj as Record<string, unknown>;
+
+      for (const key in recordObj) {
+        if (Object.prototype.hasOwnProperty.call(recordObj, key)) {
+          const value = recordObj[key];
           
           // Skip sanitization for sensitive fields
           if (this.skipFields.has(key)) {

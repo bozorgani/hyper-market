@@ -7,7 +7,7 @@ import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { AnalyticsService } from './analytics.service';
-import { parseCookies } from '../../../shared/utils/parse-cookies';
+import { parseCookies } from '../../shared/utils/parse-cookies';
 import { TrackEventDto } from './dto/track-event.dto';
 import { AnalyticsEventType } from './schemas/event.schema';
 

@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NextFunction, Request, Response } from 'express';
-import { parseCookies } from '../../../shared/utils/parse-cookies';
+import { parseCookies } from '../../shared/utils/parse-cookies';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const CSRF_TOKEN_COOKIE = 'hyper_market_csrf_token';
