@@ -51,6 +51,7 @@ describe('OtpService', () => {
     service = module.get<OtpService>(OtpService);
     otpRepository = module.get<OtpRepository>(OtpRepository);
     redisService = module.get<RedisService>(RedisService);
+    process.env.OTP_HASH_SECRET = process.env.OTP_HASH_SECRET || 'test-secret';
   });
 
   afterEach(() => {
