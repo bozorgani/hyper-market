@@ -87,7 +87,7 @@ describe('getOtpHashSecret', () => {
       process.env = { ...originalEnv, OTP_HASH_SECRET: 'test-secret' };
       mockOtpRepository.create.mockResolvedValue({});
       mockRedisService.set.mockResolvedValue('OK');
-      await service.createVerificationOtp('user-id', 'test@example.com', OtpType.EMAIL_VERIFY);
+      await service.createVerificationOtp('507f1f77bcf86cd799439011', 'test@example.com', OtpType.EMAIL_VERIFY);
       expect(mockOtpRepository.create).toHaveBeenCalled();
     });
 
@@ -95,7 +95,7 @@ describe('getOtpHashSecret', () => {
       process.env = { ...originalEnv, OTP_HASH_SECRET: '' };
       delete process.env.OTP_HASH_SECRET;
       await expect(
-        service.createVerificationOtp('user-id', 'test@example.com', OtpType.EMAIL_VERIFY),
+        service.createVerificationOtp('507f1f77bcf86cd799439011', 'test@example.com', OtpType.EMAIL_VERIFY),
       ).rejects.toThrow('OTP_HASH_SECRET environment variable must be configured');
     });
   });
