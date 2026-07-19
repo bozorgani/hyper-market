@@ -243,17 +243,11 @@ export class OtpService {
   }
 
   private getOtpHashSecret(): string {
-    const secret =
-      process.env.OTP_HASH_SECRET ??
-      process.env.PASSWORD_PEPPER ??
-      process.env.JWT_REFRESH_SECRET ??
-      process.env.JWT_ACCESS_SECRET;
-
-    if (!secret && process.env.APP_ENV === 'production') {
-      throw new Error('OTP_HASH_SECRET or PASSWORD_PEPPER must be set in production');
+    const secret = process.env.OTP_HASH_SECRET;
+    if (!secret) {
+      throw new Error('OTP_HASH_SECRET environment variable must be configured');
     }
-
-    return secret ?? 'development-otp-hash-secret-do-not-use-in-production';
+    return secret;
   }
 
   private getLockoutDate(): Date {

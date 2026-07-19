@@ -63,8 +63,17 @@ describe('CsrfProtectionMiddleware', () => {
     expect(next).toHaveBeenCalled();
   });
 
-  it('should bypass Csrf protection for safe public analytics event route', () => {
-    const req = createMockRequest({ method: 'POST', path: '/analytics/event' });
+  it('should bypass Csrf protection for exact public analytics event route', () => {
+    const req = createMockRequest({ method: 'POST', path: '/api/v1/analytics/event' });
+    const res = createMockResponse();
+    const next = jest.fn();
+
+    middleware.use(req, res, next);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('should not bypass Csrf protection for similar malicious paths', () => {
+    const req = createMockRequest({ method: 'POST', path: '/api/v1/fake/analytics/event' });
     const res = createMockResponse();
     const next = jest.fn();
 

@@ -6,24 +6,12 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../../users/services/users.service';
 import { AccountStatus } from '../../users/enums/account-status.enum';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { parseCookies } from '../../../shared/utils/parse-cookies';
 
 const ACCESS_TOKEN_COOKIE = 'hyper_market_access_token';
 
 function extractJwtFromCookie(request: Request): string | null {
-  const cookieHeader = request.headers.cookie;
-  if (!cookieHeader) {
-    return null;
-  }
-
-  const cookies = cookieHeader.split(';');
-  for (const cookie of cookies) {
-    const [rawKey, ...rawValue] = cookie.trim().split('=');
-    if (rawKey === ACCESS_TOKEN_COOKIE) {
-      return decodeURIComponent(rawValue.join('='));
-    }
-  }
-
-  return null;
+  return parseCookies(request)[ACCESS_TOKEN_COOKIE] ?? null;
 }
 
 @Injectable()

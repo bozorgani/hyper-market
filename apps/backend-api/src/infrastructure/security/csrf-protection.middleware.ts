@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NextFunction, Request, Response } from 'express';
+import { parseCookies } from '../../shared/utils/parse-cookies';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const CSRF_TOKEN_COOKIE = 'hyper_market_csrf_token';
@@ -58,11 +59,11 @@ export class CsrfProtectionMiddleware implements NestMiddleware {
   }
 
   private assertDoubleSubmitToken(request: Request): void {
-    const csrfCookie = this.getCookieValue(request, CSRF_TOKEN_COOKIE);
+    const cookies = parseCookies(request);
+    const csrfCookie = cookies[CSRF_TOKEN_COOKIE];
     const csrfHeader = request.get(CSRF_TOKEN_HEADER);
     const hasAuthCookie = Boolean(
-      this.getCookieValue(request, 'hyper_market_access_token') ||
-        this.getCookieValue(request, 'hyper_market_refresh_token'),
+      cookies['hyper_market_access_token'] || cookies['hyper_market_refresh_token'],
     );
 
     if (!hasAuthCookie) {
@@ -75,7 +76,7 @@ export class CsrfProtectionMiddleware implements NestMiddleware {
   }
 
   private isPublicAnalyticsEvent(request: Request): boolean {
-    return request.method === 'POST' && request.path.endsWith('/analytics/event');
+    return request.method === 'POST' && request.path === '/api/v1/analytics/event';
   }
 
   private parseOrigins(origins: string): string[] {
@@ -97,20 +98,5 @@ export class CsrfProtectionMiddleware implements NestMiddleware {
     }
   }
 
-  private getCookieValue(request: Request, name: string): string | undefined {
-    const cookieHeader = request.headers.cookie;
-    if (!cookieHeader) {
-      return undefined;
-    }
 
-    const cookies = cookieHeader.split(';');
-    for (const cookie of cookies) {
-      const [rawKey, ...rawValue] = cookie.trim().split('=');
-      if (rawKey === name) {
-        return decodeURIComponent(rawValue.join('='));
-      }
-    }
-
-    return undefined;
-  }
 }

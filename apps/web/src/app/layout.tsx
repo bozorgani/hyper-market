@@ -1,18 +1,9 @@
 import type { Metadata } from "next";
-import { Vazirmatn } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 import "./leaflet.css";
 import { Providers } from "@/providers";
 import { serializeJsonLd } from "@/lib/structured-data";
-
-const vazirmatn = Vazirmatn({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500", "700", "900"],
-  display: "swap",
-  variable: "--font-vazirmatn",
-  preload: true,
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
@@ -85,13 +76,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <html lang="fa" dir="rtl" className={vazirmatn.variable}>
+    <html lang="fa" dir="rtl">
       <head>
         {/* Hreflang tags for Persian content – Task 18 */}
         <link rel="alternate" hrefLang="fa" href={siteUrl} />
         <link rel="alternate" hrefLang="x-default" href={siteUrl} />
       </head>
-      <body className={`${vazirmatn.className} min-h-screen bg-background text-foreground antialiased`}>
+      <body className="min-h-screen bg-background text-foreground antialiased">
         {/* Skip-to-content link for keyboard users – Task 1 */}
         <a
           href="#main-content"

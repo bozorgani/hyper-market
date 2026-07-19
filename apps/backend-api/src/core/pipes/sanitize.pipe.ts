@@ -1,6 +1,7 @@
 import {
   PipeTransform,
   Injectable,
+  Scope,
   ArgumentMetadata,
   Logger,
 } from '@nestjs/common';
@@ -26,7 +27,9 @@ import { JSDOM } from 'jsdom';
  * 
  * Usage: Applied globally in main.ts after ValidationPipe
  */
-@Injectable()
+const sharedWindow = new JSDOM('').window;
+
+@Injectable({ scope: Scope.DEFAULT })
 export class SanitizePipe implements PipeTransform {
   private readonly logger = new Logger(SanitizePipe.name);
   private readonly purify: ReturnType<typeof createDOMPurify>;
@@ -47,25 +50,19 @@ export class SanitizePipe implements PipeTransform {
   ]);
 
   constructor() {
-    // Initialize DOMPurify with JSDOM for server-side sanitization
-    const window = new JSDOM('').window;
-    this.purify = createDOMPurify(window);
+    // Initialize DOMPurify with reused JSDOM instance
+    this.purify = createDOMPurify(sharedWindow);
   }
 
-  transform(value: any, metadata: ArgumentMetadata) {
-    // Only sanitize body data (not query params, headers, etc.)
-    if (metadata.type !== 'body') {
-      return value;
+  transform(value: unknown, metadata: ArgumentMetadata): unknown {
+    if (metadata.type === 'body' || metadata.type === 'query') {
+      if (typeof value === 'string') {
+        return this.sanitizeString(value);
+      }
+      if (typeof value === 'object' && value !== null) {
+        return this.sanitizeObject(value);
+      }
     }
-
-    if (typeof value === 'string') {
-      return this.sanitizeString(value);
-    }
-    
-    if (typeof value === 'object' && value !== null) {
-      return this.sanitizeObject(value);
-    }
-    
     return value;
   }
 
@@ -122,7 +119,7 @@ export class SanitizePipe implements PipeTransform {
   /**
    * Recursively sanitizes all string values in an object
    */
-  private sanitizeObject(obj: any): any {
+  private sanitizeObject(obj: unknown): unknown {
     if (obj === null || obj === undefined) {
       return obj;
     }
@@ -131,14 +128,15 @@ export class SanitizePipe implements PipeTransform {
     if (Array.isArray(obj)) {
       return obj.map((item) => this.transform(item, { type: 'body' }));
     }
-    
+
     // Handle objects
-    if (typeof obj === 'object') {
-      const sanitized: any = {};
-      
-      for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          const value = obj[key];
+    if (typeof obj === 'object' && obj !== null) {
+      const sanitized: Record<string, unknown> = {};
+      const recordObj = obj as Record<string, unknown>;
+
+      for (const key in recordObj) {
+        if (Object.prototype.hasOwnProperty.call(recordObj, key)) {
+          const value = recordObj[key];
           
           // Skip sanitization for sensitive fields
           if (this.skipFields.has(key)) {

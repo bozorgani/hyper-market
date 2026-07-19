@@ -332,6 +332,15 @@ describe('ReviewService', () => {
       expect(reviewRepository.delete).toHaveBeenCalledWith(REVIEW_ID);
     });
 
+    it('should allow super admin to delete any review', async () => {
+      reviewRepository.findById.mockResolvedValue({ ...mockReview, userId: 'other-user' });
+      reviewRepository.delete.mockResolvedValue(mockReview);
+
+      await service.deleteReview(REVIEW_ID, 'super-user', 'SUPER_ADMIN');
+
+      expect(reviewRepository.delete).toHaveBeenCalledWith(REVIEW_ID);
+    });
+
     it('should throw ForbiddenException when non-admin tries to delete another user review', async () => {
       reviewRepository.findById.mockResolvedValue({ ...mockReview, userId: 'other-user' });
 
