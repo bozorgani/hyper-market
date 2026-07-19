@@ -102,6 +102,7 @@ export function OrderCard({
               بررسی مجدد پرداخت
             </Button>
           ) : null}
+          <LinkButton href={`/orders/${order._id}/tracking`} variant="outline">پیگیری سفارش</LinkButton>
           <LinkButton href={`/order/success?orderId=${order._id}`} variant="outline">جزئیات سفارش</LinkButton>
         </div>
       </div>
