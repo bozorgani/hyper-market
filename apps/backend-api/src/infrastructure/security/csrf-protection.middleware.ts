@@ -75,7 +75,7 @@ export class CsrfProtectionMiddleware implements NestMiddleware {
   }
 
   private isPublicAnalyticsEvent(request: Request): boolean {
-    return request.method === 'POST' && request.path.endsWith('/analytics/event');
+    return request.method === 'POST' && request.path === '/api/v1/analytics/event';
   }
 
   private parseOrigins(origins: string): string[] {
