@@ -111,7 +111,6 @@ async function main() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`  Email   : ${email}`);
   console.log(`  Phone   : ${phoneNumber}`);
-  console.log(`  Password: ${plainPassword}`);
   console.log(`  Role    : super_admin`);
   console.log(`  ID      : ${admin._id}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
