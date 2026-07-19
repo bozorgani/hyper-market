@@ -91,10 +91,9 @@ describe('Cart, Order, and Payment Flows', () => {
       },
     };
     const productsService = {
-      getProductById: async (_id: string, session: unknown) => {
-        expect(session).toBe('session');
+      getProductsByIds: async (_ids: string[]) => {
         calls.push('get-product');
-        return createProduct({ _id: productId });
+        return [createProduct({ _id: productId })];
       },
       reduceStock: async (_id: string, _quantity: number, session: unknown, syncSearch: boolean) => {
         expect(session).toBe('session');

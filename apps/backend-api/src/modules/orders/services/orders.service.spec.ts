@@ -226,6 +226,7 @@ describe('OrdersService — createOrder', () => {
     };
     productsService = {
       getProductById: jest.fn(),
+      getProductsByIds: jest.fn(),
       reduceStock: jest.fn(),
       syncProductToSearch: jest.fn(),
     };
@@ -300,9 +301,7 @@ describe('OrdersService — createOrder', () => {
     };
 
     cartService.getCartByUserId.mockResolvedValue(mockCart);
-    productsService.getProductById
-      .mockResolvedValueOnce(mockProducts[0])
-      .mockResolvedValueOnce(mockProducts[1]);
+    productsService.getProductsByIds.mockResolvedValue(mockProducts);
     productsService.reduceStock.mockResolvedValue({});
     shippingService.getQuote.mockReturnValue({
       method: 'standard',
@@ -370,7 +369,7 @@ describe('OrdersService — createOrder', () => {
     };
 
     cartService.getCartByUserId.mockResolvedValue(mockCart);
-    productsService.getProductById.mockResolvedValue(mockProduct);
+    productsService.getProductsByIds.mockResolvedValue([mockProduct]);
 
     await expect(
       service.createOrder('user-1', {
@@ -403,7 +402,7 @@ describe('OrdersService — createOrder', () => {
     };
 
     cartService.getCartByUserId.mockResolvedValue(mockCart);
-    productsService.getProductById.mockResolvedValue(mockProduct);
+    productsService.getProductsByIds.mockResolvedValue([mockProduct]);
 
     await expect(
       service.createOrder('user-1', {
@@ -444,7 +443,7 @@ describe('OrdersService — createOrder', () => {
     };
 
     cartService.getCartByUserId.mockResolvedValue(mockCart);
-    productsService.getProductById.mockResolvedValue(mockProduct);
+    productsService.getProductsByIds.mockResolvedValue([mockProduct]);
     productsService.reduceStock.mockResolvedValue({});
     couponsService.validateCoupon.mockResolvedValue(mockCoupon);
     shippingService.getQuote.mockReturnValue({
