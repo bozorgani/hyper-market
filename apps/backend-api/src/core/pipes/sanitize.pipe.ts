@@ -1,6 +1,7 @@
 import {
   PipeTransform,
   Injectable,
+  Scope,
   ArgumentMetadata,
   Logger,
 } from '@nestjs/common';
@@ -26,7 +27,9 @@ import { JSDOM } from 'jsdom';
  * 
  * Usage: Applied globally in main.ts after ValidationPipe
  */
-@Injectable()
+const sharedWindow = new JSDOM('').window;
+
+@Injectable({ scope: Scope.DEFAULT })
 export class SanitizePipe implements PipeTransform {
   private readonly logger = new Logger(SanitizePipe.name);
   private readonly purify: ReturnType<typeof createDOMPurify>;
@@ -47,25 +50,19 @@ export class SanitizePipe implements PipeTransform {
   ]);
 
   constructor() {
-    // Initialize DOMPurify with JSDOM for server-side sanitization
-    const window = new JSDOM('').window;
-    this.purify = createDOMPurify(window);
+    // Initialize DOMPurify with reused JSDOM instance
+    this.purify = createDOMPurify(sharedWindow);
   }
 
   transform(value: any, metadata: ArgumentMetadata) {
-    // Only sanitize body data (not query params, headers, etc.)
-    if (metadata.type !== 'body') {
-      return value;
+    if (metadata.type === 'body' || metadata.type === 'query') {
+      if (typeof value === 'string') {
+        return this.sanitizeString(value);
+      }
+      if (typeof value === 'object' && value !== null) {
+        return this.sanitizeObject(value);
+      }
     }
-
-    if (typeof value === 'string') {
-      return this.sanitizeString(value);
-    }
-    
-    if (typeof value === 'object' && value !== null) {
-      return this.sanitizeObject(value);
-    }
-    
     return value;
   }
 
