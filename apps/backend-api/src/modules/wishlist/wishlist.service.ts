@@ -14,9 +14,9 @@ export class WishlistService {
   ) {}
 
   async getWishlist(userId: string, page = 1, limit = 20) {
-    const wishlist = await this.wishlistRepository.getWishlist(userId);
+    const result = await this.wishlistRepository.getWishlist(userId, page, limit);
 
-    if (!wishlist || wishlist.products.length === 0) {
+    if (!result || result.products.length === 0) {
       return {
         products: [],
         pagination: {
@@ -30,24 +30,9 @@ export class WishlistService {
       };
     }
 
-    // Manual pagination since products are already populated
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedProducts = wishlist.products.slice(startIndex, endIndex);
-
-    const total = wishlist.products.length;
-    const totalPages = Math.ceil(total / limit);
-
     return {
-      products: paginatedProducts,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrevious: page > 1,
-      },
+      products: result.products,
+      pagination: result.pagination,
     };
   }
 

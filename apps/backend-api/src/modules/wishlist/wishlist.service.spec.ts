@@ -18,6 +18,18 @@ const mockWishlist = {
   products: [mockProduct],
 };
 
+const mockWishlistResult = {
+  products: [mockProduct],
+  pagination: {
+    page: 1,
+    limit: 10,
+    total: 1,
+    totalPages: 1,
+    hasNext: false,
+    hasPrevious: false,
+  },
+};
+
 describe('WishlistService', () => {
   let service: WishlistService;
   let repository: {
@@ -35,7 +47,7 @@ describe('WishlistService', () => {
 
   beforeEach(async () => {
     repository = {
-      getWishlist: jest.fn().mockResolvedValue(mockWishlist),
+      getWishlist: jest.fn().mockResolvedValue(mockWishlistResult),
       isInWishlist: jest.fn().mockResolvedValue(false),
       addToWishlist: jest.fn().mockResolvedValue({ products: [mockProduct] }),
       removeFromWishlist: jest.fn().mockResolvedValue({ products: [] }),
