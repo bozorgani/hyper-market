@@ -163,7 +163,7 @@ export class ReviewService {
     }
 
     // Users can delete their own reviews, admins can delete any
-    if (review.userId.toString() !== userId && userRole !== 'ADMIN') {
+    if (review.userId.toString() !== userId && userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
       throw new ForbiddenException('You can only delete your own reviews');
     }
 
