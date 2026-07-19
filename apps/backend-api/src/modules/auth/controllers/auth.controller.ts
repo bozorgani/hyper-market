@@ -16,6 +16,7 @@ import { CurrentUser } from '../decorators/current-user.decorator';
 import { Public } from '../decorators/public.decorator';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { AuthService } from '../services/auth.service';
+import { parseCookies } from '../../../shared/utils/parse-cookies';
 
 const ACCESS_TOKEN_COOKIE = 'hyper_market_access_token';
 const REFRESH_TOKEN_COOKIE = 'hyper_market_refresh_token';
@@ -78,7 +79,7 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const refreshToken = dto.refreshToken ?? this.getCookieValue(request, REFRESH_TOKEN_COOKIE);
+    const refreshToken = dto.refreshToken ?? parseCookies(request)[REFRESH_TOKEN_COOKIE];
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is required');
     }
@@ -98,7 +99,7 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const refreshToken = dto.refreshToken ?? this.getCookieValue(request, REFRESH_TOKEN_COOKIE);
+    const refreshToken = dto.refreshToken ?? parseCookies(request)[REFRESH_TOKEN_COOKIE];
     if (!refreshToken) {
       this.clearAuthCookies(response);
       return { message: 'logout successful' };
@@ -215,23 +216,6 @@ export class AuthController {
       httpOnly: false,
       maxAge: this.parseDurationMs(process.env.JWT_REFRESH_EXPIRES ?? '30d'),
     };
-  }
-
-  private getCookieValue(request: Request, name: string): string | undefined {
-    const cookieHeader = request.headers.cookie;
-    if (!cookieHeader) {
-      return undefined;
-    }
-
-    const cookies = cookieHeader.split(';');
-    for (const cookie of cookies) {
-      const [rawKey, ...rawValue] = cookie.trim().split('=');
-      if (rawKey === name) {
-        return decodeURIComponent(rawValue.join('='));
-      }
-    }
-
-    return undefined;
   }
 
   private parseDurationMs(duration: string): number {

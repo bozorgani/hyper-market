@@ -7,6 +7,7 @@ import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/enums/user-role.enum';
 import { AnalyticsService } from './analytics.service';
+import { parseCookies } from '../../../shared/utils/parse-cookies';
 import { TrackEventDto } from './dto/track-event.dto';
 import { AnalyticsEventType } from './schemas/event.schema';
 
@@ -76,7 +77,7 @@ export class AnalyticsController {
   }
 
   private getAuthenticatedUserIfPresent(request: Request): JwtPayload | null {
-    const token = this.getBearerToken(request) ?? this.getCookieValue(request, ACCESS_TOKEN_COOKIE);
+    const token = this.getBearerToken(request) ?? parseCookies(request)[ACCESS_TOKEN_COOKIE];
     if (!token) {
       return null;
     }
@@ -95,23 +96,6 @@ export class AnalyticsController {
     }
 
     return authorization.slice('Bearer '.length).trim() || null;
-  }
-
-  private getCookieValue(request: Request, name: string): string | undefined {
-    const cookieHeader = request.headers.cookie;
-    if (!cookieHeader) {
-      return undefined;
-    }
-
-    const cookies = cookieHeader.split(';');
-    for (const cookie of cookies) {
-      const [rawKey, ...rawValue] = cookie.trim().split('=');
-      if (rawKey === name) {
-        return decodeURIComponent(rawValue.join('='));
-      }
-    }
-
-    return undefined;
   }
 
   private sanitizeMetadata(metadata?: Record<string, unknown>): Record<string, unknown> {
