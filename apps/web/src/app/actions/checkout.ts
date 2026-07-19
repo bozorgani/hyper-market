@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { backendFetch } from "./backend";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/constants";
-import { isAdminRole } from "@/lib/auth";
+import { isAdminRole, decodeJwtPayload } from "@/lib/auth";
 import type { DeliveryAddress, DeliveryWindow, Order, Payment } from "@/types/domain";
 import type { CouponValidationResult } from "@/hooks/use-coupons";
 
@@ -81,24 +81,6 @@ export async function createPaymentAction(input: CreatePaymentActionInput): Prom
   revalidatePath("/orders", "page");
   revalidatePath("/order/success", "page");
   return payment;
-}
-
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padding = "=".repeat((4 - (base64.length % 4)) % 4);
-    const jsonPayload = decodeURIComponent(
-      atob(base64 + padding)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
 }
 
 async function validateAdminRole(): Promise<void> {
