@@ -164,10 +164,6 @@ export class AuthController {
     tokens: { accessToken: string; refreshToken: string },
     message: string,
   ) {
-    if (process.env.AUTH_RETURN_TOKENS_IN_BODY === 'true') {
-      return tokens;
-    }
-
     return { success: true, message };
   }
 
