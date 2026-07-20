@@ -79,7 +79,7 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const refreshToken = dto.refreshToken ?? parseCookies(request)[REFRESH_TOKEN_COOKIE];
+    const refreshToken = dto?.refreshToken ?? parseCookies(request)[REFRESH_TOKEN_COOKIE];
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is required');
     }
@@ -99,7 +99,7 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const refreshToken = dto.refreshToken ?? parseCookies(request)[REFRESH_TOKEN_COOKIE];
+    const refreshToken = dto?.refreshToken ?? parseCookies(request)[REFRESH_TOKEN_COOKIE];
     if (!refreshToken) {
       this.clearAuthCookies(response);
       return { message: 'logout successful' };

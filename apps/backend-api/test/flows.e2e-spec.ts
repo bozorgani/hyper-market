@@ -45,12 +45,27 @@ describe('Critical Business Flows (e2e)', () => {
       const adminEmail = `admin-${Date.now()}@example.com`;
 
       // Insert test product
+      const categoryResult = await connection.db.collection('categories').insertOne({
+        name: 'E2E Test Category',
+        slug: `e2e-test-${Date.now()}`,
+        description: 'E2E test category',
+        icon: '🧪',
+        image: null,
+        parentId: null,
+        sortOrder: 0,
+        isActive: true,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       const productResult = await connection.db.collection('products').insertOne({
         name: 'E2E Test Product',
         description: 'E2E Test Description',
         price: 500,
         stock: 50,
         images: ['test.jpg'],
+        categoryId: categoryResult.insertedId,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -98,6 +113,7 @@ describe('Critical Business Flows (e2e)', () => {
 
   afterAll(async () => {
     if (connection?.db) {
+      await connection.db.collection('categories').deleteMany({ name: 'E2E Test Category' });
       await connection.db.collection('products').deleteMany({ name: 'E2E Test Product' });
       await connection.db.collection('users').deleteMany({ email: /customer-|admin-/ });
     }

@@ -26,6 +26,12 @@ process.env.JWT_REFRESH_SECRET ??= 'test-refresh-token-e2e-min-32chars!';
 process.env.PASSWORD_PEPPER ??= 'test-password-pepper-e2e-min-32chars!';
 process.env.OTP_HASH_SECRET ??= 'test-otp-hash-secret-e2e-min-32chars';
 process.env.CORS_ORIGINS = 'http://localhost:3000';
+process.env.RATE_LIMIT_DEFAULT_LIMIT = '100000';
+process.env.RATE_LIMIT_AUTH_LIMIT = '100000';
+process.env.RATE_LIMIT_SENSITIVE_LIMIT = '100000';
+process.env.RATE_LIMIT_DEFAULT_TTL_MS = '60000';
+process.env.RATE_LIMIT_AUTH_TTL_MS = '60000';
+process.env.RATE_LIMIT_SENSITIVE_TTL_MS = '60000';
 
 // E2E tests use supertest directly, so browser-origin CSRF protection is not
 // under test here. Dedicated CSRF unit tests cover the middleware behavior.
