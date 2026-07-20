@@ -36,25 +36,6 @@
   "overrides": {
     "multer": "2.2.0",
     "postcss": "8.5.16",
-    "eslint": {
-      "minimatch": {
-        "brace-expansion": "1.1.16"
-      }
-    },
-    "@nestjs/cli": {
-      "minimatch": {
-        "brace-expansion": "5.0.7"
-      }
-    },
-    "typescript-eslint": {
-      "minimatch": {
-        "brace-expansion": "5.0.7"
-      }
-    },
-    "jest": {
-      "minimatch": {
-        "brace-expansion": "2.1.2"
-      }
-    }
+    "brace-expansion": "1.1.16"
   }
 }
