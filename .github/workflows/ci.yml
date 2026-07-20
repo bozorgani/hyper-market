@@ -45,10 +45,10 @@ jobs:
 
       - name: Install Gitleaks
         run: |
-          VERSION=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep '"tag_name"' | cut -d '"' -f 4)
-          wget https://github.com/gitleaks/gitleaks/releases/download/${VERSION}/gitleaks_${VERSION#v}_linux_x64.tar.gz
-          tar -xzf gitleaks_${VERSION#v}_linux_x64.tar.gz
-          sudo mv gitleaks /usr/local/bin/gitleaks
+          VERSION=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r .tag_name)
+          curl -L https://github.com/gitleaks/gitleaks/releases/download/${VERSION}/gitleaks_${VERSION#v}_linux_x64.tar.gz -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz
+          sudo mv gitleaks /usr/local/bin/
           
       - name: Verify Gitleaks 
         run: gitleaks version
@@ -59,6 +59,13 @@ jobs:
             --source . \
             --verbose \
             --redact
+            --report-format sarif \
+            --report-path gitleaks.sarif
+      - name: Upload Gitleaks report
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif      
 
   audit:
     name: Security audit
