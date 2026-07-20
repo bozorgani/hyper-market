@@ -50,7 +50,10 @@ services:
       MEILI_NO_ANALYTICS: "true"
       MEILI_MASTER_KEY: hyper_market_meili_master_key_change_me
     ports:
-      - "7700:7700"
+      # Use 7701 on the host by default so backend E2E infra can run next to
+      # the regular local Meilisearch service on 7700. Override if needed:
+      # MEILI_TEST_PORT=17700 docker compose -f docker-compose.test.yml up -d --wait
+      - "${MEILI_TEST_PORT:-7701}:7700"
     tmpfs:
       - /meili_data
     healthcheck:
