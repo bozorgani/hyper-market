@@ -1,11 +1,17 @@
 // Shared E2E environment bootstrap.
 // This file is loaded by Jest before each e2e spec, before AppModule imports.
 
+const mongoTestPort = process.env.MONGO_TEST_PORT ?? '27018';
+const redisTestPort = process.env.REDIS_TEST_PORT ?? '6380';
+const meiliTestPort = process.env.MEILI_TEST_PORT ?? '7701';
+
 process.env.APP_ENV ??= 'test';
 process.env.NODE_ENV ??= 'test';
-process.env.DATABASE_URL ??= 'mongodb://localhost:27017/hypermarket_test?replicaSet=rs0';
-process.env.REDIS_URL ??= 'redis://localhost:6379';
-process.env.MEILI_HOST ??= `http://localhost:${process.env.MEILI_TEST_PORT ?? '7701'}`;
+process.env.DATABASE_URL ??= `mongodb://localhost:${mongoTestPort}/hypermarket_test`;
+process.env.REDIS_URL ??= `redis://localhost:${redisTestPort}`;
+process.env.REDIS_HOST ??= 'localhost';
+process.env.REDIS_PORT ??= redisTestPort;
+process.env.MEILI_HOST ??= `http://localhost:${meiliTestPort}`;
 process.env.MEILI_API_KEY ??= 'hyper_market_meili_master_key_change_me';
 process.env.JWT_ACCESS_SECRET ??= 'test-access-token-e2e-min-32chars!!';
 process.env.JWT_REFRESH_SECRET ??= 'test-refresh-token-e2e-min-32chars!';
