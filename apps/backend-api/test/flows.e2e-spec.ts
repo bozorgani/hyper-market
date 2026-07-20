@@ -17,9 +17,7 @@ import { Connection, Types } from 'mongoose';
 describe('Critical Business Flows (e2e)', () => {
   let app: INestApplication;
   let connection: Connection;
-  let customerToken: string;
   let customerCookie: string[] | undefined;
-  let adminToken: string;
   let adminCookie: string[] | undefined;
   let testProductId: string;
 
@@ -59,17 +57,23 @@ describe('Critical Business Flows (e2e)', () => {
       });
       testProductId = productResult.insertedId.toString();
 
-      // Register and log in customer
+      // Register, activate, and log in customer. Registration intentionally
+      // creates a pending account, while these flow tests need an authenticated
+      // customer session.
       await request(app.getHttpServer())
         .post('/auth/register')
         .send({ email, password: 'StrongPass123!' });
+
+      await connection.db.collection('users').updateOne(
+        { email },
+        { $set: { accountStatus: 'active', isEmailVerified: true } },
+      );
 
       const loginRes = await request(app.getHttpServer())
         .post('/auth/login')
         .send({ email, password: 'StrongPass123!', deviceId: 'customer-device' });
 
       customerCookie = loginRes.get('Set-Cookie');
-      customerToken = loginRes.body.accessToken;
 
       // Register and log in admin user
       await request(app.getHttpServer())
@@ -78,7 +82,7 @@ describe('Critical Business Flows (e2e)', () => {
 
       await connection.db.collection('users').updateOne(
         { email: adminEmail },
-        { $set: { role: 'admin' } }
+        { $set: { role: 'admin', accountStatus: 'active', isEmailVerified: true } },
       );
 
       const adminLoginRes = await request(app.getHttpServer())
@@ -86,11 +90,8 @@ describe('Critical Business Flows (e2e)', () => {
         .send({ email: adminEmail, password: 'StrongPass123!', deviceId: 'admin-device' });
 
       adminCookie = adminLoginRes.get('Set-Cookie');
-      adminToken = adminLoginRes.body.accessToken;
     } else {
       // Mock tokens for offline compilation check
-      customerToken = 'mock-customer-token';
-      adminToken = 'mock-admin-token';
       testProductId = new Types.ObjectId().toString();
     }
   }, 45_000);
@@ -231,7 +232,7 @@ describe('Critical Business Flows (e2e)', () => {
       await request(app.getHttpServer())
         .patch(`/orders/${orderId}/status`)
         .set('Cookie', customerCookie)
-        .send({ status: 'delivered' })
+        .send({ status: 'processing' })
         .expect(403);
     });
 
@@ -241,10 +242,10 @@ describe('Critical Business Flows (e2e)', () => {
       const res = await request(app.getHttpServer())
         .patch(`/orders/${orderId}/status`)
         .set('Cookie', adminCookie)
-        .send({ status: 'delivered' })
+        .send({ status: 'processing' })
         .expect(200);
 
-      expect(res.body.status).toBe('delivered');
+      expect(res.body.status).toBe('processing');
     });
   });
 
