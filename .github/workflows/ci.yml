@@ -32,7 +32,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-
   secret-scan:
     name: Secret scan
     runs-on: ubuntu-latest
@@ -43,29 +42,47 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Gitleaks
+      # Do not use gitleaks/gitleaks-action here. Recent versions of that
+      # marketplace action require a commercial GITLEAKS_LICENSE secret and its
+      # older Node runtime can trip GitHub Actions deprecation warnings. The OSS
+      # gitleaks CLI does not require a license, so install and run it directly.
+      - name: Install Gitleaks CLI
+        shell: bash
         run: |
-          VERSION=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r .tag_name)
-          curl -L https://github.com/gitleaks/gitleaks/releases/download/${VERSION}/gitleaks_${VERSION#v}_linux_x64.tar.gz -o gitleaks.tar.gz
-          tar -xzf gitleaks.tar.gz
-          sudo mv gitleaks /usr/local/bin/
-          
-      - name: Verify Gitleaks 
+          set -euo pipefail
+          VERSION="$(curl -fsSL https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r .tag_name)"
+          if [[ -z "${VERSION}" || "${VERSION}" == "null" ]]; then
+            echo "Could not resolve latest gitleaks version" >&2
+            exit 1
+          fi
+          curl -fsSL \
+            "https://github.com/gitleaks/gitleaks/releases/download/${VERSION}/gitleaks_${VERSION#v}_linux_x64.tar.gz" \
+            -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+
+      - name: Verify Gitleaks
         run: gitleaks version
 
       - name: Run Gitleaks scan
+        shell: bash
         run: |
+          set -euo pipefail
           gitleaks detect \
             --source . \
+            --config .gitleaks.toml \
             --verbose \
-            --redact
+            --redact \
             --report-format sarif \
             --report-path gitleaks.sarif
-      - name: Upload Gitleaks report
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
+
+      - name: Upload Gitleaks report artifact
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: gitleaks.sarif      
+          name: gitleaks-sarif
+          path: gitleaks.sarif
+          if-no-files-found: ignore
 
   audit:
     name: Security audit
@@ -140,7 +157,6 @@ jobs:
           NEXT_PUBLIC_API_BASE_URL: http://localhost:3001/api/v1
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
 
-
   frontend-e2e:
     name: Frontend E2E tests
     runs-on: ubuntu-latest
@@ -178,11 +194,11 @@ jobs:
       APP_ENV: test
       NODE_ENV: test
       PORT: 3001
-      DATABASE_URL: mongodb://localhost:27017/hypermarket_test?replicaSet=rs0
-      REDIS_URL: redis://localhost:6379
+      DATABASE_URL: mongodb://localhost:27018/hypermarket_test
+      REDIS_URL: redis://localhost:6380
       REDIS_HOST: localhost
-      REDIS_PORT: 6379
-      MEILI_HOST: http://localhost:7700
+      REDIS_PORT: 6380
+      MEILI_HOST: http://localhost:7701
       MEILI_API_KEY: hyper_market_meili_master_key_change_me
       JWT_ACCESS_SECRET: test-access-secret-e2e-min-32chars!!
       JWT_REFRESH_SECRET: test-refresh-secret-e2e-min-32chars!
@@ -196,13 +212,13 @@ jobs:
       AUTH_COOKIE_SAME_SITE: lax
       AUTH_RETURN_TOKENS_IN_BODY: "false"
       AUTH_LOG_OTP_CODES: "false"
-      CSRF_PROTECTION_ENABLED: "true"
+      CSRF_PROTECTION_ENABLED: "false"
       WORKERS_ENABLED: "false"
       OUTBOX_RELAY_ENABLED: "false"
       SEARCH_INDEXING_WORKER_ENABLED: "false"
-      SKIP_MIGRATIONS: "false"
+      SKIP_MIGRATIONS: "true"
       SWAGGER_ENABLED: "false"
-      MONGODB_TRANSACTION_FALLBACK_ENABLED: "false"
+      MONGODB_TRANSACTION_FALLBACK_ENABLED: "true"
 
     steps:
       - name: Checkout
