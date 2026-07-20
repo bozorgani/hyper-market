@@ -34,14 +34,12 @@ export class WishlistRepository {
                 from: "categories",
                 localField: "categoryId",
                 foreignField: "_id",
-                as: "categoryId",
+                as: "categoryDetails",
               },
             },
-            { $unwind: { path: "$categoryId", preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: "$categoryDetails", preserveNullAndEmptyArrays: true } },
             {
               $project: {
-                "categoryId.name": 1,
-                "categoryId._id": 1,
                 name: 1,
                 price: 1,
                 discountPrice: 1,
@@ -50,8 +48,8 @@ export class WishlistRepository {
                 isActive: 1,
                 categoryId: {
                   $cond: {
-                    if: "$categoryId",
-                    then: { name: "$categoryId.name" },
+                    if: "$categoryDetails",
+                    then: { _id: "$categoryDetails._id", name: "$categoryDetails.name" },
                     else: null,
                   },
                 },

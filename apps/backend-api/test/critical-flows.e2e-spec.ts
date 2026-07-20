@@ -45,12 +45,27 @@ describe('Critical Flows E2E — Admin, Search, Coupons, Wishlist, Addresses, Re
       const adminEmail = `e2e-admin-${Date.now()}@example.com`;
 
       // Seed test product
+      const categoryResult = await connection.db.collection('categories').insertOne({
+        name: 'E2E Test Category',
+        slug: `e2e-test-${Date.now()}`,
+        description: 'E2E test category',
+        icon: '🧪',
+        image: null,
+        parentId: null,
+        sortOrder: 0,
+        isActive: true,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
       const productRes = await connection.db.collection('products').insertOne({
         name: 'E2E Critical Product',
         description: 'Used across admin/search/coupon/wishlist/review flows',
         price: 999,
         stock: 10,
         images: ['test.jpg'],
+        categoryId: categoryResult.insertedId,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -116,6 +131,7 @@ describe('Critical Flows E2E — Admin, Search, Coupons, Wishlist, Addresses, Re
 
   afterAll(async () => {
     if (connection?.db) {
+      await connection.db.collection('categories').deleteMany({ name: 'E2E Test Category' });
       await connection.db.collection('products').deleteMany({ name: 'E2E Critical Product' });
       await connection.db.collection('users').deleteMany({ email: /e2e-customer-|e2e-admin-/ });
       if (deliveredOrderId) {

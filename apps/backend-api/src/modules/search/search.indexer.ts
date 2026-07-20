@@ -60,8 +60,18 @@ export class SearchIndexer implements OnModuleInit {
   }
 
   async indexProduct(product: Product): Promise<void> {
+    let document: ProductSearchDocument;
     try {
-      const document = await this.toProductDocument(product);
+      document = await this.toProductDocument(product);
+    } catch (error) {
+      this.loggerService.warn('Skipping search indexing because product document could not be built', {
+        productId: getEntityId(product),
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return;
+    }
+
+    try {
       await this.client.index(this.indexName).addDocuments([document], { primaryKey: 'id' });
     } catch (error) {
       this.loggerService.warn('Direct search indexing failed; enqueueing retry job', {
@@ -69,7 +79,6 @@ export class SearchIndexer implements OnModuleInit {
         error: error instanceof Error ? error.message : String(error),
       });
 
-      const document = await this.toProductDocument(product);
       await this.searchQueueService.enqueueIndexProduct(document);
     }
   }
