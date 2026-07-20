@@ -73,12 +73,19 @@ describe('CsrfProtectionMiddleware', () => {
   });
 
   it('should not bypass Csrf protection for similar malicious paths', () => {
-    const req = createMockRequest({ method: 'POST', path: '/api/v1/fake/analytics/event' });
+    const req = createMockRequest({
+      method: 'POST',
+      path: '/api/v1/fake/analytics/event',
+      headers: {
+        cookie: 'hyper_market_access_token=token-123',
+        origin: 'http://localhost:3000',
+      },
+    });
     const res = createMockResponse();
     const next = jest.fn();
 
-    middleware.use(req, res, next);
-    expect(next).toHaveBeenCalled();
+    expect(() => middleware.use(req, res, next)).toThrow(ForbiddenException);
+    expect(next).not.toHaveBeenCalled();
   });
 
   it('should successfully pass when double submit CSRF token matches', () => {

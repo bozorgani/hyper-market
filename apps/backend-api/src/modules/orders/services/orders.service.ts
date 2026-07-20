@@ -221,12 +221,18 @@ export class OrdersService {
 
       const reducedProductIds = reducedItems.map((item) => item.productId);
 
-      // Post-transaction search sync
-      await Promise.all(
-        reducedProductIds.map((productId) =>
-          this.productsService.syncProductToSearch(productId),
-        ),
-      );
+      // Post-transaction search sync (non-blocking background execution)
+      reducedProductIds.forEach((productId) => {
+        const promise = this.productsService.syncProductToSearch(productId);
+        if (promise && typeof promise.catch === 'function') {
+          promise.catch((error) => {
+            this.logger.error(
+              `Failed to sync product ${productId} to search after order creation`,
+              error instanceof Error ? error.stack : String(error),
+            );
+          });
+        }
+      });
 
       if (order.couponCode && order.discountAmount > 0) {
         await this.auditService?.log({
@@ -404,11 +410,18 @@ export class OrdersService {
         );
 
     if (restoredProductIds.length > 0) {
-      await Promise.all(
-        restoredProductIds.map((productId) =>
-          this.productsService.syncProductToSearch(productId),
-        ),
-      );
+      // Post-transaction search sync (non-blocking background execution)
+      restoredProductIds.forEach((productId) => {
+        const promise = this.productsService.syncProductToSearch(productId);
+        if (promise && typeof promise.catch === 'function') {
+          promise.catch((error) => {
+            this.logger.error(
+              `Failed to sync product ${productId} to search after order cancellation`,
+              error instanceof Error ? error.stack : String(error),
+            );
+          });
+        }
+      });
     }
 
     return updatedOrder;

@@ -22,6 +22,7 @@ export class CouponsService {
     code: string | undefined,
     subtotal: number,
     userId?: string,
+    precomputedUsages?: Map<string, number>,
   ): Promise<CouponValidationResult | null> {
     const normalizedCode = this.normalizeCode(code);
     if (!normalizedCode) return null;
@@ -35,7 +36,7 @@ export class CouponsService {
       throw new BadRequestException('Invalid coupon code');
     }
 
-    await this.assertCouponIsUsable(coupon, subtotal, userId);
+    await this.assertCouponIsUsable(coupon, subtotal, userId, precomputedUsages);
 
     const rawDiscount = Math.round(subtotal * (coupon.percent / 100));
     const cappedDiscount = coupon.maxDiscountAmount
@@ -83,10 +84,15 @@ export class CouponsService {
 
   async listAvailableCoupons(subtotal: number, userId: string): Promise<CouponValidationResult[]> {
     const coupons = await this.couponRepository.list(1, 100, true);
+
+    // Batch count usages for user to eliminate N+1 queries
+    const couponIds = (coupons.items as Array<Coupon & { _id: Types.ObjectId }>).map(c => c._id.toString());
+    const precomputedUsages = await this.couponRepository.countUsageForUserBatch(couponIds, userId);
+
     const results: CouponValidationResult[] = [];
     for (const coupon of coupons.items as Array<Coupon & { _id?: Types.ObjectId }>) {
       try {
-        const result = await this.validateCoupon(coupon.code, subtotal, userId);
+        const result = await this.validateCoupon(coupon.code, subtotal, userId, precomputedUsages);
         if (result) results.push(result);
       } catch {
         // Hide unavailable coupons from customer-facing visibility.
@@ -164,6 +170,7 @@ export class CouponsService {
     coupon: Coupon & { _id: Types.ObjectId },
     subtotal: number,
     userId?: string,
+    precomputedUsages?: Map<string, number>,
   ): Promise<void> {
     const now = Date.now();
     if (coupon.startsAt && coupon.startsAt.getTime() > now) {
@@ -179,7 +186,9 @@ export class CouponsService {
       throw new BadRequestException('Coupon usage limit reached');
     }
     if (coupon.perUserLimit && userId) {
-      const userUsage = await this.couponRepository.countUsageForUser(coupon._id.toString(), userId);
+      const userUsage = precomputedUsages
+        ? (precomputedUsages.get(coupon._id.toString()) ?? 0)
+        : await this.couponRepository.countUsageForUser(coupon._id.toString(), userId);
       if (userUsage >= coupon.perUserLimit) {
         throw new BadRequestException('Coupon user usage limit reached');
       }

@@ -1,12 +1,3 @@
-// Stub required environment variables BEFORE any NestJS module is imported.
-// ConfigModule validation runs at import-time, so these must be set early.
-if (!process.env.DATABASE_URL) process.env.DATABASE_URL = 'mongodb://localhost:27017/hypermarket_test';
-if (!process.env.REDIS_URL) process.env.REDIS_URL = 'redis://localhost:6379';
-if (!process.env.JWT_ACCESS_SECRET) process.env.JWT_ACCESS_SECRET = 'test-access-token-e2e-min-32chars!!';
-if (!process.env.JWT_REFRESH_SECRET) process.env.JWT_REFRESH_SECRET = 'test-refresh-token-e2e-min-32chars!';
-if (!process.env.CORS_ORIGINS) process.env.CORS_ORIGINS = 'http://localhost:3000';
-if (!process.env.APP_ENV) process.env.APP_ENV = 'test';
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';

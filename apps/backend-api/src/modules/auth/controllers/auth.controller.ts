@@ -201,10 +201,13 @@ export class AuthController {
 
   private getBaseCookieOptions(): CookieOptions {
     const sameSite = (process.env.AUTH_COOKIE_SAME_SITE ?? 'lax') as CookieOptions['sameSite'];
+    const secure = process.env.AUTH_COOKIE_SECURE !== undefined
+      ? process.env.AUTH_COOKIE_SECURE === 'true'
+      : process.env.APP_ENV === 'production';
 
     return {
       httpOnly: true,
-      secure: process.env.APP_ENV === 'production',
+      secure,
       sameSite,
       path: '/',
     };

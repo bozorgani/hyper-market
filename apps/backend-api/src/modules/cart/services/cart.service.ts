@@ -186,18 +186,25 @@ export class CartService {
       throw new BadRequestException('Cart is empty');
     }
 
+    const productIds = cart.items.map((item) => getEntityId(item.productId));
+    const products = await this.productsService.getProductsByIds(productIds);
+    const productMap = new Map(products.map((p) => [getEntityId(p), p]));
+
     for (const item of cart.items) {
-      const product = await this.productsService.getProductById(
-        getEntityId(item.productId),
-      );
+      const productId = getEntityId(item.productId);
+      const product = productMap.get(productId);
+
+      if (!product) {
+        throw new BadRequestException(`Product ${productId} not found`);
+      }
 
       if (!product.isActive) {
-        throw new BadRequestException(`Product ${getEntityId(item.productId)} is not active`);
+        throw new BadRequestException(`Product ${productId} is not active`);
       }
 
       if (product.stock < item.quantity) {
         throw new BadRequestException(
-          `Insufficient stock for product ${getEntityId(item.productId)}`,
+          `Insufficient stock for product ${productId}`,
         );
       }
     }

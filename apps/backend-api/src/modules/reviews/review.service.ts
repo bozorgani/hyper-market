@@ -31,7 +31,7 @@ export class ReviewService {
 
     // Verify product is in the order
     const productInOrder = order.items.find(
-      (item: any) => item.productId.toString() === dto.productId,
+      (item) => item.productId.toString() === dto.productId,
     );
 
     if (!productInOrder) {

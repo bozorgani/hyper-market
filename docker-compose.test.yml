@@ -23,7 +23,7 @@ services:
     # the host port differs from the container port.
     command: ["mongod", "--bind_ip_all"]
     ports:
-      - "${MONGO_TEST_PORT:-27018}:27017"
+      - "127.0.0.1:${MONGO_TEST_PORT:-27018}:27017"
     tmpfs:
       - /data/db
     healthcheck:
@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
-      - "${REDIS_TEST_PORT:-6380}:6379"
+      - "127.0.0.1:${REDIS_TEST_PORT:-6380}:6379"
     tmpfs:
       - /data
     healthcheck:
@@ -55,7 +55,7 @@ services:
       MEILI_NO_ANALYTICS: "true"
       MEILI_MASTER_KEY: hyper_market_meili_master_key_change_me
     ports:
-      - "${MEILI_TEST_PORT:-7701}:7700"
+      - "127.0.0.1:${MEILI_TEST_PORT:-7701}:7700"
     tmpfs:
       - /meili_data
     healthcheck:

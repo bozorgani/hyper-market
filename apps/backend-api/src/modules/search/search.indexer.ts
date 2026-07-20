@@ -6,8 +6,20 @@ import { LoggerService } from '../../infrastructure/logger/logger.service';
 import { getEntityId } from '../../shared/utils/entity-id.util';
 import { MEILISEARCH_CLIENT } from './meilisearch-client.provider';
 import { CategoriesService } from '../categories/services/categories.service';
+import { Category } from '../categories/schemas/category.schema';
 import { Product, ProductDocument } from '../products/schemas/product.schema';
 import { SearchQueueService } from './search-queue.service';
+
+export interface MeilisearchIndex {
+  addDocuments(documents: Record<string, unknown>[], options?: { primaryKey: string }): Promise<unknown>;
+  deleteDocument(uid: string | number): Promise<unknown>;
+  updateSettings(settings: Record<string, unknown>): Promise<unknown>;
+}
+
+export interface MeilisearchClient {
+  index(indexUid: string): MeilisearchIndex;
+  deleteIndex(indexUid: string): Promise<unknown>;
+}
 
 export type ProductSearchDocument = {
   id: string;
@@ -37,13 +49,13 @@ type ProductWithTimestamps = Product & {
 @Injectable()
 export class SearchIndexer implements OnModuleInit {
   private readonly indexName = 'products';
-  private readonly client: any;
+  private readonly client: MeilisearchClient;
 
   constructor(
     private readonly categoriesService: CategoriesService,
     private readonly searchQueueService: SearchQueueService,
     private readonly loggerService: LoggerService,
-    @Inject(MEILISEARCH_CLIENT) client: any,
+    @Inject(MEILISEARCH_CLIENT) client: MeilisearchClient,
     @InjectModel(Product.name) private readonly productModel: Model<ProductDocument>,
   ) {
     this.client = client;
@@ -188,7 +200,7 @@ export class SearchIndexer implements OnModuleInit {
 
   private async toProductDocument(
     product: Product,
-    categoryMap?: Map<string, any>
+    categoryMap?: Map<string, Category | null>
   ): Promise<ProductSearchDocument> {
     const categoryId = getEntityId(product.categoryId);
     
