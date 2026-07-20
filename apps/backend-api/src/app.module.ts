@@ -52,6 +52,11 @@ import { WishlistModule } from './modules/wishlist/wishlist.module';
       useFactory: (
         redisThrottlerStorage: RedisThrottlerStorage,
       ): ThrottlerModuleOptions => ({
+        // E2E specs exercise validation/auth behavior and run many requests from
+        // the same in-memory client. Disable throttling entirely in APP_ENV=test
+        // so route-level @Throttle decorators cannot leak Redis counters between
+        // specs and turn expected 400/401 responses into 429.
+        skipIf: () => process.env.APP_ENV === 'test',
         storage: redisThrottlerStorage,
         throttlers: [
           {
