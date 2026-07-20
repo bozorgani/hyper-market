@@ -62,6 +62,35 @@ export class CouponRepository {
     return this.usageModel.countDocuments({ couponId: new Types.ObjectId(couponId), userId: new Types.ObjectId(userId) }).exec();
   }
 
+  async countUsageForUserBatch(couponIds: string[], userId: string): Promise<Map<string, number>> {
+    const map = new Map<string, number>();
+    if (couponIds.length === 0 || !isValidObjectId(userId)) return map;
+
+    const validCouponIds = couponIds.filter(id => isValidObjectId(id)).map(id => new Types.ObjectId(id));
+    if (validCouponIds.length === 0) return map;
+
+    const results = await this.usageModel.aggregate<{ _id: Types.ObjectId; count: number }>([
+      {
+        $match: {
+          userId: new Types.ObjectId(userId),
+          couponId: { $in: validCouponIds },
+        },
+      },
+      {
+        $group: {
+          _id: '$couponId',
+          count: { $sum: 1 },
+        },
+      },
+    ]).exec();
+
+    for (const res of results) {
+      map.set(res._id.toString(), res.count);
+    }
+
+    return map;
+  }
+
   async createUsage(data: Partial<CouponUsage>): Promise<CouponUsage> {
     return new this.usageModel(data).save();
   }

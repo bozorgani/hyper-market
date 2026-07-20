@@ -6,6 +6,18 @@ import { paginatedResult } from '../../shared/utils/pagination.util';
 import { MEILISEARCH_CLIENT } from './meilisearch-client.provider';
 import { ProductSearchDocument } from './search.indexer';
 
+export interface MeilisearchServiceIndex {
+  search(query: string, options?: Record<string, unknown>): Promise<{
+    hits: unknown[];
+    facetDistribution?: Record<string, Record<string, number>>;
+    [key: string]: unknown;
+  }>;
+}
+
+export interface MeilisearchServiceClient {
+  index(indexUid: string): MeilisearchServiceIndex;
+}
+
 export type ProductSearchOptions = {
   categoryId?: string;
   minPrice?: number;
@@ -31,11 +43,11 @@ export type ProductSearchResult = PaginatedResult<ProductSearchDocument> & {
 @Injectable()
 export class SearchService {
   private readonly indexName = 'products';
-  private readonly client: any;
+  private readonly client: MeilisearchServiceClient;
 
   constructor(
     private readonly eventBusService: EventBusService,
-    @Inject(MEILISEARCH_CLIENT) client: any,
+    @Inject(MEILISEARCH_CLIENT) client: MeilisearchServiceClient,
   ) {
     this.client = client;
   }
@@ -179,8 +191,8 @@ export class SearchService {
     return filters;
   }
 
-  private getTotalHits(result: any, fallback: number): number {
-    return result.totalHits ?? result.estimatedTotalHits ?? fallback;
+  private getTotalHits(result: Record<string, unknown>, fallback: number): number {
+    return (result.totalHits as number) ?? (result.estimatedTotalHits as number) ?? fallback;
   }
 
   private normalizeFacets(

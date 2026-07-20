@@ -209,12 +209,12 @@ describe('OrdersService — cancellation idempotency (#4)', () => {
 
 describe('OrdersService — createOrder', () => {
   let service: OrdersService;
-  let ordersRepository: any;
-  let productsService: any;
-  let cartService: any;
-  let couponsService: any;
-  let shippingService: any;
-  let databaseTransactionService: any;
+  let ordersRepository: Record<string, jest.Mock>;
+  let productsService: Record<string, jest.Mock>;
+  let cartService: Record<string, jest.Mock>;
+  let couponsService: Record<string, jest.Mock>;
+  let shippingService: Record<string, jest.Mock>;
+  let databaseTransactionService: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     ordersRepository = {
@@ -494,7 +494,7 @@ describe('OrdersService — createOrder', () => {
 
 describe('OrdersService — getMyOrders and getOrderById', () => {
   let service: OrdersService;
-  let ordersRepository: any;
+  let ordersRepository: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     ordersRepository = {

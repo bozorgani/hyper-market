@@ -21,10 +21,10 @@ process.env.MEILI_HOST =
 process.env.MEILI_API_KEY =
   process.env.E2E_MEILI_API_KEY ?? 'hyper_market_meili_master_key_change_me';
 
-process.env.JWT_ACCESS_SECRET ??= 'test-access-token-e2e-min-32chars!!';
-process.env.JWT_REFRESH_SECRET ??= 'test-refresh-token-e2e-min-32chars!';
-process.env.PASSWORD_PEPPER ??= 'test-password-pepper-e2e-min-32chars!';
-process.env.OTP_HASH_SECRET ??= 'test-otp-hash-secret-e2e-min-32chars';
+process.env.JWT_ACCESS_SECRET = 'test-access-token-e2e-min-32chars!!';
+process.env.JWT_REFRESH_SECRET = 'test-refresh-token-e2e-min-32chars!';
+process.env.PASSWORD_PEPPER = 'test-password-pepper-e2e-min-32chars!';
+process.env.OTP_HASH_SECRET = 'test-otp-hash-secret-e2e-min-32chars';
 process.env.CORS_ORIGINS = 'http://localhost:3000';
 process.env.RATE_LIMIT_DEFAULT_LIMIT = '100000';
 process.env.RATE_LIMIT_AUTH_LIMIT = '100000';

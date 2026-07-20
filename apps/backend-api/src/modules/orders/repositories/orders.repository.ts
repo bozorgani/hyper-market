@@ -25,7 +25,7 @@ export class OrdersRepository {
   }
 
   async findByUserId(userId: string): Promise<Order[]> {
-    return this.orderModel.find({ userId }).sort({ createdAt: -1 }).lean().exec();
+    return this.orderModel.find({ userId }).sort({ createdAt: -1 }).limit(100).lean().exec();
   }
 
   async findByUserIdPaginated(
@@ -137,7 +137,7 @@ export class OrdersRepository {
   }
 
   async findAll(): Promise<Order[]> {
-    return this.orderModel.find().sort({ createdAt: -1 }).lean().exec();
+    return this.orderModel.find().sort({ createdAt: -1 }).limit(100).lean().exec();
   }
 
   async findAllPaginated(
