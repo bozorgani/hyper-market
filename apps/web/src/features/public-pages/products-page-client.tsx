@@ -13,6 +13,7 @@ import { useCategories, useProducts } from "@/hooks/use-products";
 import { useDebounce } from "@/hooks/use-debounce";
 import { getCategoryId } from "@/lib/category-utils";
 import { formatNumber } from "@/lib/utils";
+import { getUserFacingError } from "@/lib/user-facing-error";
 import type { Category, ProductListResponse } from "@/types/domain";
 
 function ProductCardSkeleton() {
@@ -60,7 +61,7 @@ export function ProductsPageClient({
   }
 
   const categoriesLoadFailed = categories.isError;
-  const productsErrorMessage = products.error instanceof Error ? products.error.message : "امکان دریافت محصولات وجود ندارد.";
+  const productsErrorMessage = getUserFacingError(products.error, "امکان دریافت محصولات وجود ندارد. لطفاً دوباره تلاش کنید.");
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 text-right">

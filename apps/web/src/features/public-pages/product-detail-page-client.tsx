@@ -15,6 +15,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useRouter } from "next/navigation";
 import { useProduct } from "@/hooks/use-products";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import { getUserFacingError } from "@/lib/user-facing-error";
 import { ProductReviews } from "@/components/reviews/product-reviews";
 import { WishlistButton } from "@/components/wishlist-button";
 import type { Product } from "@/types/domain";
@@ -69,7 +70,7 @@ export function ProductDetailPageClient({
       showToast({
         type: "error",
         title: "افزودن به سبد خرید ناموفق بود",
-        description: error instanceof Error ? error.message : undefined,
+        description: getUserFacingError(error, "افزودن محصول انجام نشد. لطفاً دوباره تلاش کنید."),
       });
     }
   }
@@ -97,7 +98,7 @@ export function ProductDetailPageClient({
         <Card className="border-red-200 bg-red-50 p-8 text-center text-red-700">
           <p className="text-xl font-black">محصول پیدا نشد یا قابل بارگذاری نیست</p>
           <p className="mt-3 text-sm leading-7">
-            {product.error instanceof Error ? product.error.message : "دریافت جزئیات محصول با خطا مواجه شد."}
+            {getUserFacingError(product.error, "دریافت جزئیات محصول با خطا مواجه شد. لطفاً دوباره تلاش کنید.")}
           </p>
           <LinkButton href="/products" className="mt-6">
             بازگشت به لیست محصولات

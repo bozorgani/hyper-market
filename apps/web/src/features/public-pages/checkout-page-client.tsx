@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { trackAnalyticsEvent } from "@/lib/analytics";
 import { createIdempotencyKey } from "@/lib/idempotency";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import { getUserFacingError } from "@/lib/user-facing-error";
 import { useMyAddresses } from "@/hooks/use-addresses";
 import { useCart } from "@/hooks/use-cart";
 import { useAvailableCoupons, useValidateCoupon, type CouponValidationResult } from "@/hooks/use-coupons";
@@ -146,7 +147,7 @@ export function CheckoutPageClient() {
   }, [deliveryAddress, savedAddresses.data]);
   const cartErrorMessage = useMemo(() => {
     if (!cart.error) return "";
-    return cart.error instanceof Error ? cart.error.message : "دریافت اطلاعات سبد خرید ناموفق بود.";
+    return getUserFacingError(cart.error, "دریافت اطلاعات سبد خرید ناموفق بود. لطفاً دوباره تلاش کنید.");
   }, [cart.error]);
 
   useEffect(() => {
@@ -364,7 +365,7 @@ export function CheckoutPageClient() {
               </div>
               {shippingQuote.isError ? (
                 <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
-                  {shippingQuote.error instanceof Error ? shippingQuote.error.message : "امکان محاسبه ارسال وجود ندارد."}
+                  {getUserFacingError(shippingQuote.error, "امکان محاسبه هزینه ارسال وجود ندارد. لطفاً دوباره تلاش کنید.")}
                 </p>
               ) : null}
             </Card>

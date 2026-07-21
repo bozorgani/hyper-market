@@ -18,6 +18,7 @@ import { useCart, useClearCart, useRemoveFromCart, useUpdateCartQuantity } from 
 import { formatNumber, formatPrice } from "@/lib/utils";
 import { getProductImageUrl, isKnownOptimizedImageSource } from "@/lib/image-utils";
 import { isCustomerRole } from "@/lib/auth";
+import { getUserFacingError } from "@/lib/user-facing-error";
 import { useAuthStore } from "@/store/auth-store";
 
 export function CartPageClient() {
@@ -38,7 +39,7 @@ export function CartPageClient() {
   const isMutating = remove.isPending || updateQuantity.isPending || clear.isPending;
   const cartErrorMessage = useMemo(() => {
     if (!cart.error) return "";
-    return cart.error instanceof Error ? cart.error.message : "دریافت سبد خرید ناموفق بود.";
+    return getUserFacingError(cart.error, "دریافت سبد خرید ناموفق بود. لطفاً دوباره تلاش کنید.");
   }, [cart.error]);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export function CartPageClient() {
 
       await updateQuantity.mutateAsync({ productId, quantity: quantity - 1 });
     } catch (error) {
-      showToast({ type: "error", title: "خطا در به‌روزرسانی سبد", description: error instanceof Error ? error.message : undefined });
+      showToast({ type: "error", title: "خطا در به‌روزرسانی سبد", description: getUserFacingError(error, "عملیات سبد خرید انجام نشد.") });
     } finally {
       setMutatingProductId(null);
     }
@@ -71,7 +72,7 @@ export function CartPageClient() {
     try {
       await updateQuantity.mutateAsync({ productId, quantity: quantity + 1 });
     } catch (error) {
-      showToast({ type: "error", title: "خطا در افزایش تعداد", description: error instanceof Error ? error.message : undefined });
+      showToast({ type: "error", title: "خطا در افزایش تعداد", description: getUserFacingError(error, "عملیات سبد خرید انجام نشد.") });
     } finally {
       setMutatingProductId(null);
     }
@@ -84,7 +85,7 @@ export function CartPageClient() {
       await remove.mutateAsync(productId);
       showToast({ type: "success", title: "محصول از سبد حذف شد" });
     } catch (error) {
-      showToast({ type: "error", title: "حذف محصول ناموفق بود", description: error instanceof Error ? error.message : undefined });
+      showToast({ type: "error", title: "حذف محصول ناموفق بود", description: getUserFacingError(error, "عملیات سبد خرید انجام نشد.") });
     } finally {
       setMutatingProductId(null);
     }
@@ -97,7 +98,7 @@ export function CartPageClient() {
       setClearDialogOpen(false);
       showToast({ type: "success", title: "سبد خرید خالی شد" });
     } catch (error) {
-      showToast({ type: "error", title: "خالی کردن سبد ناموفق بود", description: error instanceof Error ? error.message : undefined });
+      showToast({ type: "error", title: "خالی کردن سبد ناموفق بود", description: getUserFacingError(error, "عملیات سبد خرید انجام نشد.") });
     }
   }
 

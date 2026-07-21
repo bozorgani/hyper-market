@@ -17,6 +17,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useCategories } from "@/hooks/use-products";
 import { useProductSearch, type SearchResponse } from "@/hooks/use-search";
 import { formatNumber } from "@/lib/utils";
+import { getUserFacingError } from "@/lib/user-facing-error";
 import type { Product } from "@/types/domain";
 
 function SearchResultsSkeleton() {
@@ -105,7 +106,7 @@ function SearchContent({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const searchErrorMessage = search.error instanceof Error ? search.error.message : "امکان جستجو وجود ندارد.";
+  const searchErrorMessage = getUserFacingError(search.error, "امکان جستجو وجود ندارد. لطفاً دوباره تلاش کنید.");
   const hasResults = (search.data?.items.length ?? 0) > 0;
 
   function toProductCardProduct(searchProduct: NonNullable<SearchResponse["items"]>[number]): Product {
