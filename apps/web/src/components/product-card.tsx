@@ -60,7 +60,7 @@ export const ProductCard = memo(function ProductCard({
 
   return (
     <div
-      className="group product-card relative flex h-full min-h-[var(--card-product-min-h)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-[3px] hover:shadow-lg active:scale-[0.985] focus-within:ring-2 focus-visible:outline-none sm:min-h-[var(--card-product-min-h-sm)]"
+      className="group product-card relative flex h-full min-h-[var(--card-product-min-h)] flex-col overflow-hidden rounded-[var(--radius-lg)] border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-[3px] hover:shadow-lg active:scale-[0.985] focus-within:ring-2 focus-visible:outline-none sm:min-h-[var(--card-product-min-h-sm)]"
     >
       <div className="absolute left-3 top-3 z-10">
         <WishlistButton

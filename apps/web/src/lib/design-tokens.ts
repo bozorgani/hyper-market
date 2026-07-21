@@ -32,12 +32,12 @@ export const card = {
   product: {
     minHeight: "var(--card-product-min-h)",       // 20rem / 320px
     minHeightSm: "var(--card-product-min-h-sm)",  // 22rem / 352px
-    radius: radius["2xl"],
+    radius: radius.lg,
     padding: spacing[4],
     paddingSm: spacing[4],
   },
   default: {
-    radius: radius["2xl"],
+    radius: radius.lg,
     padding: spacing[4],
   },
 } as const;
@@ -48,7 +48,7 @@ export const button = {
     md: "2.5rem",  // 40px
     lg: "3rem",    // 48px – touch target ≥44px WCAG
   },
-  radius: radius.xl,
+  radius: radius.md,
   paddingX: spacing[4],
 } as const;
 
@@ -67,11 +67,11 @@ export const shadow = {
  * Tailwind class helpers – prefer these over arbitrary values
  */
 export const tw = {
-  card: "rounded-[var(--radius-2xl)] border border-slate-200 bg-white shadow-[var(--shadow-sm)]",
+  card: "rounded-[var(--radius-lg)] border border-slate-200 bg-white shadow-[var(--shadow-sm)]",
   cardHover: "hover:-translate-y-[2px] hover:shadow-[var(--shadow-lg)] transition-all duration-200",
-  button: "rounded-[var(--radius-xl)]",
-  buttonLg: "rounded-[var(--radius-2xl)]",
-  input: "rounded-[var(--radius-xl)]",
+  button: "rounded-[var(--radius-md)]",
+  buttonLg: "rounded-[var(--radius-lg)]",
+  input: "rounded-[var(--radius-md)]",
   focusRing: "focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-700 focus-visible:outline-offset-2",
 } as const;
 
