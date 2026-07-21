@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
+import { MobileFilterSheet } from "@/components/ui/mobile-filter-sheet";
 import { LinkButton } from "@/components/ui/link-button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -56,6 +57,7 @@ function SearchContent({
   const [maxPrice, setMaxPrice] = useState("");
   const [availableOnly, setAvailableOnly] = useState(false);
   const [sort, setSort] = useState("createdAt:desc");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const categories = useCategories();
   const { trackSearch } = useAnalytics();
   const debouncedMinPrice = useDebounce(minPrice, 400);
@@ -108,6 +110,7 @@ function SearchContent({
 
   const searchErrorMessage = getUserFacingError(search.error, "امکان جستجو وجود ندارد. لطفاً دوباره تلاش کنید.");
   const hasResults = (search.data?.items.length ?? 0) > 0;
+  const activeFilterCount = [categoryId, minPrice, maxPrice, availableOnly ? "available" : "", sort !== "createdAt:desc" ? sort : ""].filter(Boolean).length;
 
   function toProductCardProduct(searchProduct: NonNullable<SearchResponse["items"]>[number]): Product {
     const effectivePrice = searchProduct.effectivePrice ?? searchProduct.discountPrice;
@@ -143,7 +146,7 @@ function SearchContent({
           }
         />
 
-        <div className="mt-5 grid gap-3 md:grid-cols-5">
+        <div className="mt-5 hidden gap-3 md:grid md:grid-cols-5">
           <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1); }} aria-label="دسته‌بندی" className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm">
             <option value="">همه دسته‌بندی‌ها</option>
             {(categories.data ?? []).map((category) => (
@@ -175,7 +178,53 @@ function SearchContent({
             </Button>
           ) : null}
         </div>
+        <div className="mt-4 md:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileFiltersOpen(true)}
+            className="flex min-h-11 w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-700 transition hover:border-rose-200 hover:bg-rose-50"
+          >
+            <span>فیلترها و مرتب‌سازی</span>
+            <span className="rounded-full bg-white px-2.5 py-1 text-xs text-rose-700 shadow-sm">
+              {activeFilterCount > 0 ? `${activeFilterCount.toLocaleString("fa-IR")} فعال` : "انتخاب فیلتر"}
+            </span>
+          </button>
+          {activeFilterCount > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {categoryId ? <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">دسته‌بندی</span> : null}
+              {minPrice || maxPrice ? <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">محدوده قیمت</span> : null}
+              {availableOnly ? <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">فقط موجود</span> : null}
+              {sort !== "createdAt:desc" ? <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">مرتب‌سازی</span> : null}
+            </div>
+          ) : null}
+        </div>
       </div>
+
+      <MobileFilterSheet
+        open={mobileFiltersOpen}
+        onClose={() => setMobileFiltersOpen(false)}
+        title="فیلتر و مرتب‌سازی"
+        activeCount={activeFilterCount}
+      >
+        <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1); }} aria-label="دسته‌بندی" className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">
+          <option value="">همه دسته‌بندی‌ها</option>
+          {(categories.data ?? []).map((category) => <option key={category._id} value={category._id}>{category.name}</option>)}
+        </select>
+        <div className="grid grid-cols-2 gap-3">
+          <Input value={minPrice} onChange={(e) => { setMinPrice(e.target.value); setPage(1); }} placeholder="حداقل قیمت" type="number" />
+          <Input value={maxPrice} onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }} placeholder="حداکثر قیمت" type="number" />
+        </div>
+        <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }} aria-label="مرتب‌سازی" className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm">
+          <option value="createdAt:desc">جدیدترین</option>
+          <option value="price:asc">ارزان‌ترین</option>
+          <option value="price:desc">گران‌ترین</option>
+          <option value="stock:desc">موجودترین</option>
+        </select>
+        <Button type="button" variant={availableOnly ? "default" : "outline"} onClick={() => { setAvailableOnly((value) => !value); setPage(1); }} className="w-full">
+          فقط کالاهای موجود
+        </Button>
+        <Button type="button" variant="outline" onClick={resetFilters} className="w-full">پاک‌کردن فیلترها</Button>
+      </MobileFilterSheet>
 
       {search.isLoading ? <SearchResultsSkeleton /> : null}
 

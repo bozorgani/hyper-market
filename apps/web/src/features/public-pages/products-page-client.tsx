@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
+import { MobileFilterSheet } from "@/components/ui/mobile-filter-sheet";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -47,6 +48,7 @@ export function ProductsPageClient({
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState(initialSearch ?? "");
   const [categoryId, setCategoryId] = useState<string | undefined>(initialCategoryId);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const debouncedSearch = useDebounce(searchInput, 300);
   const products = useProducts(page, categoryId, debouncedSearch || undefined, page === 1 && categoryId === initialCategoryId && (debouncedSearch || undefined) === (initialSearch || undefined) ? initialProducts : undefined);
   const categories = useCategories(initialCategories);
@@ -60,6 +62,9 @@ export function ProductsPageClient({
     setPage(1);
   }
 
+  const activeFilterCount = useMemo(() => {
+    return (searchInput.trim() ? 1 : 0) + (categoryId ? 1 : 0);
+  }, [categoryId, searchInput]);
   const categoriesLoadFailed = categories.isError;
   const productsErrorMessage = getUserFacingError(products.error, "امکان دریافت محصولات وجود ندارد. لطفاً دوباره تلاش کنید.");
 
@@ -78,7 +83,7 @@ export function ProductsPageClient({
           }
         />
 
-        <div className="mt-4 grid gap-3 md:grid-cols-[1fr_220px_auto]">
+        <div className="mt-4 hidden gap-3 md:grid md:grid-cols-[1fr_220px_auto]">
           <Input
             value={searchInput}
             onChange={(e) => {
@@ -111,8 +116,58 @@ export function ProductsPageClient({
             پاک‌کردن فیلترها
           </Button>
         </div>
+        <div className="mt-4 md:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileFiltersOpen(true)}
+            className="flex min-h-11 w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-700 transition hover:border-rose-200 hover:bg-rose-50"
+          >
+            <span>فیلترها</span>
+            <span className="rounded-full bg-white px-2.5 py-1 text-xs text-rose-700 shadow-sm">
+              {activeFilterCount > 0 ? `${activeFilterCount.toLocaleString("fa-IR")} فعال` : "انتخاب فیلتر"}
+            </span>
+          </button>
+          {activeFilterCount > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {searchInput.trim() ? <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">جستجو: {searchInput}</span> : null}
+              {categoryId ? <span className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">دسته‌بندی انتخاب‌شده</span> : null}
+            </div>
+          ) : null}
+        </div>
         {categoriesLoadFailed ? <p className="mt-3 text-sm text-amber-600">بارگذاری دسته‌بندی‌ها انجام نشد؛ فعلاً فقط فیلتر نام محصول در دسترس است.</p> : null}
       </div>
+
+      <MobileFilterSheet
+        open={mobileFiltersOpen}
+        onClose={() => setMobileFiltersOpen(false)}
+        activeCount={activeFilterCount}
+      >
+        <Input
+          value={searchInput}
+          onChange={(e) => {
+            setSearchInput(e.target.value);
+            setPage(1);
+          }}
+          placeholder="جستجوی محصول..."
+        />
+        <select
+          value={categoryId ?? ""}
+          onChange={(e) => {
+            setCategoryId(e.target.value || undefined);
+            setPage(1);
+          }}
+          aria-label="دسته‌بندی"
+          className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
+        >
+          <option value="">همه دسته‌بندی‌ها</option>
+          {(categories.data ?? []).map((category) => {
+            const optionValue = getCategoryId(category);
+            if (!optionValue) return null;
+            return <option key={optionValue} value={optionValue}>{category.name}</option>;
+          })}
+        </select>
+        <Button type="button" variant="outline" onClick={resetFilters} className="w-full">پاک‌کردن فیلترها</Button>
+      </MobileFilterSheet>
 
       {products.isLoading ? (
         <section className="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" aria-busy="true" aria-label="در حال بارگذاری محصولات">
