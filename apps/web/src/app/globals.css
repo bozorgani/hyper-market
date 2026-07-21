@@ -315,6 +315,11 @@ tr:hover td {
   padding-bottom: calc(4rem + max(env(safe-area-inset-bottom, 0px), 14px));
 }
 
+/* Keep the mobile product purchase bar above the fixed bottom navigation. */
+.mobile-purchase-bar {
+  bottom: calc(4rem + max(env(safe-area-inset-bottom, 0px), 14px));
+}
+
 @media (min-width: 768px) {
   .pb-main-nav {
     padding-bottom: 0;

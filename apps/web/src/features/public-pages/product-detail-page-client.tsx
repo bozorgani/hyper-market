@@ -108,7 +108,7 @@ export function ProductDetailPageClient({
     : 0;
 
   return (
-    <>
+    <div className="pb-36 md:pb-0">
     <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-2 md:gap-8">
       <Card className="p-6">
         <ProductGallery images={item.images} productName={item.name} />
@@ -156,7 +156,7 @@ export function ProductDetailPageClient({
           <p className="text-3xl font-black text-rose-600">{formatPrice(price)}</p>
           {item.discountPrice ? <p className="text-slate-400 line-through">{formatPrice(item.price)}</p> : null}
         </div>
-        <p className="mt-5 text-sm leading-7 text-slate-500">با افزودن این محصول به سبد، می‌توانید از صفحه سبد خرید تعداد را تغییر دهید و سپس وارد مسیر پرداخت آزمایشی شوید.</p>
+        <p className="mt-5 text-sm leading-7 text-slate-500">با افزودن این محصول به سبد خرید، می‌توانید تعداد کالاها را در سبد بررسی و ویرایش کنید و سپس سفارش خود را ثبت کنید.</p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Button type="button" disabled={item.stock < 1 || addToCart.isPending} onClick={handleAddToCart} className="w-full sm:w-auto">
             {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد خرید"}
@@ -175,6 +175,24 @@ export function ProductDetailPageClient({
     <div className="mx-auto max-w-6xl px-4 pb-12">
       <ProductReviews productId={item._id} orderId={reviewOrderId} />
     </div>
-    </>
+
+    <div className="mobile-purchase-bar fixed inset-x-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-6px_20px_rgba(15,23,42,0.08)] backdrop-blur-xl md:hidden">
+      <div className="mx-auto flex max-w-6xl items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-medium text-slate-500">قیمت نهایی</p>
+          <p className="truncate text-base font-black text-rose-600">{formatPrice(price)} <span className="text-[10px] font-medium text-slate-400">تومان</span></p>
+        </div>
+        <Button
+          type="button"
+          disabled={item.stock < 1 || addToCart.isPending}
+          onClick={handleAddToCart}
+          className="min-h-11 flex-1 rounded-2xl text-xs sm:flex-none sm:px-8"
+          aria-label={`افزودن ${item.name} به سبد خرید`}
+        >
+          {addToCart.isPending ? "در حال افزودن..." : item.stock < 1 ? "ناموجود" : "افزودن به سبد"}
+        </Button>
+      </div>
+    </div>
+    </div>
   );
 }
