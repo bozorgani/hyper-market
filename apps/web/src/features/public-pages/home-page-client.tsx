@@ -3,9 +3,9 @@
 import { motion } from "@/components/ui/csp-motion";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { 
-  Truck, ShieldCheck, RotateCcw, Headphones, Zap, ArrowLeft, 
-  Clock, Percent, Star 
+import {
+  Truck, ShieldCheck, RotateCcw, Headphones, Zap, ArrowLeft,
+  Clock, Percent, ShoppingCart, Star,
 } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { LinkButton } from "@/components/ui/link-button";
@@ -92,8 +92,8 @@ export function HomePageClient({
       {/* ==================== HERO ==================== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-rose-600 via-rose-700 to-blue-700 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] bg-[length:4px_4px]" />
-        
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:py-16 lg:py-20">
+
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-10 sm:py-14 lg:grid-cols-[1.05fr,0.95fr] lg:gap-16 lg:py-16">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-sm font-medium backdrop-blur">
               <Zap className="h-4 w-4" />
@@ -103,26 +103,56 @@ export function HomePageClient({
             <h1 className="mt-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl lg:text-6xl">
               خرید سریع و<br />ارزان از هایپرمارکت
             </h1>
-            
+
             <p className="mt-4 max-w-md text-lg text-white/90">
               هزاران محصول تازه با ارسال در کمتر از ۲ ساعت
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
-              <LinkButton href="/products" className="rounded-2xl bg-white px-8 py-4 text-lg font-bold text-rose-700 shadow-xl hover:bg-rose-50">
+            <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
+              <LinkButton href="/products" className="rounded-2xl bg-white px-7 py-3.5 text-base font-bold text-rose-700 shadow-xl hover:bg-rose-50 sm:px-8 sm:py-4 sm:text-lg">
                 شروع خرید
                 <ArrowLeft className="h-5 w-5" />
               </LinkButton>
-              <LinkButton href="#categories" variant="ghost" className="rounded-2xl border border-white/40 bg-white/10 px-6 py-4 text-lg font-semibold text-white backdrop-blur hover:bg-white/20">
+              <LinkButton href="#categories" variant="ghost" className="rounded-2xl border border-white/40 bg-white/10 px-5 py-3.5 text-sm font-semibold text-white backdrop-blur hover:bg-white/20 sm:px-6 sm:py-4 sm:text-base">
                 مشاهده دسته‌بندی‌ها
               </LinkButton>
             </div>
 
-            <div className="mt-8 flex items-center gap-6 text-sm text-white/80">
+            <div className="mt-7 flex items-center gap-5 text-xs text-white/80 sm:mt-8 sm:gap-6 sm:text-sm">
               <div className="flex items-center gap-2">
                 <Star className="h-4 w-4 text-yellow-400" /> ۴.۸ امتیاز
               </div>
               <div>+۱۲۰٬۰۰۰ سفارش موفق</div>
+            </div>
+          </div>
+
+          <div className="relative mx-auto h-64 w-full max-w-md sm:h-80 lg:h-[22rem]" aria-label="نمایی از تجربه خرید سریع" role="img">
+            <div className="absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-sm sm:h-64 sm:w-64" />
+            <div className="absolute right-3 top-2 flex h-20 w-20 rotate-6 items-center justify-center rounded-[1.75rem] bg-white/15 text-white shadow-xl backdrop-blur sm:right-8 sm:top-4 sm:h-24 sm:w-24">
+              <ShoppingCart className="h-9 w-9 sm:h-11 sm:w-11" aria-hidden="true" />
+            </div>
+            <div className="absolute bottom-2 left-2 flex h-20 w-20 -rotate-6 items-center justify-center rounded-[1.75rem] bg-orange-400/90 text-white shadow-xl sm:bottom-5 sm:left-8 sm:h-24 sm:w-24">
+              <Percent className="h-9 w-9 sm:h-11 sm:w-11" aria-hidden="true" />
+            </div>
+            <div className="absolute left-1/2 top-1/2 w-[min(88%,20rem)] -translate-x-1/2 -translate-y-1/2 rounded-[2rem] border border-white/30 bg-white p-5 text-slate-900 shadow-2xl sm:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-rose-600">هایپرمارکت</p>
+                  <p className="mt-1 text-lg font-black sm:text-xl">خرید روزانه، ساده‌تر</p>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 sm:h-12 sm:w-12">
+                  <Truck className="h-6 w-6" aria-hidden="true" />
+                </div>
+              </div>
+              <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="h-16 rounded-2xl bg-rose-50" />
+                <div className="h-16 rounded-2xl bg-blue-50" />
+                <div className="h-16 rounded-2xl bg-amber-50" />
+              </div>
+              <div className="mt-4 flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600">
+                <Clock className="h-4 w-4 text-rose-600" aria-hidden="true" />
+                ارسال سریع و مطمئن
+              </div>
             </div>
           </div>
         </div>
