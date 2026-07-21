@@ -67,11 +67,11 @@ export const shadow = {
  * Tailwind class helpers – prefer these over arbitrary values
  */
 export const tw = {
-  card: "rounded-2xl border border-slate-100 bg-white shadow-sm",
-  cardHover: "hover:-translate-y-[2px] hover:shadow-lg transition-all duration-200",
-  button: "rounded-xl",
-  buttonLg: "rounded-2xl",
-  input: "rounded-xl",
+  card: "rounded-[var(--radius-2xl)] border border-slate-200 bg-white shadow-[var(--shadow-sm)]",
+  cardHover: "hover:-translate-y-[2px] hover:shadow-[var(--shadow-lg)] transition-all duration-200",
+  button: "rounded-[var(--radius-xl)]",
+  buttonLg: "rounded-[var(--radius-2xl)]",
+  input: "rounded-[var(--radius-xl)]",
   focusRing: "focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-700 focus-visible:outline-offset-2",
 } as const;
 
