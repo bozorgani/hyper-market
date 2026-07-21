@@ -32,9 +32,18 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
   return (
     <div className="space-y-3">
       {/* Main Image */}
-      <div 
-        className="product-gallery group relative aspect-square overflow-hidden rounded-3xl bg-slate-50 border border-slate-100 cursor-zoom-in"
+      <div
+        className="product-gallery group relative aspect-square overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 cursor-zoom-in"
         onClick={openLightbox}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openLightbox();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="بزرگنمایی تصویر محصول"
       >
         <Image
           src={selectedImage}
@@ -88,6 +97,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
                   : "border-slate-200 hover:border-slate-300"
               }`}
               aria-label={`نمایش تصویر ${index + 1} از ${safeImages.length}`}
+              aria-current={index === selectedIndex ? "true" : undefined}
             >
               <Image
                 src={getProductImageUrl(image)}
