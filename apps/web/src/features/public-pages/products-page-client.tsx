@@ -114,8 +114,9 @@ export function ProductsPageClient({
       </div>
 
       {products.isLoading ? (
-        <section className="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {Array.from({ length: 8 }).map((_, index) => (
+        <section className="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" aria-busy="true" aria-label="در حال بارگذاری محصولات">
+          <p className="sr-only" role="status" aria-live="polite">در حال بارگذاری محصولات...</p>
+          {Array.from({ length: 10 }).map((_, index) => (
             <ProductCardSkeleton key={index} />
           ))}
         </section>

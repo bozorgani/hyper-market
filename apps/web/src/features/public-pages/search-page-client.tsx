@@ -21,17 +21,16 @@ import type { Product } from "@/types/domain";
 
 function SearchResultsSkeleton() {
   return (
-    <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-      {Array.from({ length: 8 }).map((_, index) => (
-        <Card key={index} className="overflow-hidden">
+    <section className="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" aria-busy="true" aria-label="در حال بارگذاری نتایج جستجو">
+      <p className="sr-only" role="status" aria-live="polite">در حال بارگذاری نتایج جستجو...</p>
+      {Array.from({ length: 10 }).map((_, index) => (
+        <Card key={index} className="h-full overflow-hidden rounded-2xl border-slate-100">
           <Skeleton className="aspect-square w-full rounded-none" />
-          <div className="p-4">
-            <div className="flex items-start justify-between gap-2">
-              <Skeleton className="h-6 w-16" />
-              <Skeleton className="h-12 flex-1" />
-            </div>
-            <Skeleton className="mt-3 h-6 w-28" />
-            <Skeleton className="mt-2 h-4 w-24" />
+          <div className="space-y-3 p-3.5 sm:p-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-3.5 w-1/2" />
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-11 w-full rounded-2xl" />
           </div>
         </Card>
       ))}
