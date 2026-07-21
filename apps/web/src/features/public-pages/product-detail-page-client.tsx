@@ -79,7 +79,7 @@ export function ProductDetailPageClient({
     return (
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-2 md:gap-8">
         <Card className="aspect-square p-6">
-          <Skeleton className="h-full w-full rounded-3xl" />
+          <Skeleton className="h-full w-full rounded-2xl" />
         </Card>
         <Card className="p-6 text-right">
           <Skeleton className="h-8 w-28" />
@@ -120,7 +120,7 @@ export function ProductDetailPageClient({
       <Card className="p-6">
         <ProductGallery images={item.images} productName={item.name} />
       </Card>
-      <section className="rounded-3xl border border-slate-100 bg-white p-5 text-right shadow-sm sm:p-6">
+      <section className="rounded-2xl border border-slate-100 bg-white p-5 text-right shadow-sm sm:p-6">
         <div className="flex flex-wrap items-center gap-2">
           {item.brand ? <Badge className="bg-violet-50 text-violet-700">{item.brand}</Badge> : null}
           <Badge className={item.stock > 0 ? "bg-rose-50 text-rose-700" : "bg-red-50 text-red-700"}>

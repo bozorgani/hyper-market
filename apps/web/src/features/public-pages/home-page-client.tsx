@@ -192,7 +192,7 @@ export function HomePageClient({
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
           {shouldShowCategorySkeleton ? (
             Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="rounded-3xl border p-4">
+              <div key={i} className="rounded-2xl border p-4">
                 <Skeleton className="mx-auto h-14 w-14 rounded-2xl" />
                 <Skeleton className="mx-auto mt-3 h-4 w-16" />
               </div>
@@ -202,7 +202,7 @@ export function HomePageClient({
               <Link
                 key={cat._id}
                 href={cat.href}
-                className="group flex flex-col items-center rounded-3xl border border-slate-200 bg-white p-4 text-center transition hover:border-rose-200 hover:shadow-md"
+                className="group flex flex-col items-center rounded-2xl border border-slate-200 bg-white p-4 text-center transition hover:border-rose-200 hover:shadow-md"
               >
                 <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-3xl transition group-hover:scale-110">
                   {cat.icon || "🛒"}
@@ -224,7 +224,7 @@ export function HomePageClient({
         <div className="grid gap-4 md:grid-cols-2">
           {promoBanners.map((banner, index) => (
             <Link key={index} href={banner.href}>
-              <div className={`group relative overflow-hidden rounded-3xl bg-gradient-to-l ${banner.color} p-8 text-white transition active:scale-[0.985]`}>
+              <div className={`group relative overflow-hidden rounded-2xl bg-gradient-to-l ${banner.color} p-8 text-white transition active:scale-[0.985]`}>
                 <div className="relative z-10">
                   <div className="text-3xl font-black">{banner.title}</div>
                   <div className="mt-1 text-lg text-white/90">{banner.subtitle}</div>
@@ -260,7 +260,7 @@ export function HomePageClient({
         >
           {products.isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-full rounded-3xl border bg-white p-3"><Skeleton className="aspect-square w-full rounded-2xl" /></div>
+              <div key={i} className="h-full rounded-2xl border bg-white p-3"><Skeleton className="aspect-square w-full rounded-2xl" /></div>
             ))
           ) : bestSellers.length > 0 ? (
             bestSellers.map((product, index) => (
@@ -274,7 +274,7 @@ export function HomePageClient({
 
       {/* ==================== FLASH SALE (همیشه نمایش داده می‌شود) ==================== */}
       <section className="mx-auto max-w-7xl rounded-[2rem] bg-gradient-to-b from-orange-50 to-rose-50/40 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-7">
-        <div className="mb-6 flex items-center justify-between rounded-3xl bg-gradient-to-l from-red-500 to-orange-500 px-4 py-4 text-white shadow-lg shadow-orange-200/50 sm:px-6">
+        <div className="mb-6 flex items-center justify-between rounded-2xl bg-gradient-to-l from-red-500 to-orange-500 px-4 py-4 text-white shadow-lg shadow-orange-200/50 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">
               <Percent className="h-5 w-5" />
@@ -337,7 +337,7 @@ export function HomePageClient({
 
       {/* ==================== FINAL CTA ==================== */}
       <section className="mx-auto max-w-7xl px-4 pb-10">
-        <div className="rounded-3xl bg-slate-900 px-8 py-10 text-center text-white">
+        <div className="rounded-2xl bg-slate-900 px-8 py-10 text-center text-white">
           <div className="mx-auto max-w-md">
             <h3 className="text-3xl font-black">هر روز، تازه‌تر</h3>
             <p className="mt-3 text-slate-300">

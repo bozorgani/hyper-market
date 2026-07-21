@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ProductsLoading() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 text-right">
-      <div className="rounded-3xl bg-white p-5 shadow-sm">
+      <div className="rounded-2xl bg-white p-5 shadow-sm">
         <Skeleton className="h-8 w-40" />
         <Skeleton className="mt-3 h-5 w-80" />
         <div className="mt-4 grid gap-3 md:grid-cols-[1fr_220px_auto]">

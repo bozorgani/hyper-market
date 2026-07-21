@@ -133,7 +133,7 @@ function SearchContent({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 text-right">
-      <div className="rounded-3xl bg-white p-5 shadow-sm">
+      <div className="rounded-2xl bg-white p-5 shadow-sm">
         <PageHeader
           title="نتایج جستجو"
           description={`جستجو برای: ${query || "همه محصولات"}`}

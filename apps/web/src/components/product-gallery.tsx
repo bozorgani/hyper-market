@@ -23,7 +23,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
 
   if (!selectedImage) {
     return (
-      <div className="flex h-full items-center justify-center rounded-3xl bg-slate-100 text-8xl border border-slate-200" role="img" aria-label="تصویر محصول موجود نیست">
+      <div className="flex h-full items-center justify-center rounded-2xl bg-slate-100 text-8xl border border-slate-200" role="img" aria-label="تصویر محصول موجود نیست">
         🛒
       </div>
     );
@@ -33,7 +33,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
     <div className="space-y-3">
       {/* Main Image */}
       <div
-        className="product-gallery group relative aspect-square overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 cursor-zoom-in"
+        className="product-gallery group relative aspect-square overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 cursor-zoom-in"
         onClick={openLightbox}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -133,7 +133,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
             </button>
 
             <div className="relative max-h-[90vh] w-full pt-2">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-black md:aspect-[16/9]">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-black md:aspect-[16/9]">
                 <Image
                   src={selectedImage}
                   alt={productName}
