@@ -237,18 +237,19 @@ export function HomePageClient({
       </section>
 
       {/* ==================== BEST SELLERS ==================== */}
-      <section className="mx-auto max-w-7xl px-4 pt-12">
-        <div className="mb-6 flex items-center justify-between">
+      <section className="mx-auto max-w-7xl rounded-[2rem] bg-white/70 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-7">
+        <div className="mb-6 flex items-end justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100">
               <Star className="h-5 w-5 text-rose-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-slate-900">پرفروش‌ترین‌ها</h2>
-              <p className="text-sm text-slate-500">محبوب‌ترین محصولات هفته</p>
+              <div className="mb-1 inline-flex rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700">محبوب این هفته</div>
+              <h2 className="text-xl font-black text-slate-900 sm:text-2xl">پرفروش‌ترین‌ها</h2>
+              <p className="text-xs text-slate-500 sm:text-sm">محبوب‌ترین محصولات هفته</p>
             </div>
           </div>
-          <Link href="/products" className="text-sm font-semibold text-rose-600 hover:text-rose-700">مشاهده همه</Link>
+          <Link href="/products" className="shrink-0 text-xs font-semibold text-rose-600 hover:text-rose-700 sm:text-sm">مشاهده همه</Link>
         </div>
 
         <motion.div
@@ -272,17 +273,20 @@ export function HomePageClient({
       </section>
 
       {/* ==================== FLASH SALE (همیشه نمایش داده می‌شود) ==================== */}
-      <section className="mx-auto max-w-7xl px-4 pt-12">
-        <div className="mb-6 flex items-center justify-between rounded-3xl bg-gradient-to-l from-red-500 to-orange-500 px-6 py-4 text-white">
+      <section className="mx-auto max-w-7xl rounded-[2rem] bg-gradient-to-b from-orange-50 to-rose-50/40 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-7">
+        <div className="mb-6 flex items-center justify-between rounded-3xl bg-gradient-to-l from-red-500 to-orange-500 px-4 py-4 text-white shadow-lg shadow-orange-200/50 sm:px-6">
           <div className="flex items-center gap-3">
-            <Percent className="h-6 w-6" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">
+              <Percent className="h-5 w-5" />
+            </div>
             <div>
-              <div className="font-black text-xl">فروش ویژه</div>
-              <div className="text-sm text-white/90">تا ۷۰٪ تخفیف — محدود</div>
+              <div className="mb-0.5 text-[10px] font-bold text-white/80">فقط برای مدت محدود</div>
+              <div className="font-black text-lg sm:text-xl">فروش ویژه</div>
+              <div className="text-xs text-white/90 sm:text-sm">تا ۷۰٪ تخفیف — محدود</div>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Clock className="h-4 w-4" /> ۱۲ ساعت باقی‌مانده
+          <div className="flex items-center gap-1.5 rounded-xl bg-black/10 px-2.5 py-2 text-[10px] font-bold sm:gap-2 sm:px-3 sm:text-sm">
+            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> ۱۲ ساعت باقی‌مانده
           </div>
         </div>
 
@@ -301,13 +305,14 @@ export function HomePageClient({
       </section>
 
       {/* ==================== NEW ARRIVALS ==================== */}
-      <section className="mx-auto max-w-7xl px-4 pt-12 pb-8">
-        <div className="mb-6 flex items-center justify-between">
+      <section className="mx-auto max-w-7xl rounded-[2rem] border border-blue-100/80 bg-blue-50/40 px-4 pt-6 pb-5 sm:px-6 sm:pt-8 sm:pb-7">
+        <div className="mb-6 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-black text-slate-900">جدیدترین محصولات</h2>
-            <p className="text-sm text-slate-500">تازه به فروشگاه اضافه شده‌اند</p>
+            <div className="mb-1 inline-flex rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-blue-700 shadow-sm">تازه رسیده</div>
+            <h2 className="text-xl font-black text-slate-900 sm:text-2xl">جدیدترین محصولات</h2>
+            <p className="text-xs text-slate-500 sm:text-sm">تازه به فروشگاه اضافه شده‌اند</p>
           </div>
-          <Link href="/products" className="text-sm font-semibold text-rose-600 hover:text-rose-700">همه محصولات جدید</Link>
+          <Link href="/products" className="shrink-0 text-xs font-semibold text-blue-700 hover:text-blue-800 sm:text-sm">همه محصولات جدید</Link>
         </div>
 
         <motion.div
