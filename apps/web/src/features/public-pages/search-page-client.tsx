@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
 import { Card } from "@/components/ui/card";
@@ -17,8 +16,8 @@ import { useAnalytics } from "@/hooks/use-analytics";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useCategories } from "@/hooks/use-products";
 import { useProductSearch, type SearchResponse } from "@/hooks/use-search";
-import { formatNumber, formatPrice } from "@/lib/utils";
-import { WishlistButton } from "@/components/wishlist-button";
+import { formatNumber } from "@/lib/utils";
+import type { Product } from "@/types/domain";
 
 function SearchResultsSkeleton() {
   return (
@@ -110,6 +109,25 @@ function SearchContent({
   const searchErrorMessage = search.error instanceof Error ? search.error.message : "امکان جستجو وجود ندارد.";
   const hasResults = (search.data?.items.length ?? 0) > 0;
 
+  function toProductCardProduct(searchProduct: NonNullable<SearchResponse["items"]>[number]): Product {
+    const effectivePrice = searchProduct.effectivePrice ?? searchProduct.discountPrice;
+    const hasDiscount = typeof effectivePrice === "number" && effectivePrice < searchProduct.price;
+
+    return {
+      _id: searchProduct.id,
+      name: searchProduct.name,
+      description: searchProduct.description ?? "",
+      price: searchProduct.price,
+      discountPrice: hasDiscount ? effectivePrice : null,
+      stock: searchProduct.stock,
+      images: searchProduct.images ?? [],
+      categoryId: searchProduct.categoryId ?? "search",
+      isActive: true,
+      brand: searchProduct.brand,
+      tags: searchProduct.tags,
+    };
+  }
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 text-right">
       <div className="rounded-3xl bg-white p-5 shadow-sm">
@@ -194,35 +212,14 @@ function SearchContent({
       ) : null}
 
       {!search.isLoading && !search.isError && hasResults ? (
-        <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-          {(search.data?.items ?? []).map((product) => (
-            <Card key={product.id} className="relative overflow-hidden text-right">
-              <div className="absolute left-3 top-3 z-10">
-                <WishlistButton
-                  productId={product.id}
-                  size="sm"
-                  className="border border-slate-100/80"
-                />
-              </div>
-              <Link href={`/products/${product.id}`} className="block aspect-square bg-slate-100">
-                <div className="flex h-full items-center justify-center text-4xl">🛍️</div>
-              </Link>
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <Badge className={product.stock > 0 ? "bg-rose-50 text-rose-700" : "bg-red-50 text-red-700"}>
-                    {product.stock > 0 ? "موجود" : "ناموجود"}
-                  </Badge>
-                  <Link href={`/products/${product.id}`} className="line-clamp-2 flex-1 font-bold leading-7 text-slate-900">
-                    {product.name}
-                  </Link>
-                </div>
-                <p className="mt-2 text-lg font-black text-rose-600">{formatPrice(product.effectivePrice ?? product.discountPrice ?? product.price)}</p>
-                {product.discountPrice && product.discountPrice < product.price ? (
-                  <p className="text-sm text-slate-400 line-through">{formatPrice(product.price)}</p>
-                ) : null}
-                <p className="mt-1 text-xs text-slate-500">{product.categoryName}</p>
-              </div>
-            </Card>
+        <section className="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {(search.data?.items ?? []).map((product, index) => (
+            <ProductCard
+              key={product.id}
+              product={toProductCardProduct(product)}
+              priority={page === 1 && index < 6}
+              fetchPriority={page === 1 && index < 4 ? "high" : "auto"}
+            />
           ))}
         </section>
       ) : null}

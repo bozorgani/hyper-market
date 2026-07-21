@@ -33,7 +33,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
     <div className="space-y-3">
       {/* Main Image */}
       <div 
-        className="group relative aspect-square overflow-hidden rounded-3xl bg-slate-100 border border-slate-100 cursor-zoom-in"
+        className="product-gallery group relative aspect-square overflow-hidden rounded-3xl bg-slate-50 border border-slate-100 cursor-zoom-in"
         onClick={openLightbox}
       >
         <Image
@@ -43,7 +43,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
           unoptimized={!isKnownOptimizedImageSource(selectedImage)}
           priority
           sizes="(max-width: 1024px) 100vw, 50vw"
-          className="object-cover transition-all duration-500 group-hover:scale-[1.035]"
+          className="object-contain p-6 transition-all duration-500 group-hover:scale-[1.035]"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/5 opacity-0 group-hover:opacity-100 transition" />
         
@@ -95,7 +95,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
                 fill
                 unoptimized={!isKnownOptimizedImageSource(getProductImageUrl(image))}
                 sizes="20vw"
-                className="object-cover"
+                className="object-contain p-1"
               />
             </button>
           ))}

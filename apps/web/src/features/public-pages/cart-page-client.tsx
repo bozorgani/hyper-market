@@ -170,7 +170,7 @@ export function CartPageClient() {
                           alt={item.name}
                           fill
                           sizes="64px"
-                          className="object-cover"
+                          className="object-contain p-1"
                           unoptimized={!isKnownOptimizedImageSource(getProductImageUrl(item.image))}
                         />
                       ) : (

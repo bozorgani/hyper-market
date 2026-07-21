@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ToastType = "success" | "error" | "info";
@@ -10,6 +12,10 @@ type Toast = {
   title: string;
   description?: string;
   type: ToastType;
+  action?: {
+    label: string;
+    href: string;
+  };
 };
 
 type ToastInput = Omit<Toast, "id">;
@@ -51,17 +57,33 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         aria-atomic="true"
       >
         {toasts.map((toast) => (
-          <button
+          <div
             key={toast.id}
-            onClick={() => dismissToast(toast.id)}
             className={cn(
-              "rounded-2xl border p-4 text-right shadow-lg transition hover:opacity-90",
+              "relative rounded-2xl border p-4 pl-11 text-right shadow-lg transition",
               toastStyles[toast.type],
             )}
           >
+            <button
+              type="button"
+              onClick={() => dismissToast(toast.id)}
+              className="absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-xl opacity-60 transition hover:bg-black/5 hover:opacity-100"
+              aria-label="بستن پیام"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
             <p className="font-black">{toast.title}</p>
             {toast.description ? <p className="mt-1 text-sm leading-6 opacity-80">{toast.description}</p> : null}
-          </button>
+            {toast.action ? (
+              <Link
+                href={toast.action.href}
+                onClick={() => dismissToast(toast.id)}
+                className="mt-3 inline-flex min-h-9 items-center rounded-xl bg-white/80 px-3 py-1.5 text-xs font-black text-slate-800 shadow-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
+              >
+                {toast.action.label}
+              </Link>
+            ) : null}
+          </div>
         ))}
       </div>
     </ToastContext.Provider>

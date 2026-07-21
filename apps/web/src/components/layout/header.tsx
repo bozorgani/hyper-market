@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Search, ShoppingCart, UserRound, MapPin, Menu,
 } from "lucide-react";
@@ -24,9 +24,25 @@ export function Header() {
     ? cartItems.reduce((sum, item) => sum + (item.quantity ?? 0), 0)
     : 0;
 
+  const previousCartCount = useRef<number | null>(null);
+  const [cartCountPulse, setCartCountPulse] = useState(false);
   const [query, setQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (previousCartCount.current === null) {
+      previousCartCount.current = cartCount;
+      return;
+    }
+    if (cartCount > previousCartCount.current) {
+      setCartCountPulse(true);
+      const timeout = window.setTimeout(() => setCartCountPulse(false), 450);
+      previousCartCount.current = cartCount;
+      return () => window.clearTimeout(timeout);
+    }
+    previousCartCount.current = cartCount;
+  }, [cartCount]);
 
   // Global Escape key handler for mobile overlays
   useEffect(() => {
@@ -101,7 +117,7 @@ export function Header() {
               <ShoppingCart className="h-5 w-5" aria-hidden="true" />
               {cartCount > 0 && (
                 <span
-                  className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow ring-1 ring-white px-1"
+                  className={`absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow ring-1 ring-white px-1 ${cartCountPulse ? "cart-badge-pop" : ""}`}
                   aria-label={`${cartCount} مورد در سبد خرید`}
                 >
                   {cartCount > 9 ? "۹+" : cartCount.toLocaleString("fa-IR")}
