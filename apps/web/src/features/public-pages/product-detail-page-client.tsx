@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { LoaderCircle } from "lucide-react";
 import { LinkButton } from "@/components/ui/link-button";
 import { ProductGallery } from "@/components/product-gallery";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,12 @@ export function ProductDetailPageClient({
 
     try {
       await addToCart.mutateAsync({ productId: product.data._id, quantity: 1 });
-      showToast({ type: "success", title: "محصول به سبد خرید اضافه شد" });
+      showToast({
+        type: "success",
+        title: "محصول به سبد خرید اضافه شد",
+        description: "می‌توانید سبد خرید را بررسی و سفارش خود را تکمیل کنید.",
+        action: { label: "مشاهده سبد خرید", href: "/cart" },
+      });
     } catch (error) {
       showToast({
         type: "error",
@@ -159,7 +165,12 @@ export function ProductDetailPageClient({
         <p className="mt-5 text-sm leading-7 text-slate-500">با افزودن این محصول به سبد خرید، می‌توانید تعداد کالاها را در سبد بررسی و ویرایش کنید و سپس سفارش خود را ثبت کنید.</p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Button type="button" disabled={item.stock < 1 || addToCart.isPending} onClick={handleAddToCart} className="w-full sm:w-auto">
-            {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد خرید"}
+            {addToCart.isPending ? (
+            <>
+              <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+              در حال افزودن...
+            </>
+          ) : "افزودن به سبد خرید"}
           </Button>
           <WishlistButton
             productId={item._id}

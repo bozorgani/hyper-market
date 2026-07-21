@@ -4,7 +4,7 @@ import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Tag } from "lucide-react";
+import { LoaderCircle, ShoppingCart, Tag } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useAuthStore } from "@/store/auth-store";
@@ -47,7 +47,12 @@ export const ProductCard = memo(function ProductCard({
     }
     try {
       await addToCart.mutateAsync({ productId: product._id, quantity: 1 });
-      showToast({ type: "success", title: t('common.addedToCart') });
+      showToast({
+        type: "success",
+        title: t('common.addedToCart'),
+        description: "محصول با موفقیت به سبد خرید اضافه شد.",
+        action: { label: "مشاهده سبد خرید", href: "/cart" },
+      });
     } catch (error) {
       showToast({ type: "error", title: t('common.addToCartFailed'), description: error instanceof Error ? error.message : undefined });
     }
@@ -136,7 +141,11 @@ export const ProductCard = memo(function ProductCard({
           aria-label={tf('product.addToCartAriaLabel', { name: product.name })}
           className="mt-3 flex min-h-[var(--touch-target-min)] w-full items-center justify-center gap-1.5 rounded-2xl bg-rose-50 py-[9px] text-xs font-bold text-rose-700 transition-all hover:bg-rose-100 active:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <ShoppingCart className="h-3.5 w-3.5" aria-hidden="true" />
+          {addToCart.isPending ? (
+            <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+          ) : (
+            <ShoppingCart className="h-3.5 w-3.5" aria-hidden="true" />
+          )}
           {addToCart.isPending ? t('common.adding') : t('common.addToCart')}
         </button>
       </div>
