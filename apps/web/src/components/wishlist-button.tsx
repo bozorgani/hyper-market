@@ -107,6 +107,7 @@ export function WishlistButton({
         className
       )}
       aria-label={isInWishlist ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
+      title={isInWishlist ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
     >
       <Heart
         className={cn(

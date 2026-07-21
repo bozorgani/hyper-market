@@ -199,7 +199,7 @@ export function CartPageClient() {
                         <Minus className="h-4 w-4" />
                       </Button>
                       <span className="min-w-10 text-center text-sm font-black">{isItemMutating ? "..." : formatNumber(item.quantity)}</span>
-                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating || item.isAvailable === false || item.quantity >= item.stock} onClick={() => incrementItem(item.productId, item.quantity)} aria-label="افزایش تعداد">
+                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating || item.isAvailable === false || item.quantity >= item.stock} onClick={() => incrementItem(item.productId, item.quantity)} aria-label="افزایش تعداد" title="افزایش تعداد">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>

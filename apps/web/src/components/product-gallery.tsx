@@ -59,6 +59,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
         <button
           onClick={(e) => { e.stopPropagation(); openLightbox(); }}
           className="absolute bottom-4 left-4 flex items-center gap-1.5 rounded-2xl bg-white/90 px-3 py-1.5 text-xs font-semibold shadow-sm backdrop-blur transition hover:bg-white"
+          title="بزرگنمایی تصویر"
         >
           <ZoomIn className="h-3.5 w-3.5" /> بزرگنمایی
         </button>

@@ -86,6 +86,7 @@ export function MobileSearchOverlay({
                 onClick={onClose}
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-4 focus-visible:ring-slate-200"
                 aria-label="بستن جستجو"
+                title="بستن جستجو"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>

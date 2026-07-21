@@ -91,7 +91,8 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            <button onClick={() => setMobileSearchOpen(true)} className="md:hidden flex h-10 w-10 items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-50" aria-label="جستجو">
+            <button onClick={() => setMobileSearchOpen(true)} className="md:hidden flex h-10 w-10 items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-50" aria-label="جستجو"
+              title="جستجو در محصولات">
               <Search className="h-5 w-5" />
             </button>
 
