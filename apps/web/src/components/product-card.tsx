@@ -76,7 +76,7 @@ export const ProductCard = memo(function ProductCard({
             unoptimized={!isKnownOptimizedImageSource(getProductImageUrl(product.images[0]))}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+            className="object-contain p-4 transition-transform duration-500 group-hover:scale-[1.06]"
             quality={80}
             priority={priority}
             fetchPriority={fetchPriority ?? (priority ? "high" : "auto")}
