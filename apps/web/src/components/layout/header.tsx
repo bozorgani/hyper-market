@@ -98,23 +98,30 @@ export function Header() {
             {user ? (
               <Link
                 href="/profile/addresses"
-                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 bg-slate-50 rounded-xl hover:bg-slate-100 hover:text-slate-700 transition"
+                className="hidden lg:flex items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-rose-50 hover:text-rose-700"
                 aria-label="مدیریت آدرس‌ها"
+                title="مدیریت آدرس‌های ارسال"
               >
                 <MapPin className="h-3.5 w-3.5 text-rose-500" /> آدرس‌های من
               </Link>
             ) : (
-              <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 bg-slate-50 rounded-xl">
+              <div className="hidden items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600 lg:flex" title="مقصد ارسال سفارش">
                 <MapPin className="h-3.5 w-3.5 text-rose-500" /> ارسال به آدرس شما
               </div>
             )}
 
             <Link
               href="/cart"
-              className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-50 transition"
+              className="relative flex h-10 w-10 items-center justify-center gap-2 rounded-2xl text-slate-600 transition hover:bg-slate-50 lg:w-auto lg:px-3"
               aria-label={cartCount > 0 ? `سبد خرید، ${cartCount} عدد کالا` : "سبد خرید"}
             >
               <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+              <span className="hidden text-xs font-bold text-slate-700 lg:inline">سبد خرید</span>
+              {cartCount > 0 && (
+                <span className="hidden text-[10px] font-medium text-slate-400 lg:inline">
+                  ({cartCount.toLocaleString("fa-IR")})
+                </span>
+              )}
               {cartCount > 0 && (
                 <span
                   className={`absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow ring-1 ring-white px-1 ${cartCountPulse ? "cart-badge-pop" : ""}`}
@@ -133,7 +140,8 @@ export function Header() {
               <LinkButton href="/login" size="sm" className="rounded-2xl text-xs">ورود / ثبت‌نام</LinkButton>
             )}
 
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden ml-1 flex h-10 w-10 items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-50" aria-label="منوی اصلی">
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden ml-1 flex h-10 w-10 items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-50" aria-label="منوی اصلی"
+              aria-expanded={mobileMenuOpen}>
               <Menu className="h-5 w-5" />
             </button>
           </div>
