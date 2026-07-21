@@ -256,15 +256,15 @@ export function HomePageClient({
           initial={shouldAnimate ? { opacity: 0, y: 15 } : false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+          className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
         >
           {products.isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-full rounded-2xl border bg-white p-3"><Skeleton className="aspect-square w-full rounded-2xl" /></div>
+              <div key={i} className="h-full min-w-[72vw] snap-start rounded-2xl border bg-white p-3 sm:min-w-0"><Skeleton className="aspect-square w-full rounded-2xl" /></div>
             ))
           ) : bestSellers.length > 0 ? (
             bestSellers.map((product, index) => (
-              <div key={product._id} className="h-full">
+              <div key={product._id} className="h-full min-w-[72vw] snap-start sm:min-w-0">
                 <ProductCard product={product} priority={index < 6} fetchPriority={index < 4 ? "high" : "auto"} />
               </div>
             ))
@@ -294,10 +294,10 @@ export function HomePageClient({
           initial={shouldAnimate ? { opacity: 0 } : false}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
-          className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+          className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
         >
           {(discounted.length > 0 ? discounted : uniqueItems.slice(0, 6)).map((product, index) => (
-            <div key={product._id} className="h-full">
+            <div key={product._id} className="h-full min-w-[72vw] snap-start sm:min-w-0">
               <ProductCard product={product} priority={index < 2} />
             </div>
           ))}
@@ -319,15 +319,15 @@ export function HomePageClient({
           initial={shouldAnimate ? { opacity: 0, y: 15 } : false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+          className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
         >
           {newArrivals.length > 0 ? newArrivals.map((product) => (
-            <div key={product._id} className="h-full">
+            <div key={product._id} className="h-full min-w-[72vw] snap-start sm:min-w-0">
               <ProductCard product={product} priority={false} />
             </div>
           )) : (
             uniqueItems.slice(0, 6).map((product, index) => (
-              <div key={product._id} className="h-full">
+              <div key={product._id} className="h-full min-w-[72vw] snap-start sm:min-w-0">
                 <ProductCard product={product} priority={index < 2} />
               </div>
             ))
