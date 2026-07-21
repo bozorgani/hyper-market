@@ -7,6 +7,7 @@ import {
   Truck, ShieldCheck, RotateCcw, Headphones, Zap, ArrowLeft,
   Clock, Percent, ShoppingCart, Star,
 } from "lucide-react";
+import { CategoryVisual } from "@/components/category-visual";
 import { ProductCard } from "@/components/product-card";
 import { LinkButton } from "@/components/ui/link-button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -204,9 +205,12 @@ export function HomePageClient({
                 href={cat.href}
                 className="group flex flex-col items-center rounded-2xl border border-slate-200 bg-white p-4 text-center transition hover:border-rose-200 hover:shadow-md"
               >
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-3xl transition group-hover:scale-110">
-                  {cat.icon || "🛒"}
-                </div>
+                <CategoryVisual
+                  name={cat.name}
+                  icon={cat.icon}
+                  image={cat.image}
+                  className="mb-3 transition group-hover:scale-110"
+                />
                 <span className="text-sm font-semibold text-slate-700 group-hover:text-rose-700">
                   {cat.name}
                 </span>
