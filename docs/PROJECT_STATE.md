@@ -115,23 +115,23 @@ Module implementation matrix:
 
 | Module | Module file | Controllers | Services | Repositories | Schemas | DTOs |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| addresses | yes | 1 | 1 | 1 | 1 | 1 |
-| analytics | yes | 1 | 1 | 1 | 1 | 1 |
+| addresses | yes | 1 | 1 | 1 | 1 | 0 |
+| analytics | yes | 1 | 1 | 1 | 1 | 0 |
 | audit | yes | 0 | 1 | 1 | 1 | 0 |
-| auth | yes | 1 | 4 | 3 | 3 | 10 |
-| cart | yes | 1 | 1 | 1 | 1 | 2 |
-| categories | yes | 1 | 1 | 1 | 1 | 2 |
-| coupons | yes | 1 | 1 | 1 | 2 | 2 |
+| auth | yes | 1 | 4 | 3 | 3 | 0 |
+| cart | yes | 1 | 1 | 1 | 1 | 0 |
+| categories | yes | 1 | 1 | 1 | 1 | 0 |
+| coupons | yes | 1 | 1 | 1 | 2 | 0 |
 | mail | yes | 0 | 3 | 0 | 0 | 0 |
-| orders | yes | 1 | 1 | 1 | 1 | 2 |
+| orders | yes | 1 | 1 | 1 | 1 | 0 |
 | outbox | yes | 0 | 1 | 1 | 1 | 0 |
-| payments | yes | 1 | 1 | 1 | 1 | 2 |
-| permissions | yes | 1 | 1 | 1 | 1 | 1 |
-| products | yes | 1 | 2 | 1 | 1 | 2 |
+| payments | yes | 1 | 1 | 1 | 1 | 0 |
+| permissions | yes | 1 | 1 | 1 | 1 | 0 |
+| products | yes | 1 | 2 | 1 | 1 | 0 |
 | queue | yes | 0 | 1 | 0 | 0 | 0 |
 | reviews | no | 1 | 2 | 1 | 2 | 0 |
 | search | yes | 1 | 2 | 0 | 0 | 0 |
-| shipping | yes | 1 | 1 | 0 | 0 | 1 |
+| shipping | yes | 1 | 1 | 0 | 0 | 0 |
 | users | yes | 1 | 1 | 1 | 1 | 0 |
 | wishlist | yes | 1 | 1 | 1 | 1 | 0 |
 
@@ -172,35 +172,7 @@ zustand
 Detected App Router routes:
 
 ```text
-/(main)
-/(main)/cart
-/(main)/categories
-/(main)/checkout
-/(main)/order/success
-/(main)/orders
-/(main)/orders/[id]/tracking
-/(main)/products
-/(main)/products/[id]
-/(main)/profile
-/(main)/profile/addresses
-/(main)/search
-/(main)/wishlist
-/admin
-/admin/analytics
-/admin/categories
-/admin/coupons
-/admin/orders
-/admin/orders/[id]
-/admin/payments
-/admin/products
-/admin/products/[id]
-/admin/products/new
-/admin/roles
-/admin/users
-/forgot-password
-/login
-/register
-/verify-otp
+
 ```
 
 Detected characteristics from code:
@@ -238,35 +210,7 @@ zustand
 Detected App Router routes:
 
 ```text
-/(main)
-/(main)/cart
-/(main)/categories
-/(main)/checkout
-/(main)/order/success
-/(main)/orders
-/(main)/orders/[id]/tracking
-/(main)/products
-/(main)/products/[id]
-/(main)/profile
-/(main)/profile/addresses
-/(main)/search
-/(main)/wishlist
-/admin
-/admin/analytics
-/admin/categories
-/admin/coupons
-/admin/orders
-/admin/orders/[id]
-/admin/payments
-/admin/products
-/admin/products/[id]
-/admin/products/new
-/admin/roles
-/admin/users
-/forgot-password
-/login
-/register
-/verify-otp
+
 ```
 
 Detected characteristics from code:
