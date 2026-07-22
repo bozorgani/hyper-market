@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AlertTriangle, Minus, Plus } from "lucide-react";
+import { AlertTriangle, LoaderCircle, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/layout/protected-route";
@@ -194,11 +194,20 @@ export function CartPageClient() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between gap-3 sm:justify-end">
-                    <div className="flex items-center rounded-2xl border border-slate-200 bg-white">
-                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating} onClick={() => decrementItem(item.productId, item.quantity)} aria-label="کاهش تعداد">
+                    <div
+                      className="flex items-center rounded-2xl border border-slate-200 bg-white"
+                      aria-busy={isItemMutating}
+                    >
+                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating} onClick={() => decrementItem(item.productId, item.quantity)} aria-label="کاهش تعداد" title="کاهش تعداد">
                         <Minus className="h-4 w-4" />
                       </Button>
-                      <span className="min-w-10 text-center text-sm font-black">{isItemMutating ? "..." : formatNumber(item.quantity)}</span>
+                      <span
+                        className="flex min-w-10 items-center justify-center text-center text-sm font-black"
+                        role={isItemMutating ? "status" : undefined}
+                        aria-label={isItemMutating ? "در حال به‌روزرسانی تعداد" : `تعداد ${formatNumber(item.quantity)}`}
+                      >
+                        {isItemMutating ? <LoaderCircle className="h-4 w-4 animate-spin text-rose-600" aria-hidden="true" /> : formatNumber(item.quantity)}
+                      </span>
                       <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating || item.isAvailable === false || item.quantity >= item.stock} onClick={() => incrementItem(item.productId, item.quantity)} aria-label="افزایش تعداد" title="افزایش تعداد">
                         <Plus className="h-4 w-4" />
                       </Button>
