@@ -1,8 +1,7 @@
 "use client";
 
-import { motion } from "@/components/ui/csp-motion";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Truck, ShieldCheck, RotateCcw, Headphones, Zap, ArrowLeft,
   Clock, Percent, ShoppingCart, Star,
@@ -49,21 +48,6 @@ export function HomePageClient({
   const products = useProducts(1, undefined, undefined, initialProducts);
   const categories = useCategories(initialCategories);
   const user = useAuthStore((s) => s.user);
-
-  const [shouldAnimate, setShouldAnimate] = useState(true);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handler = () => {
-      setShouldAnimate(!mediaQuery.matches);
-    };
-    const timeout = setTimeout(handler, 0);
-    mediaQuery.addEventListener("change", handler);
-    return () => {
-      clearTimeout(timeout);
-      mediaQuery.removeEventListener("change", handler);
-    };
-  }, []);
 
   // Deduplicate products by _id to prevent duplicates across sections
   const uniqueItems = useMemo(() => {
@@ -256,10 +240,7 @@ export function HomePageClient({
           <Link href="/products" className="shrink-0 text-xs font-semibold text-rose-600 hover:text-rose-700 sm:text-sm">مشاهده همه</Link>
         </div>
 
-        <motion.div
-          initial={shouldAnimate ? { opacity: 0, y: 15 } : false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+        <div
           className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
         >
           {products.isLoading ? (
@@ -273,7 +254,7 @@ export function HomePageClient({
               </div>
             ))
           ) : null}
-        </motion.div>
+        </div>
       </section>
 
       {/* ==================== FLASH SALE (همیشه نمایش داده می‌شود) ==================== */}
@@ -294,10 +275,7 @@ export function HomePageClient({
           </div>
         </div>
 
-        <motion.div
-          initial={shouldAnimate ? { opacity: 0 } : false}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4 }}
+        <div
           className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
         >
           {(discounted.length > 0 ? discounted : uniqueItems.slice(0, 6)).map((product, index) => (
@@ -305,7 +283,7 @@ export function HomePageClient({
               <ProductCard product={product} priority={index < 2} />
             </div>
           ))}
-        </motion.div>
+        </div>
       </section>
 
       {/* ==================== NEW ARRIVALS ==================== */}
@@ -319,10 +297,7 @@ export function HomePageClient({
           <Link href="/products" className="shrink-0 text-xs font-semibold text-blue-700 hover:text-blue-800 sm:text-sm">همه محصولات جدید</Link>
         </div>
 
-        <motion.div
-          initial={shouldAnimate ? { opacity: 0, y: 15 } : false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+        <div
           className="-mx-4 flex snap-x snap-mandatory items-stretch gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
         >
           {newArrivals.length > 0 ? newArrivals.map((product) => (
@@ -336,7 +311,7 @@ export function HomePageClient({
               </div>
             ))
           )}
-        </motion.div>
+        </div>
       </section>
 
       {/* ==================== FINAL CTA ==================== */}
