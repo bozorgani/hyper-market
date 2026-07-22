@@ -157,8 +157,8 @@ export function CartPageClient() {
         ) : null}
 
         {!cart.isLoading && !cartErrorMessage && hasItems ? (
-          <>
-            <Card className="mt-5 divide-y divide-slate-100 overflow-hidden">
+          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+            <Card className="divide-y divide-slate-100 overflow-hidden">
               {detailedItems.map((item) => {
                 const isItemMutating = mutatingProductId === item.productId;
                 return (
@@ -212,7 +212,7 @@ export function CartPageClient() {
               })}
             </Card>
 
-            <div className="mt-5 rounded-2xl bg-white p-5 shadow-sm">
+            <aside className="h-fit rounded-2xl border border-slate-100 bg-white p-5 shadow-sm lg:sticky lg:top-24">
               <div className="flex items-center justify-between text-lg font-black">
                 <span>مجموع</span>
                 <span>{formatPrice(totalPrice)}</span>
@@ -230,8 +230,8 @@ export function CartPageClient() {
                   ادامه خرید
                 </LinkButton>
               </div>
-            </div>
-          </>
+            </aside>
+          </div>
         ) : null}
 
         <ConfirmDialog
