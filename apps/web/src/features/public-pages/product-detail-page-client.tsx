@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { LoaderCircle } from "lucide-react";
 import { LinkButton } from "@/components/ui/link-button";
 import { ProductGallery } from "@/components/product-gallery";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useRouter } from "next/navigation";
 import { useProduct } from "@/hooks/use-products";
 import { formatNumber, formatPrice } from "@/lib/utils";
+import { getUserFacingError } from "@/lib/user-facing-error";
 import { ProductReviews } from "@/components/reviews/product-reviews";
 import { WishlistButton } from "@/components/wishlist-button";
 import type { Product } from "@/types/domain";
@@ -58,12 +60,17 @@ export function ProductDetailPageClient({
 
     try {
       await addToCart.mutateAsync({ productId: product.data._id, quantity: 1 });
-      showToast({ type: "success", title: "محصول به سبد خرید اضافه شد" });
+      showToast({
+        type: "success",
+        title: "محصول به سبد خرید اضافه شد",
+        description: "می‌توانید سبد خرید را بررسی و سفارش خود را تکمیل کنید.",
+        action: { label: "مشاهده سبد خرید", href: "/cart" },
+      });
     } catch (error) {
       showToast({
         type: "error",
         title: "افزودن به سبد خرید ناموفق بود",
-        description: error instanceof Error ? error.message : undefined,
+        description: getUserFacingError(error, "افزودن محصول انجام نشد. لطفاً دوباره تلاش کنید."),
       });
     }
   }
@@ -72,7 +79,7 @@ export function ProductDetailPageClient({
     return (
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-2 md:gap-8">
         <Card className="aspect-square p-6">
-          <Skeleton className="h-full w-full rounded-3xl" />
+          <Skeleton className="h-full w-full rounded-2xl" />
         </Card>
         <Card className="p-6 text-right">
           <Skeleton className="h-8 w-28" />
@@ -91,7 +98,7 @@ export function ProductDetailPageClient({
         <Card className="border-red-200 bg-red-50 p-8 text-center text-red-700">
           <p className="text-xl font-black">محصول پیدا نشد یا قابل بارگذاری نیست</p>
           <p className="mt-3 text-sm leading-7">
-            {product.error instanceof Error ? product.error.message : "دریافت جزئیات محصول با خطا مواجه شد."}
+            {getUserFacingError(product.error, "دریافت جزئیات محصول با خطا مواجه شد. لطفاً دوباره تلاش کنید.")}
           </p>
           <LinkButton href="/products" className="mt-6">
             بازگشت به لیست محصولات
@@ -108,27 +115,27 @@ export function ProductDetailPageClient({
     : 0;
 
   return (
-    <>
+    <div className="pb-36 md:pb-0">
     <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-2 md:gap-8">
       <Card className="p-6">
         <ProductGallery images={item.images} productName={item.name} />
       </Card>
-      <section className="rounded-3xl bg-white p-6 text-right shadow-sm">
-        <div className="flex flex-wrap gap-2">
+      <section className="rounded-2xl border border-slate-100 bg-white p-5 text-right shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          {item.brand ? <Badge className="bg-violet-50 text-violet-700">{item.brand}</Badge> : null}
           <Badge className={item.stock > 0 ? "bg-rose-50 text-rose-700" : "bg-red-50 text-red-700"}>
             {item.stock > 0 ? `${formatNumber(item.stock)} ${item.unit ?? "عدد"} موجود` : "ناموجود"}
           </Badge>
           {discountPercent > 0 ? <Badge className="bg-rose-50 text-rose-700">{formatNumber(discountPercent)}٪ تخفیف</Badge> : null}
-          {item.brand ? <Badge className="bg-violet-50 text-violet-700">{item.brand}</Badge> : null}
-          {item.sku ? <Badge className="bg-slate-100 text-slate-500 font-mono">{item.sku}</Badge> : null}
+          {item.sku ? <Badge className="bg-slate-100 font-mono text-slate-500">{item.sku}</Badge> : null}
         </div>
-        <h1 className="mt-5 text-3xl font-black leading-tight text-slate-950">{item.name}</h1>
-        <p className="mt-4 leading-8 text-slate-600">{item.description}</p>
+        <h1 className="mt-4 text-2xl font-black leading-tight text-slate-950 sm:text-3xl">{item.name}</h1>
+        <p className="mt-3 leading-8 text-slate-600">{item.description}</p>
 
         {/* Attributes */}
         {(item.brand || item.unit || item.weight || (item.tags && item.tags.length > 0)) ? (
-          <div className="mt-5 space-y-3 rounded-xl bg-slate-50 p-4">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">مشخصات</p>
+          <div className="mt-5 space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">مشخصات محصول</p>
             <div className="grid grid-cols-2 gap-3 text-sm">
               {item.brand ? (
                 <div><span className="text-slate-500">برند:</span> <span className="font-semibold text-slate-800">{item.brand}</span></div>
@@ -152,22 +159,37 @@ export function ProductDetailPageClient({
             ) : null}
           </div>
         ) : null}
-        <div className="mt-6 flex flex-wrap items-end gap-3">
-          <p className="text-3xl font-black text-rose-600">{formatPrice(price)}</p>
-          {item.discountPrice ? <p className="text-slate-400 line-through">{formatPrice(item.price)}</p> : null}
+
+        <div className="mt-6 rounded-2xl border border-rose-100 bg-rose-50/60 p-4" aria-label="خلاصه خرید">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-slate-500">قیمت فروش</p>
+              <p className="mt-1 text-3xl font-black tracking-tight text-rose-700">{formatPrice(price)}</p>
+            </div>
+            <div className="text-left">
+              {item.discountPrice ? <p className="text-sm text-slate-400 line-through">{formatPrice(item.price)}</p> : null}
+              <p className="mt-1 text-[10px] font-medium text-slate-500">تومان / {item.unit ?? "عدد"}</p>
+            </div>
+          </div>
+          <p className="mt-3 border-t border-rose-100 pt-3 text-sm leading-7 text-slate-600">با افزودن این محصول به سبد خرید، می‌توانید تعداد کالاها را در سبد بررسی و ویرایش کنید و سپس سفارش خود را ثبت کنید.</p>
         </div>
-        <p className="mt-5 text-sm leading-7 text-slate-500">با افزودن این محصول به سبد، می‌توانید از صفحه سبد خرید تعداد را تغییر دهید و سپس وارد مسیر پرداخت آزمایشی شوید.</p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button type="button" disabled={item.stock < 1 || addToCart.isPending} onClick={handleAddToCart} className="w-full sm:w-auto">
-            {addToCart.isPending ? "در حال افزودن..." : "افزودن به سبد خرید"}
+
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <Button type="button" disabled={item.stock < 1 || addToCart.isPending} onClick={handleAddToCart} className="w-full sm:flex-1">
+            {addToCart.isPending ? (
+              <>
+                <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+                در حال افزودن...
+              </>
+            ) : "افزودن به سبد خرید"}
           </Button>
           <WishlistButton
             productId={item._id}
             size="md"
             showLabel
-            className="w-full justify-center sm:w-auto"
+            className="w-full justify-center sm:flex-1"
           />
-          <LinkButton href="/cart" variant="outline" className="w-full sm:w-auto">مشاهده سبد خرید</LinkButton>
+          <LinkButton href="/cart" variant="outline" className="w-full sm:flex-1">مشاهده سبد خرید</LinkButton>
         </div>
       </section>
     </main>
@@ -175,6 +197,24 @@ export function ProductDetailPageClient({
     <div className="mx-auto max-w-6xl px-4 pb-12">
       <ProductReviews productId={item._id} orderId={reviewOrderId} />
     </div>
-    </>
+
+    <div className="mobile-purchase-bar fixed inset-x-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-6px_20px_rgba(15,23,42,0.08)] backdrop-blur-xl md:hidden">
+      <div className="mx-auto flex max-w-6xl items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-medium text-slate-500">قیمت نهایی</p>
+          <p className="truncate text-base font-black text-rose-600">{formatPrice(price)} <span className="text-[10px] font-medium text-slate-400">تومان</span></p>
+        </div>
+        <Button
+          type="button"
+          disabled={item.stock < 1 || addToCart.isPending}
+          onClick={handleAddToCart}
+          className="min-h-11 flex-1 rounded-2xl text-xs sm:flex-none sm:px-8"
+          aria-label={`افزودن ${item.name} به سبد خرید`}
+        >
+          {addToCart.isPending ? "در حال افزودن..." : item.stock < 1 ? "ناموجود" : "افزودن به سبد"}
+        </Button>
+      </div>
+    </div>
+    </div>
   );
 }

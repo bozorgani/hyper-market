@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CategoryVisual } from "@/components/category-visual";
 import { Card } from "@/components/ui/card";
 import { fallbackCategories, getCategoryProductsHref } from "@/lib/category-utils";
 import { fetchCategoriesForSSR } from "@/lib/server-api";
@@ -43,7 +44,7 @@ export default async function CategoriesPage() {
         {visibleCategories.map((category) => (
           <Link key={category._id} href={getCategoryProductsHref(category)}>
             <Card className="flex h-full items-center gap-4 p-5 transition hover:border-rose-200 hover:shadow-md">
-              <span className="text-3xl">{category.icon || "📦"}</span>
+              <CategoryVisual name={category.name} icon={category.icon} image={category.image} />
               <div>
                 <h2 className="font-black text-slate-900">{category.name}</h2>
                 {category.description ? <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-500">{category.description}</p> : null}

@@ -72,7 +72,7 @@ export function ProfilePageClient() {
     <ProtectedRoute>
       <div className="mx-auto max-w-3xl px-4 py-8 text-right">
         {/* Profile Header Card */}
-        <div className="relative overflow-hidden rounded-3xl mb-6">
+        <div className="relative overflow-hidden rounded-2xl mb-6">
           {/* Background gradient */}
           <div className="absolute inset-0 bg-gradient-to-bl from-rose-600 via-rose-500 to-orange-500 h-48" />
           {/* Decorative circles */}

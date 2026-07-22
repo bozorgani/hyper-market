@@ -158,7 +158,7 @@ export function DesktopSearch() {
     <form
       ref={searchRef}
       onSubmit={submitSearch}
-      className="relative hidden flex-1 md:block max-w-lg"
+      className="relative hidden min-w-0 flex-1 md:block md:max-w-xl xl:max-w-2xl"
     >
       <Search className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
       <Input

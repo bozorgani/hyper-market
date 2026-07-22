@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AlertTriangle, Minus, Plus } from "lucide-react";
+import { AlertTriangle, LoaderCircle, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/layout/protected-route";
@@ -18,6 +18,7 @@ import { useCart, useClearCart, useRemoveFromCart, useUpdateCartQuantity } from 
 import { formatNumber, formatPrice } from "@/lib/utils";
 import { getProductImageUrl, isKnownOptimizedImageSource } from "@/lib/image-utils";
 import { isCustomerRole } from "@/lib/auth";
+import { getUserFacingError } from "@/lib/user-facing-error";
 import { useAuthStore } from "@/store/auth-store";
 
 export function CartPageClient() {
@@ -38,7 +39,7 @@ export function CartPageClient() {
   const isMutating = remove.isPending || updateQuantity.isPending || clear.isPending;
   const cartErrorMessage = useMemo(() => {
     if (!cart.error) return "";
-    return cart.error instanceof Error ? cart.error.message : "دریافت سبد خرید ناموفق بود.";
+    return getUserFacingError(cart.error, "دریافت سبد خرید ناموفق بود. لطفاً دوباره تلاش کنید.");
   }, [cart.error]);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export function CartPageClient() {
 
       await updateQuantity.mutateAsync({ productId, quantity: quantity - 1 });
     } catch (error) {
-      showToast({ type: "error", title: "خطا در به‌روزرسانی سبد", description: error instanceof Error ? error.message : undefined });
+      showToast({ type: "error", title: "خطا در به‌روزرسانی سبد", description: getUserFacingError(error, "عملیات سبد خرید انجام نشد.") });
     } finally {
       setMutatingProductId(null);
     }
@@ -71,7 +72,7 @@ export function CartPageClient() {
     try {
       await updateQuantity.mutateAsync({ productId, quantity: quantity + 1 });
     } catch (error) {
-      showToast({ type: "error", title: "خطا در افزایش تعداد", description: error instanceof Error ? error.message : undefined });
+      showToast({ type: "error", title: "خطا در افزایش تعداد", description: getUserFacingError(error, "عملیات سبد خرید انجام نشد.") });
     } finally {
       setMutatingProductId(null);
     }
@@ -84,7 +85,7 @@ export function CartPageClient() {
       await remove.mutateAsync(productId);
       showToast({ type: "success", title: "محصول از سبد حذف شد" });
     } catch (error) {
-      showToast({ type: "error", title: "حذف محصول ناموفق بود", description: error instanceof Error ? error.message : undefined });
+      showToast({ type: "error", title: "حذف محصول ناموفق بود", description: getUserFacingError(error, "عملیات سبد خرید انجام نشد.") });
     } finally {
       setMutatingProductId(null);
     }
@@ -97,7 +98,7 @@ export function CartPageClient() {
       setClearDialogOpen(false);
       showToast({ type: "success", title: "سبد خرید خالی شد" });
     } catch (error) {
-      showToast({ type: "error", title: "خالی کردن سبد ناموفق بود", description: error instanceof Error ? error.message : undefined });
+      showToast({ type: "error", title: "خالی کردن سبد ناموفق بود", description: getUserFacingError(error, "عملیات سبد خرید انجام نشد.") });
     }
   }
 
@@ -156,8 +157,8 @@ export function CartPageClient() {
         ) : null}
 
         {!cart.isLoading && !cartErrorMessage && hasItems ? (
-          <>
-            <Card className="mt-5 divide-y divide-slate-100 overflow-hidden">
+          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+            <Card className="divide-y divide-slate-100 overflow-hidden">
               {detailedItems.map((item) => {
                 const isItemMutating = mutatingProductId === item.productId;
                 return (
@@ -170,7 +171,7 @@ export function CartPageClient() {
                           alt={item.name}
                           fill
                           sizes="64px"
-                          className="object-cover"
+                          className="object-contain p-1"
                           unoptimized={!isKnownOptimizedImageSource(getProductImageUrl(item.image))}
                         />
                       ) : (
@@ -193,12 +194,21 @@ export function CartPageClient() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between gap-3 sm:justify-end">
-                    <div className="flex items-center rounded-2xl border border-slate-200 bg-white">
-                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating} onClick={() => decrementItem(item.productId, item.quantity)} aria-label="کاهش تعداد">
+                    <div
+                      className="flex items-center rounded-2xl border border-slate-200 bg-white"
+                      aria-busy={isItemMutating}
+                    >
+                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating} onClick={() => decrementItem(item.productId, item.quantity)} aria-label="کاهش تعداد" title="کاهش تعداد">
                         <Minus className="h-4 w-4" />
                       </Button>
-                      <span className="min-w-10 text-center text-sm font-black">{isItemMutating ? "..." : formatNumber(item.quantity)}</span>
-                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating || item.isAvailable === false || item.quantity >= item.stock} onClick={() => incrementItem(item.productId, item.quantity)} aria-label="افزایش تعداد">
+                      <span
+                        className="flex min-w-10 items-center justify-center text-center text-sm font-black"
+                        role={isItemMutating ? "status" : undefined}
+                        aria-label={isItemMutating ? "در حال به‌روزرسانی تعداد" : `تعداد ${formatNumber(item.quantity)}`}
+                      >
+                        {isItemMutating ? <LoaderCircle className="h-4 w-4 animate-spin text-rose-600" aria-hidden="true" /> : formatNumber(item.quantity)}
+                      </span>
+                      <Button variant="ghost" className="h-10 w-10 rounded-2xl px-0" disabled={isMutating || item.isAvailable === false || item.quantity >= item.stock} onClick={() => incrementItem(item.productId, item.quantity)} aria-label="افزایش تعداد" title="افزایش تعداد">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
@@ -211,7 +221,7 @@ export function CartPageClient() {
               })}
             </Card>
 
-            <div className="mt-5 rounded-2xl bg-white p-5 shadow-sm">
+            <aside className="h-fit rounded-2xl border border-slate-100 bg-white p-5 shadow-sm lg:sticky lg:top-24">
               <div className="flex items-center justify-between text-lg font-black">
                 <span>مجموع</span>
                 <span>{formatPrice(totalPrice)}</span>
@@ -229,8 +239,8 @@ export function CartPageClient() {
                   ادامه خرید
                 </LinkButton>
               </div>
-            </div>
-          </>
+            </aside>
+          </div>
         ) : null}
 
         <ConfirmDialog

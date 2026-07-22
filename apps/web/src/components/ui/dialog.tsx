@@ -48,7 +48,7 @@ export function Dialog({
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
         tabIndex={-1}
-        className={cn("w-full max-w-md rounded-3xl bg-white p-6 text-right shadow-2xl", className)}
+        className={cn("w-full max-w-md rounded-2xl bg-white p-6 text-right shadow-2xl", className)}
         onMouseDown={(event) => event.stopPropagation()}
       >
         {children}

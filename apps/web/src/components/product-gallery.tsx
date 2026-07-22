@@ -23,7 +23,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
 
   if (!selectedImage) {
     return (
-      <div className="flex h-full items-center justify-center rounded-3xl bg-slate-100 text-8xl border border-slate-200" role="img" aria-label="تصویر محصول موجود نیست">
+      <div className="flex h-full items-center justify-center rounded-2xl bg-slate-100 text-8xl border border-slate-200" role="img" aria-label="تصویر محصول موجود نیست">
         🛒
       </div>
     );
@@ -32,9 +32,18 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
   return (
     <div className="space-y-3">
       {/* Main Image */}
-      <div 
-        className="group relative aspect-square overflow-hidden rounded-3xl bg-slate-100 border border-slate-100 cursor-zoom-in"
+      <div
+        className="product-gallery group relative aspect-square overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 cursor-zoom-in"
         onClick={openLightbox}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openLightbox();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="بزرگنمایی تصویر محصول"
       >
         <Image
           src={selectedImage}
@@ -43,13 +52,14 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
           unoptimized={!isKnownOptimizedImageSource(selectedImage)}
           priority
           sizes="(max-width: 1024px) 100vw, 50vw"
-          className="object-cover transition-all duration-500 group-hover:scale-[1.035]"
+          className="object-contain p-6 transition-all duration-500 group-hover:scale-[1.035]"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/5 opacity-0 group-hover:opacity-100 transition" />
         
         <button
           onClick={(e) => { e.stopPropagation(); openLightbox(); }}
           className="absolute bottom-4 left-4 flex items-center gap-1.5 rounded-2xl bg-white/90 px-3 py-1.5 text-xs font-semibold shadow-sm backdrop-blur transition hover:bg-white"
+          title="بزرگنمایی تصویر"
         >
           <ZoomIn className="h-3.5 w-3.5" /> بزرگنمایی
         </button>
@@ -88,6 +98,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
                   : "border-slate-200 hover:border-slate-300"
               }`}
               aria-label={`نمایش تصویر ${index + 1} از ${safeImages.length}`}
+              aria-current={index === selectedIndex ? "true" : undefined}
             >
               <Image
                 src={getProductImageUrl(image)}
@@ -95,7 +106,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
                 fill
                 unoptimized={!isKnownOptimizedImageSource(getProductImageUrl(image))}
                 sizes="20vw"
-                className="object-cover"
+                className="object-contain p-1"
               />
             </button>
           ))}
@@ -122,7 +133,7 @@ export function ProductGallery({ images, productName }: { images?: string[]; pro
             </button>
 
             <div className="relative max-h-[90vh] w-full pt-2">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-black md:aspect-[16/9]">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-black md:aspect-[16/9]">
                 <Image
                   src={selectedImage}
                   alt={productName}

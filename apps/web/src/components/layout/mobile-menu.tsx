@@ -37,6 +37,7 @@ function MobileMenuContent({ open, onClose }: MobileMenuProps) {
           onClick={onClose}
           className="rounded-xl p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
           aria-label="بستن منو"
+          title="بستن منوی اصلی"
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </button>

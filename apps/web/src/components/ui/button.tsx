@@ -1,4 +1,5 @@
 import * as React from "react";
+import { tw } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 export type ButtonVariant = "default" | "secondary" | "outline" | "ghost" | "destructive" | "success";
@@ -27,7 +28,7 @@ export const buttonSizes: Record<ButtonSize, string> = {
 
 export function buttonClassName(variant: ButtonVariant, size: ButtonSize, className?: string) {
   return cn(
-    "inline-flex touch-manipulation items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 focus-visible:ring-offset-2 active:scale-[0.985]",
+    `inline-flex touch-manipulation items-center justify-center gap-2 ${tw.button} font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 focus-visible:ring-offset-2 active:scale-[0.985]`,
     buttonVariants[variant],
     buttonSizes[size],
     className,

@@ -10,10 +10,10 @@ type AuthFeature = {
 };
 
 const defaultFeatures: AuthFeature[] = [
-  { title: "خرید آسان", description: "هزاران محصول با بهترین قیمت و ارسال سریع", icon: <ShoppingCart className="h-5 w-5" /> },
-  { title: "ارسال سریع", description: "تحویل اکسپرس در بازه زمانی انتخابی شما", icon: <Truck className="h-5 w-5" /> },
-  { title: "پشتیبانی ۲۴/۷", description: "تیم پشتیبانی همیشه در کنار شماست", icon: <Headphones className="h-5 w-5" /> },
-  { title: "پرداخت امن", description: "تراکنش‌های رمزنگاری‌شده و درگاه مطمئن", icon: <CreditCard className="h-5 w-5" /> },
+  { title: "خرید روزانه آسان", description: "محصولات موردنیازتان را سریع و ساده پیدا کنید", icon: <ShoppingCart className="h-5 w-5" /> },
+  { title: "محصولات تازه و مطمئن", description: "انتخابی مطمئن برای خریدهای روزمره شما", icon: <ShieldCheck className="h-5 w-5" /> },
+  { title: "پیگیری سفارش", description: "وضعیت سفارش را از ثبت تا تحویل دنبال کنید", icon: <Truck className="h-5 w-5" /> },
+  { title: "پشتیبانی در کنار شما", description: "هر زمان نیاز داشتید، تیم ما پاسخ‌گوست", icon: <Headphones className="h-5 w-5" /> },
 ];
 
 export function AuthShell({
