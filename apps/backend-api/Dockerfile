@@ -28,6 +28,7 @@ FROM deps AS prod-deps
 WORKDIR /app
 ENV NODE_ENV=production
 RUN npm prune --omit=dev --ignore-scripts
+RUN npm ls dompurify
 
 # ── Stage 4: Production runner ────────────────────────────────────────────────
 FROM ${NODE_IMAGE} AS runner
@@ -44,6 +45,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends dumb-init && \
     rm -rf /var/lib/apt/lists/* && mkdir -p /app/uploads/product-images && chown -R node:node /app
 
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=node:node /app/apps/backend-api/node_modules ./apps/backend-api/node_modules
 COPY --from=prod-deps --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=prod-deps --chown=node:node /app/apps/backend-api/package.json ./apps/backend-api/
 COPY --from=build --chown=node:node /app/apps/backend-api/dist ./apps/backend-api/dist
