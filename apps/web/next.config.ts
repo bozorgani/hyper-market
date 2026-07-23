@@ -67,7 +67,16 @@ const nextConfig: NextConfig = {
   output: "standalone",
 
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Font files are immutable (content-hashed or versioned) — cache for 1 year
+      {
+        source: "/fonts/:path*.woff2",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+    ];
   },
 
   images: {

@@ -18,6 +18,7 @@ import { formatNumber, formatPrice } from "@/lib/utils";
 import { getUserFacingError } from "@/lib/user-facing-error";
 import { ProductReviews } from "@/components/reviews/product-reviews";
 import { WishlistButton } from "@/components/wishlist-button";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import type { Product } from "@/types/domain";
 
 export function ProductDetailPageClient({
@@ -116,7 +117,14 @@ export function ProductDetailPageClient({
 
   return (
     <div className="pb-36 md:pb-0">
-    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-2 md:gap-8">
+    <div className="mx-auto max-w-6xl px-4 pt-4">
+      <Breadcrumbs items={[
+        { label: "محصولات", href: "/products" },
+        ...(item.brand ? [{ label: item.brand, href: `/products?brand=${encodeURIComponent(item.brand)}` }] : []),
+        { label: item.name },
+      ]} />
+    </div>
+    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-4 md:grid-cols-2 md:gap-8">
       <Card className="p-6">
         <ProductGallery images={item.images} productName={item.name} />
       </Card>

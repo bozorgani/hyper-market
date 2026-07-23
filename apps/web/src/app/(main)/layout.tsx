@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { Footer } from "@/components/layout/footer";
+import { BackToTop } from "@/components/ui/back-to-top";
 import { cn } from "@/lib/utils";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +17,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <main id="main-content" className={cn("animate-fade-in", isCheckout ? "pb-0" : "pb-main-nav")}>
         {children}
       </main>
-      {isCheckout ? null : <BottomNav />}
+      {isCheckout ? null : (
+        <>
+          <Footer />
+          <BottomNav />
+          <BackToTop />
+        </>
+      )}
     </>
   );
 }

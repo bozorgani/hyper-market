@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useWishlist, useClearWishlist, type WishlistProduct } from "@/hooks/use-wishlist";
+import { useWishlist, useClearWishlist } from "@/hooks/use-wishlist";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,8 +11,6 @@ import { ErrorState } from "@/components/ui/error-state";
 import { ProtectedRoute } from "@/components/layout/protected-route";
 import { Heart, Trash2, ShoppingBag } from "lucide-react";
 import { LinkButton } from "@/components/ui/link-button";
-import { useAddToCart } from "@/hooks/use-cart";
-import { useToast } from "@/components/ui/toast";
 import { useAuthStore } from "@/store/auth-store";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -20,28 +18,14 @@ export function WishlistPageClient() {
   const [page, setPage] = useState(1);
   const limit = 12;
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
-  const { showToast } = useToast();
   const user = useAuthStore((state) => state.user);
   const hydrated = useAuthStore((state) => state.hydrated);
 
   const { data, isLoading, isError, error, refetch } = useWishlist(page, limit, Boolean(hydrated && user));
   const clearMutation = useClearWishlist();
-  const addToCartMutation = useAddToCart();
 
   const products = data?.products || [];
   const pagination = data?.pagination;
-
-  const handleAddToCart = async (productId: string) => {
-    try {
-      await addToCartMutation.mutateAsync({ productId, quantity: 1 });
-      showToast({
-        type: "success",
-        title: "به سبد خرید اضافه شد",
-      });
-    } catch {
-      // Error is handled by the mutation
-    }
-  };
 
   const handleClearWishlist = async () => {
     try {
@@ -133,33 +117,9 @@ export function WishlistPageClient() {
         {!isLoading && !isError && products.length > 0 && (
           <>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {products.map((product: WishlistProduct, index: number) => (
+              {products.map((product, index: number) => (
                 <div key={product._id} className="relative">
                   <ProductCard product={product} priority={page === 1 && index < 4} />
-
-                  {/* Add to Cart Button */}
-                  {product.stock > 0 && product.isActive && (
-                    <div className="absolute bottom-3 left-3 right-3 z-10">
-                      <Button
-                        onClick={() => handleAddToCart(product._id)}
-                        disabled={addToCartMutation.isPending}
-                        className="w-full"
-                        size="sm"
-                      >
-                        <ShoppingBag className="ml-2 h-4 w-4" />
-                        افزودن به سبد خرید
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Inactive Product Badge (out-of-stock overlay is handled by ProductCard) */}
-                  {product.stock > 0 && !product.isActive && (
-                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50">
-                      <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-900">
-                        غیرفعال
-                      </span>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

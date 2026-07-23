@@ -172,7 +172,35 @@ zustand
 Detected App Router routes:
 
 ```text
-
+/(main)
+/(main)/cart
+/(main)/categories
+/(main)/checkout
+/(main)/order/success
+/(main)/orders
+/(main)/orders/[id]/tracking
+/(main)/products
+/(main)/products/[id]
+/(main)/profile
+/(main)/profile/addresses
+/(main)/search
+/(main)/wishlist
+/admin
+/admin/analytics
+/admin/categories
+/admin/coupons
+/admin/orders
+/admin/orders/[id]
+/admin/payments
+/admin/products
+/admin/products/[id]
+/admin/products/new
+/admin/roles
+/admin/users
+/forgot-password
+/login
+/register
+/verify-otp
 ```
 
 Detected characteristics from code:
@@ -210,7 +238,35 @@ zustand
 Detected App Router routes:
 
 ```text
-
+/(main)
+/(main)/cart
+/(main)/categories
+/(main)/checkout
+/(main)/order/success
+/(main)/orders
+/(main)/orders/[id]/tracking
+/(main)/products
+/(main)/products/[id]
+/(main)/profile
+/(main)/profile/addresses
+/(main)/search
+/(main)/wishlist
+/admin
+/admin/analytics
+/admin/categories
+/admin/coupons
+/admin/orders
+/admin/orders/[id]
+/admin/payments
+/admin/products
+/admin/products/[id]
+/admin/products/new
+/admin/roles
+/admin/users
+/forgot-password
+/login
+/register
+/verify-otp
 ```
 
 Detected characteristics from code:
