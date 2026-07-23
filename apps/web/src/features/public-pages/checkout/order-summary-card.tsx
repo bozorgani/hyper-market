@@ -108,27 +108,36 @@ export function OrderSummaryCard({
             <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500">تلاش فعال</span>
           ) : null}
         </div>
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-0">
           {checkoutSteps.map((step, index) => {
             const isActive = currentStep === step.key;
             const isDone = activeStepIndex > index;
             const isWaiting = activeStepIndex < index || currentStep === "idle";
+            const isLast = index === checkoutSteps.length - 1;
 
             return (
               <div key={step.key} className="flex gap-3">
-                        <span
-                          className={cn(
-                            "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black",
-                            isDone
-                              ? "bg-green-500 text-white"
-                              : isActive
-                                ? "bg-rose-600 text-white shadow-sm shadow-rose-200"
-                                : "bg-white text-slate-400 ring-1 ring-slate-200"
-                          )}
-                >
-                  {isDone ? "✓" : index + 1}
-                </span>
-                <div>
+                <div className="flex flex-col items-center">
+                  <span
+                    className={cn(
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black transition-all duration-300",
+                      isDone
+                        ? "bg-green-500 text-white"
+                        : isActive
+                          ? "bg-rose-600 text-white shadow-sm shadow-rose-200 animate-pulse"
+                          : "bg-white text-slate-400 ring-1 ring-slate-200"
+                    )}
+                  >
+                    {isDone ? "✓" : index + 1}
+                  </span>
+                  {!isLast && (
+                    <div className={cn(
+                      "w-0.5 flex-1 min-h-[20px] transition-colors duration-300",
+                      isDone ? "bg-green-300" : "bg-slate-200"
+                    )} />
+                  )}
+                </div>
+                <div className={cn("pb-5", isLast && "pb-0")}>
                   <p className={cn("text-sm font-bold", isWaiting ? "text-slate-500" : "text-slate-900")}>{step.title}</p>
                   <p className="mt-0.5 text-xs leading-5 text-slate-500">
                     {isActive ? "در حال انجام..." : isDone ? "انجام شد" : step.description}

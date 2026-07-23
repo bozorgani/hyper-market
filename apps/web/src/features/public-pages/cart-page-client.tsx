@@ -104,7 +104,7 @@ export function CartPageClient() {
 
   return (
     <ProtectedRoute>
-      <div className="mx-auto max-w-4xl px-4 py-8 text-right">
+      <div className="mx-auto max-w-5xl px-4 py-8 text-right">
         <PageHeader
           title="سبد خرید من"
           description="در این بخش می‌توانید تعداد کالاها را تغییر دهید، سبد را خالی کنید یا برای پرداخت ادامه دهید."

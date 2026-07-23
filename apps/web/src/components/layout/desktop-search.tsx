@@ -182,7 +182,7 @@ export function DesktopSearch() {
         aria-activedescendant={activeOptionId}
         placeholder="جستجو در محصولات..."
         autoComplete="off"
-        className="h-10 bg-slate-50 pr-11 rounded-2xl border-slate-200 focus:bg-white"
+        className="h-11 bg-slate-50 pr-11 rounded-full border-slate-200 text-sm focus:bg-white focus:border-rose-300 focus:ring-4 focus:ring-rose-50 transition-all"
       />
       {suggestContent}
     </form>

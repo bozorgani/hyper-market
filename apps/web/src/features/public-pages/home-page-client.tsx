@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Truck, ShieldCheck, RotateCcw, Headphones, Zap, ArrowLeft,
   Clock, Percent, ShoppingCart, Star,
@@ -64,6 +64,29 @@ export function HomePageClient({
   const visibleCategories = categoryList.length > 0
     ? categoryList.slice(0, 12).map((cat) => ({ ...cat, href: getCategoryProductsHref(cat) }))
     : fallbackCategories;
+
+  // Dynamic flash sale countdown — resets every midnight
+  const [countdown, setCountdown] = useState(() => {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    return Math.max(0, Math.floor((midnight.getTime() - now.getTime()) / 1000));
+  });
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 0) {
+          // Reset for next day
+          return 24 * 60 * 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+  const countdownHours = Math.floor(countdown / 3600);
+  const countdownMinutes = Math.floor((countdown % 3600) / 60);
+  const countdownLabel = `${countdownHours.toString().padStart(2, "۰").replace(/0/g, "۰").replace(/1/g, "۱").replace(/2/g, "۲").replace(/3/g, "۳").replace(/4/g, "۴").replace(/5/g, "۵").replace(/6/g, "۶").replace(/7/g, "۷").replace(/8/g, "۸").replace(/9/g, "۹")}:${countdownMinutes.toString().padStart(2, "0").replace(/0/g, "۰").replace(/1/g, "۱").replace(/2/g, "۲").replace(/3/g, "۳").replace(/4/g, "۴").replace(/5/g, "۵").replace(/6/g, "۶").replace(/7/g, "۷").replace(/8/g, "۸").replace(/9/g, "۹")}`;
 
   // همیشه داده داشته باشیم
   const bestSellers = uniqueItems.length > 0 ? uniqueItems.slice(0, 8) : [];
@@ -271,7 +294,9 @@ export function HomePageClient({
             </div>
           </div>
           <div className="flex items-center gap-1.5 rounded-xl bg-black/10 px-2.5 py-2 text-[10px] font-bold sm:gap-2 sm:px-3 sm:text-sm">
-            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> ۱۲ ساعت باقی‌مانده
+            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="font-mono tabular-nums">{countdownLabel}</span>
+            <span className="hidden sm:inline">باقی‌مانده</span>
           </div>
         </div>
 

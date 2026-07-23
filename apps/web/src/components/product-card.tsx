@@ -4,7 +4,7 @@ import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LoaderCircle, ShoppingCart, Tag } from "lucide-react";
+import { LoaderCircle, ShoppingCart } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useAuthStore } from "@/store/auth-store";
@@ -95,9 +95,9 @@ export const ProductCard = memo(function ProductCard({
         )}
 
         {discountPercent > 0 && (
-          <div className="absolute top-3 right-3 flex items-center gap-1 rounded-xl bg-red-500 px-2.5 py-1 text-white shadow-md">
-            <Tag className="h-3 w-3" />
-            <span className="text-[11px] font-bold">{formatNumber(discountPercent)}%</span>
+          <div className="absolute top-3 right-3 flex items-center gap-0.5 rounded-full bg-red-500 px-2 py-0.5 text-white shadow-md">
+            <span className="text-[11px] font-black">{formatNumber(discountPercent)}</span>
+            <span className="text-[9px] font-bold">٪</span>
           </div>
         )}
 
@@ -139,7 +139,7 @@ export const ProductCard = memo(function ProductCard({
           onClick={handleAddToCart}
           disabled={product.stock < 1 || addToCart.isPending}
           aria-label={tf('product.addToCartAriaLabel', { name: product.name })}
-          className="mt-3 flex min-h-[var(--touch-target-min)] w-full items-center justify-center gap-1.5 rounded-2xl bg-rose-50 py-[9px] text-xs font-bold text-rose-700 transition-all hover:bg-rose-100 active:bg-rose-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-3 flex min-h-[var(--touch-target-min)] w-full items-center justify-center gap-1.5 rounded-2xl border border-rose-200 bg-rose-50 py-[9px] text-xs font-bold text-rose-700 transition-all duration-200 hover:border-rose-600 hover:bg-rose-600 hover:text-white hover:shadow-md active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {addToCart.isPending ? (
             <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />

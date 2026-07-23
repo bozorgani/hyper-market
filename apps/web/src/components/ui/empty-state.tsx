@@ -15,12 +15,14 @@ export function EmptyState({
 }) {
   return (
     <Card className="p-10 text-center empty-state">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-        <Icon className="h-8 w-8" />
+      <div className="relative mx-auto mb-2">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-slate-50 to-slate-100 shadow-inner">
+          <Icon className="h-9 w-9 text-slate-400" />
+        </div>
       </div>
-      <p className="mt-6 text-xl font-black text-slate-900">{title}</p>
-      <p className="mt-2.5 max-w-xs mx-auto text-sm leading-6 text-slate-500">{description}</p>
-      {actions && <div className="mt-7 flex justify-center gap-3">{actions}</div>}
+      <p className="mt-4 text-xl font-black text-slate-900">{title}</p>
+      <p className="mt-2.5 max-w-sm mx-auto text-sm leading-7 text-slate-500">{description}</p>
+      {actions && <div className="mt-7 flex flex-wrap justify-center gap-3">{actions}</div>}
     </Card>
   );
 }
